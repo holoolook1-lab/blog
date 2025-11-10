@@ -1,6 +1,8 @@
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import AuthToastBridge from '@/components/layout/AuthToastBridge';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -41,6 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-white text-black">
         {/* 공용 헤더 */}
         <Header />
+        {/* 인증 성공/실패 토스트 브릿지 */}
+        <Suspense fallback={null}>
+          <AuthToastBridge />
+        </Suspense>
         {children}
         <Footer />
       </body>

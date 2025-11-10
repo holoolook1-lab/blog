@@ -22,7 +22,7 @@ export default function LoginPage() {
     }
     try {
       setIsSubmitting(true);
-      const res = await sendMagicLink(email, redirect);
+      const res = await sendMagicLink(email, redirect, 'login');
       if (res.ok) {
         setToast({ type: 'success', message: '매직 링크를 이메일로 전송했습니다. 메일의 링크를 클릭해 로그인하세요.' });
       } else {

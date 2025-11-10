@@ -22,7 +22,7 @@ export default function SignupPage() {
     }
     try {
       setIsSubmitting(true);
-      const res = await sendMagicLink(email, redirect);
+      const res = await sendMagicLink(email, redirect, 'signup');
       if (res.ok) {
         setToast({ type: 'success', message: '회원가입 링크를 이메일로 전송했습니다. 메일의 링크를 클릭해 가입을 완료하세요.' });
       } else {
@@ -57,4 +57,3 @@ export default function SignupPage() {
     </main>
   );
 }
-

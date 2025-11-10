@@ -3,16 +3,19 @@ import { getServerSupabase } from '@/lib/supabase/server';
 
 export async function sendMagicLink(
   email: string,
-  redirect?: string
+  redirect?: string,
+  flow: 'login' | 'signup' = 'login'
 ): Promise<{ ok: boolean; message?: string }> {
   try {
     const supabase = await getServerSupabase();
     const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const redirectParam = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
+    const qp = new URLSearchParams();
+    if (redirect) qp.set('redirect', redirect);
+    qp.set('flow', flow);
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${site}/auth/callback${redirectParam}`,
+        emailRedirectTo: `${site}/auth/callback?${qp.toString()}`,
       },
     });
     if (error) {
