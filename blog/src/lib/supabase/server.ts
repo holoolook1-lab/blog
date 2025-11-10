@@ -1,12 +1,25 @@
 import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 
-export const getServerSupabase = () => {
+export const getServerSupabase = async () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) {
-    return null as unknown as ReturnType<typeof createRouteHandlerClient>;
+    return null as unknown as ReturnType<typeof createServerClient>;
   }
-  // Route Handler/Server 환경 모두에서 안전하게 동작하도록 RouteHandlerClient 사용
-  return createRouteHandlerClient({ cookies });
+  const store = await cookies();
+  return createServerClient(url, key, {
+    cookies: {
+      get(name: string) {
+        return store.get(name)?.value;
+      },
+      set(name: string, value: string, options?: any) {
+        store.set(name, value, options);
+      },
+      remove(name: string, options?: any) {
+        // Next 16에서는 삭제를 set으로 처리(maxAge=0)
+        store.set(name, '', { ...options, maxAge: 0 });
+      },
+    },
+  });
 };

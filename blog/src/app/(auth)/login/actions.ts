@@ -1,13 +1,12 @@
 'use server';
-import { cookies } from 'next/headers';
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
+import { getServerSupabase } from '@/lib/supabase/server';
 
 export async function sendMagicLink(
   email: string,
   redirect?: string
 ): Promise<{ ok: boolean; message?: string }> {
   try {
-    const supabase = createServerActionClient({ cookies });
+    const supabase = await getServerSupabase();
     const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const redirectParam = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
     const { error } = await supabase.auth.signInWithOtp({

@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { getServerSupabase } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -64,7 +63,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const post_id = url.searchParams.get('post_id');
   if (!post_id) return NextResponse.json({ error: 'post_id_required' }, { status: 400 });
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await getServerSupabase();
   const { count: likesCount } = await supabase
     .from('votes')
     .select('id', { count: 'exact', head: true })

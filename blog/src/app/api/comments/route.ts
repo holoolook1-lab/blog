@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { getServerSupabase } from '@/lib/supabase/server';
 import { containsProfanity } from '@/lib/profanity';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 
 const userCommentCount = new Map<string, { count: number; timestamp: number }>();
 
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
