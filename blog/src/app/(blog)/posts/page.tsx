@@ -9,7 +9,7 @@ import PostCard from '@/components/blog/PostCard';
 
 export const revalidate = 60;
 
-export default async function PostsPage({ searchParams }: { searchParams?: Promise<{ page?: string; q?: string }> }) {
+export default async function PostsPage({ searchParams }: { searchParams?: Promise<{ page?: string; q?: string; heading?: string }> }) {
   const supabase = createPublicSupabaseClient();
   let posts: any[] | null = null;
   let totalCount = 0;
@@ -20,18 +20,40 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   const from = (safePage - 1) * pageSize;
   const to = from + pageSize - 1;
   const q = (sp.q || '').trim();
+  const heading = (sp.heading || '').trim();
   if (supabase) {
     let query = supabase
       .from('posts')
-      .select('id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count')
+      .select('id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count, heading')
       .eq('published', true);
     if (q) {
       const like = `%${q}%`;
       query = query.or(`title.ilike.${like},content.ilike.${like}`);
     }
-    const { data } = await query
-      .order('created_at', { ascending: false })
-      .range(from, to);
+    // 머리말 컬럼이 존재하는 경우만 필터 적용 (오류 시 폴백)
+    let data: any[] | null = null;
+    let err: any = null;
+    if (heading) {
+      const { data: filtered, error } = await query.eq('heading', heading)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      data = filtered || null;
+      err = error;
+      if (err) {
+        const { data: noFilter } = await supabase
+          .from('posts')
+          .select('id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        data = noFilter || null;
+      }
+    } else {
+      const { data: all } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      data = all || null;
+    }
     posts = data || [];
 
     // 총 결과 개수 조회
@@ -43,8 +65,20 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
       const like = `%${q}%`;
       countQuery = countQuery.or(`title.ilike.${like},content.ilike.${like}`);
     }
-    const { count } = await countQuery;
-    totalCount = count || 0;
+    if (heading) {
+      const { count, error } = await countQuery.eq('heading', heading);
+      if (!error) totalCount = count || 0;
+      else {
+        const { count: c } = await supabase
+          .from('posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('published', true);
+        totalCount = c || 0;
+      }
+    } else {
+      const { count } = await countQuery;
+      totalCount = count || 0;
+    }
   } else {
     posts = [];
   }
@@ -78,6 +112,8 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
         <p className="text-sm text-gray-600" aria-live="polite">
           {q ? (
             <>현재 검색어: <span className="font-medium text-gray-800">{q}</span> · 결과: {totalCount}건</>
+          ) : heading ? (
+            <>카테고리: <span className="font-medium text-gray-800">{heading}</span> · 결과: {totalCount}건</>
           ) : (
             <>전체 글 · 총 {totalCount || (posts?.length || 0)}건</>
           )}
@@ -91,10 +127,10 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
       </ul>
       <div className="flex items-center justify-between pt-2">
         {safePage > 1 ? (
-          <Link href={`/posts?page=${safePage - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className="text-sm underline">이전</Link>
+          <Link href={`/posts?page=${safePage - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm underline">이전</Link>
         ) : <span />}
         {(posts || []).length === pageSize ? (
-          <Link href={`/posts?page=${safePage + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className="text-sm underline">더 보기</Link>
+          <Link href={`/posts?page=${safePage + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm underline">더 보기</Link>
         ) : (
           <span className="text-sm text-gray-500">마지막 페이지</span>
         )}

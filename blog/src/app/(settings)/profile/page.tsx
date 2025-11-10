@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import ActionToast from '@/components/ui/ActionToast';
 import { compressToWebp } from '@/lib/utils/imageClient';
@@ -8,6 +9,7 @@ import ProfileStats from '@/components/profile/ProfileStats';
 type Profile = { id: string; username: string | null; avatar_url: string | null };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -21,6 +23,8 @@ export default function ProfilePage() {
       const user = data.user;
       if (!user) {
         setHasUser(false);
+        // 로그인 필요 시 자동 리디렉션으로 UX 개선
+        router.replace('/login?redirect=/settings/profile');
         return;
       }
       setHasUser(true);
@@ -30,7 +34,7 @@ export default function ProfilePage() {
       setUsername(initial?.username || '');
       setAvatarUrl(initial?.avatar_url || '');
     });
-  }, []);
+  }, [router]);
 
   const validateUsername = (u: string) => {
     const trimmed = (u || '').trim();

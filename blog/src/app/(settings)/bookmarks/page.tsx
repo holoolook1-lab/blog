@@ -1,10 +1,12 @@
 "use client";
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PostCard from '@/components/blog/PostCard';
 import { supabase } from '@/lib/supabase/client';
 
 export default function BookmarksPage() {
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,8 @@ export default function BookmarksPage() {
       const user = userResp?.user || null;
       if (!user) {
         setUserId(null);
+        // 로그인 필요 시 자동 리디렉션으로 UX 개선
+        router.replace('/login?redirect=/bookmarks');
         setLoading(false);
         return;
       }
@@ -40,7 +44,7 @@ export default function BookmarksPage() {
       setLoading(false);
     };
     run();
-  }, []);
+  }, [router]);
 
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-4">

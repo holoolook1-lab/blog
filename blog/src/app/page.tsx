@@ -3,8 +3,10 @@ import Image from 'next/image';
 import { SITE_NAME, TAGLINE } from '@/lib/brand';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
 import PostCard from '@/components/blog/PostCard';
-import { Mail, Github, Globe } from 'lucide-react';
+import { Mail, AtSign, Globe } from 'lucide-react';
 import VisitorPing from '@/components/analytics/VisitorPing';
+import { createPublicSupabaseClient } from '@/lib/supabase/env';
+import { Suspense } from 'react';
 
 export const revalidate = 60;
 
@@ -18,24 +20,17 @@ const SocialLink = ({ href, icon, label }: { href: string; icon: React.ReactNode
 export default async function HomePage() {
   let latest: any | null = null;
   let recent: any[] = [];
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (url && key) {
-    try {
-      const endpoint = `${url}/rest/v1/posts?select=id,title,slug,excerpt,cover_image,created_at&published=eq.true&order=created_at.desc&limit=6`;
-      const res = await fetch(endpoint, {
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`,
-        },
-        next: { revalidate: 60 },
-      });
-      if (res.ok) {
-        recent = await res.json();
-        latest = recent[0] || null;
-      }
-    } catch {}
-  }
+  const supabase = createPublicSupabaseClient();
+  try {
+    const { data } = await supabase
+      .from('posts')
+      .select('id, title, slug, excerpt, cover_image, created_at')
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .range(0, 5);
+    recent = data || [];
+    latest = recent[0] || null;
+  } catch {}
 
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-12">
@@ -43,8 +38,7 @@ export default async function HomePage() {
       <section className="space-y-3">
         <h1 className="text-3xl font-bold">{SITE_NAME}</h1>
         <p className="text-gray-600 text-lg">{TAGLINE}</p>
-        {/* 오늘/누적 방문자 */}
-        <StatsBar />
+        {/* 방문자 통계는 푸터에서만 통합 표시합니다 */}
         <div className="flex gap-3 pt-2">
           <Link href="/posts" className="inline-flex items-center justify-center border rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors">
             최근 글 보기
@@ -137,7 +131,7 @@ export default async function HomePage() {
         <div className="flex items-start gap-4">
           <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
             <Image
-              src="/default-avatar.png" // TODO: 실제 프로필 이미지 경로로 교체
+              src="https://hyueqldwgertapmhmmni.supabase.co/storage/v1/object/public/blog-images/IMG_20250916_085108_380.jpg"
               alt="프로필 이미지"
               fill
               className="object-cover"
@@ -147,9 +141,9 @@ export default async function HomePage() {
           <div className="space-y-2">
             <p className="text-base text-gray-700">{TAGLINE}. 라키라키는 담백한 레이아웃으로 글 중심 경험을 제공합니다.</p>
             <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
-              <SocialLink href="mailto:your-email@example.com" icon={<Mail size={16} />} label="Email" />
-              <SocialLink href="https://github.com/your-username" icon={<Github size={16} />} label="GitHub" />
-              <SocialLink href="https://your-website.com" icon={<Globe size={16} />} label="Website" />
+              <SocialLink href="mailto:salad20c@gmail.com" icon={<Mail size={16} />} label="Email" />
+              <SocialLink href="https://www.threads.net/@ilovemom_2026" icon={<AtSign size={16} />} label="Threads" />
+              <SocialLink href="https://cafe.naver.com/catch10man" icon={<Globe size={16} />} label="키움캐치" />
             </div>
           </div>
         </div>
@@ -158,18 +152,4 @@ export default async function HomePage() {
   );
 }
 
-async function StatsBar() {
-  try {
-    const res = await fetch('/api/analytics/stats', { next: { revalidate: 10 } });
-    if (!res.ok) return null;
-    const { today, total } = await res.json();
-    return (
-      <div className="text-sm text-gray-600 flex items-center gap-3">
-        <span>오늘 방문자: <span className="font-medium text-gray-800">{today}</span></span>
-        <span>누적 방문자: <span className="font-medium text-gray-800">{total}</span></span>
-      </div>
-    );
-  } catch {
-    return null;
-  }
-}
+// 서버 함수 기반 StatsBar 제거: 클라이언트 컴포넌트로 대체

@@ -75,7 +75,7 @@ export default async function PostDetailPage({ params }: Params) {
 
   const { data: post } = await supabase
     .from('posts')
-    .select('id, user_id, title, content, cover_image, created_at, updated_at, published, like_count, dislike_count')
+    .select('*')
     .eq('slug', params.slug)
     .single();
 
@@ -159,6 +159,13 @@ export default async function PostDetailPage({ params }: Params) {
       </p>
       <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-3" />
       <div className="prose mt-4" dangerouslySetInnerHTML={{ __html: safe }} />
+      {post.heading && (
+        <div className="pt-4">
+          <Link href={`/posts?heading=${encodeURIComponent(post.heading)}`} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-gray-50 hover:bg-gray-100">
+            #{post.heading}
+          </Link>
+        </div>
+      )}
       <div className="pt-4"><ShareButtons url={`${site}/posts/${params.slug}`} title={post.title} /></div>
       <nav className="flex justify-between pt-6">
         <div>
@@ -190,3 +197,4 @@ export default async function PostDetailPage({ params }: Params) {
     </article>
   );
 }
+export const revalidate = 60;
