@@ -51,6 +51,23 @@ export default function SignupPage() {
         </button>
       </form>
       {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
+      <div className="space-y-2 text-sm text-gray-700">
+        <h2 className="font-semibold">매직 링크란?</h2>
+        <p>
+          이메일로 전달되는 1회성 가입/로그인 링크입니다. 링크를 클릭하면 해당 브라우저에서 가입 완료 후 자동 로그인됩니다.
+        </p>
+        <h3 className="font-semibold">회원가입 절차</h3>
+        <ol className="list-decimal pl-5 space-y-1">
+          <li>위 입력란에 가입할 이메일을 입력합니다.</li>
+          <li>메일함에서 "매직 링크" 안내 메일을 엽니다.</li>
+          <li>메일의 링크를 클릭하면 가입이 완료되고 홈으로 이동합니다.</li>
+        </ol>
+        <h3 className="font-semibold">주의사항</h3>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>링크는 일정 시간 후 만료될 수 있어요. 오래된 메일은 다시 요청하세요.</li>
+          <li>이미 가입된 이메일이면 링크 클릭 시 로그인으로 처리됩니다.</li>
+        </ul>
+      </div>
       <p className="text-sm">
         이미 계정이 있나요? <Link className="underline" href="/login">로그인</Link>
       </p>
