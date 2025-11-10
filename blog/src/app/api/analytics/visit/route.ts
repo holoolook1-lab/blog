@@ -15,7 +15,7 @@ function todayDateStr() {
 export async function POST() {
   const supabase = await getServerSupabase();
 
-  const c = cookies();
+  const c = await cookies();
   let visitorId = c.get('visitor_id')?.value || '';
   let newCookie = false;
   if (!visitorId) {
@@ -45,4 +45,3 @@ export async function POST() {
   }
   return res;
 }
-

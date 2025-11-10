@@ -10,7 +10,8 @@ export async function compressToWebp(file: File, opts: CompressOptions = {}) {
 
   // 1차: 라이브러리로 리사이징/압축(원본 타입 유지)
   const prelim = await imageCompression(file, {
-    maxWidth,
+    // browser-image-compression의 옵션 키는 maxWidthOrHeight
+    maxWidthOrHeight: maxWidth,
     useWebWorker: true,
     maxSizeMB: undefined,
     initialQuality: quality,
@@ -51,4 +52,3 @@ function loadImage(src: string) {
     img.src = src;
   });
 }
-

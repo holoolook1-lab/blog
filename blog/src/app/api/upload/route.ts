@@ -31,7 +31,8 @@ export async function POST(req: Request) {
 
   const targetMime = 'image/webp';
   const filePath = `${user.id}/${Date.now()}.webp`;
-  const webpBlob = new Blob([webp], { type: targetMime });
+  // Node 런타임의 타입 호환을 위해 Buffer를 Uint8Array로 감싸 BlobPart로 전달
+  const webpBlob = new Blob([new Uint8Array(webp)], { type: targetMime });
   const { data, error } = await supabase.storage.from('blog-images').upload(filePath, webpBlob, {
     contentType: targetMime,
     upsert: false,
