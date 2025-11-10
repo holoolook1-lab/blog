@@ -1,18 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { revalidatePath } from 'next/cache';
-
-type Params = { params: { id: string } };
-
-export async function PUT(req: Request, { params }: Params) {
+ 
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
-  const id = params.id;
   const { data: owned } = await supabase.from('posts').select('id, user_id').eq('id', id).single();
   if (!owned) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   if (owned.user_id !== user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -39,15 +36,14 @@ export async function PUT(req: Request, { params }: Params) {
   } catch {}
   return NextResponse.json({ ok: true });
 }
-
-export async function DELETE(_req: Request, { params }: Params) {
+ 
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
-  const id = params.id;
   const { data: owned } = await supabase.from('posts').select('id, user_id').eq('id', id).single();
   if (!owned) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   if (owned.user_id !== user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 });

@@ -1,12 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { containsProfanity } from '@/lib/profanity';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 
-type Params = { params: { id: string } };
-
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const supabase = await getServerSupabase();
   const {
     data: { user },
@@ -31,18 +29,19 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   // XSS 방지: 저장 전에 콘텐츠 정화
   content = sanitizeHtml(content);
 
-  const { error } = await supabase.from('comments').update({ content }).eq('id', params.id);
+  const { error } = await supabase.from('comments').update({ content }).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(req: Request, { params }: Params) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   const supabase = await getServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { error } = await supabase.from('comments').delete().eq('id', params.id);
+  const { error } = await supabase.from('comments').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
