@@ -12,6 +12,8 @@ export async function sendMagicLink(
     const qp = new URLSearchParams();
     if (redirect) qp.set('redirect', redirect);
     qp.set('flow', flow);
+    // 교차 브라우저/앱에서 클릭해도 마이페이지에서 승인할 수 있도록 전송 모드를 활성화
+    qp.set('transfer', '1');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {

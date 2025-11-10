@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import CoverUpload from '@/components/editor/CoverUpload';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
@@ -152,11 +152,34 @@ export default function WritePage() {
           <p className="text-sm text-gray-600 mb-1">커버 이미지</p>
           <CoverUpload value={cover} onChange={setCover} />
         </div>
-        <RichEditor value={content} onChange={setContent} />
+        {/* 런타임 예외 발생 시 페이지 전체 크래시를 방지하는 간단한 에러 바운더리 */}
+        <EditorBoundary>
+          <RichEditor value={content} onChange={setContent} />
+        </EditorBoundary>
         <button className="bg-black text-white px-3 py-1 rounded disabled:opacity-60" type="submit" disabled={isSubmitting}>{isSubmitting ? '작성 중...' : '작성'}</button>
         <p className="text-xs text-gray-500">Ctrl+Enter로 빠르게 작성할 수 있습니다.</p>
       </form>
       {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
     </main>
   );
+}
+
+// 간단한 에러 바운더리: 에디터/이미지 업로드 등에서 예외 발생 시 안전한 폴백 제공
+class EditorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch() { /* 로깅 등 필요 시 추가 */ }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="border rounded p-3 bg-red-50 text-sm text-red-700">
+          에디터 로딩 중 오류가 발생했습니다. 페이지를 새로고침하거나 다른 브라우저로 시도해 주세요.
+        </div>
+      );
+    }
+    return this.props.children as React.ReactElement;
+  }
 }

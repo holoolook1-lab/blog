@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase/client';
+// 사용자 정보는 서버 쿠키 기반 API에서 조회
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
@@ -11,10 +11,16 @@ export default function UserMenu() {
   const logoutRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const email = data.user?.email || '';
-      setInitial(email ? email[0].toUpperCase() : 'U');
-    });
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/user', { cache: 'no-store' });
+        if (!res.ok) return;
+        const json = await res.json();
+        const email: string = json.email || '';
+        setInitial(email ? email[0].toUpperCase() : 'U');
+      } catch {}
+    };
+    fetchUser();
   }, []);
 
   useEffect(() => {
@@ -27,7 +33,9 @@ export default function UserMenu() {
   }, []);
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
     window.location.href = '/';
   };
 

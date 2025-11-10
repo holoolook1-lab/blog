@@ -1,9 +1,7 @@
 "use client";
 import Link from 'next/link';
-import LogoutButton from './LogoutButton';
 import NavLinks from './NavLinks';
 import UserMenu from './UserMenu';
-import { supabase } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import Monogram from '@/components/brand/Monogram';
 import { SITE_NAME } from '@/lib/brand';
@@ -12,10 +10,20 @@ export default function Header() {
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (mounted) setUserId(user?.id || null);
-    }).catch(() => { /* ignore */ });
-    return () => { mounted = false; };
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/user', { cache: 'no-store' });
+        if (!res.ok) { if (mounted) setUserId(null); return; }
+        const json = await res.json();
+        if (mounted) setUserId(json.user_id || null);
+      } catch {
+        if (mounted) setUserId(null);
+      }
+    };
+    fetchUser();
+    const onVis = () => { if (document.visibilityState === 'visible') fetchUser(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { mounted = false; document.removeEventListener('visibilitychange', onVis); };
   }, []);
 
   return (
@@ -27,7 +35,23 @@ export default function Header() {
           <NavLinks showWrite={!!userId} />
         </div>
         <div className="flex items-center gap-3 text-sm">
-          {userId ? <UserMenu /> : <Link href="/login" className="hover:underline">로그인</Link>}
+          {userId ? (
+            <>
+              <UserMenu />
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                  } catch {}
+                  window.location.reload();
+                }}
+                className="inline-flex items-center rounded px-3 py-1 border hover:bg-gray-50"
+                aria-label="로그아웃"
+              >
+                로그아웃
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
     </header>
