@@ -1,0 +1,91 @@
+"use client";
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+export default function PostsSearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [q, setQ] = useState<string>(params.get('q') || '');
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sp = new URLSearchParams(params.toString());
+    if (q.trim()) {
+      sp.set('q', q.trim());
+      sp.set('page', '1');
+    } else {
+      sp.delete('q');
+      sp.set('page', '1');
+    }
+    router.push(`${pathname}?${sp.toString()}`);
+    try {
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    } catch {}
+  };
+
+  const onClear = () => {
+    setQ('');
+    const sp = new URLSearchParams(params.toString());
+    sp.delete('q');
+    sp.set('page', '1');
+    router.push(`${pathname}?${sp.toString()}`);
+    try {
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    } catch {}
+  };
+
+  // 입력 디바운스로 자동 검색
+  useEffect(() => {
+    const current = params.get('q') || '';
+    const handle = setTimeout(() => {
+      const sp = new URLSearchParams(params.toString());
+      if (q.trim()) {
+        sp.set('q', q.trim());
+        sp.set('page', '1');
+      } else {
+        sp.delete('q');
+        sp.set('page', '1');
+      }
+      const next = `${pathname}?${sp.toString()}`;
+      // 현재 쿼리와 동일하면 푸시하지 않음
+      if (q.trim() === current.trim()) return;
+      router.push(next);
+    }, 350);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
+
+  return (
+    <form onSubmit={onSubmit} className="flex items-center gap-2">
+      <label htmlFor="search" className="text-sm text-gray-700">검색</label>
+      <input
+        id="search"
+        ref={inputRef}
+        type="text"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="제목이나 본문에서 검색"
+        className="flex-1 border rounded px-3 py-1 text-sm"
+        aria-label="포스트 검색"
+      />
+      <button type="submit" className="border rounded px-3 py-1 text-sm">찾기</button>
+      {params.get('q') && (
+        <button type="button" className="border rounded px-3 py-1 text-sm" onClick={onClear} aria-label="검색 초기화">초기화</button>
+      )}
+    </form>
+  );
+}
