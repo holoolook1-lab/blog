@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { getServerSupabase } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 export const runtime = 'nodejs';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
   const flow = url.searchParams.get('flow') || 'login';
@@ -24,13 +24,39 @@ export async function GET(req: Request) {
   }
 
   try {
-    const supabase = await getServerSupabase();
+    const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!projectUrl || !anonKey) {
+      const qp = new URLSearchParams();
+      qp.set('flow', flow);
+      qp.set('auth_error', 'missing_supabase_env');
+      const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
+      return NextResponse.redirect(dest);
+    }
+
+    // Response 객체에 쿠키를 써야 PKCE 교환 후 세션이 설정됩니다.
+    const response = new NextResponse(null, { status: 302 });
+    const supabase = createServerClient(projectUrl, anonKey, {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options?: any) {
+          response.cookies.set(name, value, options);
+        },
+        remove(name: string, options?: any) {
+          response.cookies.set(name, '', { ...options, maxAge: 0 });
+        },
+      },
+    });
+
     await supabase.auth.exchangeCodeForSession(code);
     const qp = new URLSearchParams();
     qp.set('flow', flow);
     qp.set('auth_success', flow);
     const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
-    return NextResponse.redirect(dest);
+    response.headers.set('Location', dest);
+    return response;
   } catch (e: any) {
     const qp = new URLSearchParams();
     qp.set('flow', flow);
