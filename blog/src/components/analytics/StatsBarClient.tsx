@@ -10,21 +10,30 @@ export default function StatsBarClient({ className = '' }: { className?: string 
     if (fetchedRef.current) return; // 단 한 번만 요청
     fetchedRef.current = true;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1500); // 1.5초 타임아웃
-    (async () => {
-      try {
-        const res = await fetch('/api/analytics/stats', { cache: 'no-store', signal: controller.signal });
-        if (!res.ok) return; // 조용히 실패
-        const json = await res.json();
-        setToday(typeof json.today === 'number' ? json.today : 0);
-        setTotal(typeof json.total === 'number' ? json.total : 0);
-      } catch (e: any) {
-        // Abort/네트워크 오류는 무시
-      } finally {
-        clearTimeout(timer);
-      }
-    })();
-    return () => { clearTimeout(timer); controller.abort(); };
+    const timeoutAbort = setTimeout(() => controller.abort(), 1500); // 1.5초 타임아웃
+    const start = () => {
+      (async () => {
+        try {
+          const res = await fetch('/api/analytics/stats', { cache: 'no-store', signal: controller.signal });
+          if (!res.ok) return; // 조용히 실패
+          const json = await res.json();
+          setToday(typeof json.today === 'number' ? json.today : 0);
+          setTotal(typeof json.total === 'number' ? json.total : 0);
+        } catch (e: any) {
+          // Abort/네트워크 오류는 무시
+        } finally {
+          clearTimeout(timeoutAbort);
+        }
+      })();
+    };
+    // 초기 로딩과 경쟁을 줄이기 위해 idle 시점으로 지연
+    if (typeof (window as any).requestIdleCallback === 'function') {
+      const id = (window as any).requestIdleCallback(() => start(), { timeout: 800 });
+      return () => { (window as any).cancelIdleCallback?.(id); clearTimeout(timeoutAbort); controller.abort(); };
+    } else {
+      const t = setTimeout(start, 600);
+      return () => { clearTimeout(t); clearTimeout(timeoutAbort); controller.abort(); };
+    }
   }, []);
 
   return (
@@ -38,4 +47,3 @@ export default function StatsBarClient({ className = '' }: { className?: string 
     </div>
   );
 }
-

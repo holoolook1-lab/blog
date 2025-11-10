@@ -37,14 +37,19 @@ export default async function EditPage({ params }: Params) {
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">글 편집</h1>
-      <EditForm initial={{
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        content: post.content,
-        cover_image: post.cover_image,
-        published: post.published,
-      }} />
+      {(() => {
+        const initial = {
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          content: post.content,
+          cover_image: post.cover_image,
+          published: post.published,
+          heading: null as string | null,
+        };
+        return <EditForm initial={initial} />;
+      })()}
     </main>
   );
 }
+export const dynamic = 'force-dynamic';

@@ -1,9 +1,10 @@
 import type { MetadataRoute } from 'next';
+import { getPublicSiteMeta } from '@/lib/site';
 
 export const revalidate = 3600;
 
 export default function robots(): MetadataRoute.Robots {
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const { url: site } = getPublicSiteMeta();
   return {
     rules: [
       { userAgent: '*', allow: '/' },
@@ -14,4 +15,3 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${site}/sitemap.xml`,
   };
 }
-

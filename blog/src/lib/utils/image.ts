@@ -7,7 +7,9 @@ export type TransformOptions = {
 // Supabase Storage 공개 URL에 변환 파라미터를 붙여 최적화된 이미지 URL을 반환합니다.
 export function getOptimizedImageUrl(url: string, opts: TransformOptions = {}): string {
   try {
-    const u = new URL(url);
+    // 일부 입력에서 마크다운/복사 붙여넣기로 인해 끝에 괄호나 공백이 붙는 문제를 정규화합니다.
+    const cleaned = url.trim().replace(/[)\]]+$/, '');
+    const u = new URL(cleaned);
     const isSupabasePublic = /\/storage\/v1\/object\/public\//.test(u.pathname);
     if (!isSupabasePublic) return url;
 

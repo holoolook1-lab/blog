@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
 
 export default function VoteButtons({ postId, initialLikes = 0, initialDislikes = 0 }: { postId: string; initialLikes?: number; initialDislikes?: number }) {
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+  const { userId } = useAuthUser();
+  const loggedIn = Boolean(userId);
 
   async function refreshCounts() {
     try {
@@ -21,9 +22,6 @@ export default function VoteButtons({ postId, initialLikes = 0, initialDislikes 
 
   useEffect(() => {
     refreshCounts();
-    supabase.auth.getUser().then(({ data }) => {
-      setLoggedIn(Boolean(data.user));
-    }).catch(() => setLoggedIn(false));
   }, [postId]);
 
   async function handleVote(value: 1 | -1) {

@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-// 사용자 정보는 서버 쿠키 기반 API에서 조회
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
+import { logout } from '@/lib/auth/logout';
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
@@ -10,18 +11,10 @@ export default function UserMenu() {
   const firstItemRef = useRef<HTMLAnchorElement | null>(null);
   const logoutRef = useRef<HTMLButtonElement | null>(null);
 
+  const { email } = useAuthUser();
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/user', { cache: 'no-store' });
-        if (!res.ok) return;
-        const json = await res.json();
-        const email: string = json.email || '';
-        setInitial(email ? email[0].toUpperCase() : 'U');
-      } catch {}
-    };
-    fetchUser();
-  }, []);
+    setInitial(email ? email[0].toUpperCase() : 'U');
+  }, [email]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -32,12 +25,7 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  const onLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {}
-    window.location.href = '/';
-  };
+  const onLogout = async () => { await logout('/'); };
 
   return (
     <div className="relative" ref={menuRef}>
@@ -65,7 +53,7 @@ export default function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-36 rounded-md border bg-white shadow-lg p-1 text-sm"
+          className="absolute right-0 mt-2 w-36 rounded-md border bg-white dark:border-neutral-800 dark:bg-neutral-900 shadow-lg p-1 text-sm dark:text-gray-200"
           onKeyDown={(e) => {
             if (e.key === 'Tab') {
               const first = firstItemRef.current;
@@ -82,7 +70,7 @@ export default function UserMenu() {
             }
           }}
         >
-          <Link href="/profile" ref={firstItemRef} className="block px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
+          <Link href="/profile" ref={firstItemRef} className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-neutral-800" role="menuitem" tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setOpen(false);
               if (e.key === 'ArrowDown') {
@@ -91,7 +79,7 @@ export default function UserMenu() {
               }
             }}
           >프로필</Link>
-          <button ref={logoutRef} onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
+          <button ref={logoutRef} onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-neutral-800" role="menuitem" tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setOpen(false);
               if (e.key === 'ArrowUp') {

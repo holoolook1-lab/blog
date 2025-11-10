@@ -14,6 +14,9 @@ create table if not exists public.votes (
 -- posts에 집계 컬럼 추가(선택): 좋아요/싫어요 수 저장
 alter table public.posts add column if not exists like_count integer default 0;
 alter table public.posts add column if not exists dislike_count integer default 0;
+-- posts에 머리말(카테고리) 추가
+alter table public.posts add column if not exists heading text;
+create index if not exists idx_posts_heading on public.posts (heading);
 
 -- bookmarks: 사용자 스크랩
 create table if not exists public.bookmarks (

@@ -11,16 +11,16 @@ export default function Monogram({ size = 28 }: { size?: number }) {
         className="shadow-sm"
         aria-hidden="true"
       >
-        <circle cx="16" cy="16" r="16" fill="#111827" />
+        <rect x="0" y="0" width="32" height="32" rx="4" fill="#000000" />
         <text
           x="16"
-          y="19"
+          y="20"
           textAnchor="middle"
-          fontSize="14"
-          fontFamily="'Pretendard', 'Noto Sans KR', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial"
+          fontSize="16"
+          fontFamily="system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif"
           fill="#ffffff"
-        >
-          라
+       >
+          r
         </text>
       </svg>
     </Link>

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import CoverUpload from '@/components/editor/CoverUpload';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import ActionToast from '@/components/ui/ActionToast';
+import { supabase } from '@/lib/supabase/client';
 
 const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
   ssr: false,
@@ -11,15 +12,33 @@ const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
 });
 
 export default function WritePage() {
+  // 로그인 가드: 미로그인 시 로그인 페이지로 이동
+  useEffect(() => {
+    let alive = true;
+    supabase.auth.getUser()
+      .then(({ data }) => {
+        if (alive && !data.user) {
+          window.location.href = '/login?redirect=/write';
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          window.location.href = '/login?redirect=/write';
+        }
+      });
+    return () => { alive = false; };
+  }, []);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
   const [cover, setCover] = useState<string | null>(null);
+  const HEADINGS = ['자유게시판','키움캐치','sns','유머','유용한정보','개발','블로그','기타'] as const;
+  const [heading, setHeading] = useState<string>('');
   const [status, setStatus] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
-  const [savedDraft, setSavedDraft] = useState<{ title?: string; slug?: string; content?: string; cover?: string | null } | null>(null);
+  const [savedDraft, setSavedDraft] = useState<{ title?: string; slug?: string; content?: string; cover?: string | null; heading?: string } | null>(null);
 
   // detect draft
   useEffect(() => {
@@ -27,7 +46,7 @@ export default function WritePage() {
       const raw = localStorage.getItem('draft:write');
       if (raw) {
         const d = JSON.parse(raw);
-        setSavedDraft({ title: d.title || '', slug: d.slug || '', content: d.content || '', cover: d.cover || null });
+        setSavedDraft({ title: d.title || '', slug: d.slug || '', content: d.content || '', cover: d.cover || null, heading: d.heading || '' });
         setHasDraft(true);
       }
     } catch {}
@@ -37,7 +56,7 @@ export default function WritePage() {
   useEffect(() => {
     const h = setInterval(() => {
       try {
-        localStorage.setItem('draft:write', JSON.stringify({ title, slug, content, cover }));
+        localStorage.setItem('draft:write', JSON.stringify({ title, slug, content, cover, heading }));
         const now = new Date();
         const hh = now.getHours().toString().padStart(2, '0');
         const mm = now.getMinutes().toString().padStart(2, '0');
@@ -46,7 +65,7 @@ export default function WritePage() {
       } catch {}
     }, 3000);
     return () => clearInterval(h);
-  }, [title, slug, content, cover]);
+  }, [title, slug, content, cover, heading]);
 
   const makeExcerpt = (html: string) => {
     const safe = sanitizeHtml(html || '');
@@ -77,7 +96,7 @@ export default function WritePage() {
     const res = await fetch('/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: t, slug: s, content, excerpt: makeExcerpt(content), cover_image: cover, published: true }),
+      body: JSON.stringify({ title: t, slug: s, content, excerpt: makeExcerpt(content), cover_image: cover, published: true, heading: heading || null }),
     });
     const json = await res.json();
     if (!res.ok) setToast({ type: 'error', message: json.error || '오류' });
@@ -106,17 +125,18 @@ export default function WritePage() {
             <button
               className="px-2 py-1 border rounded bg-white hover:bg-gray-50"
               onClick={() => {
-                if (savedDraft) {
-                  setTitle(savedDraft.title || '');
-                  setSlug(savedDraft.slug || '');
-                  setContent(savedDraft.content || '');
-                  setCover(savedDraft.cover || null);
-                }
-                setHasDraft(false);
-                setToast({ type: 'success', message: '초안을 복원했습니다.' });
-                setTimeout(() => setToast(null), 2500);
-              }}
-            >복원</button>
+              if (savedDraft) {
+                setTitle(savedDraft.title || '');
+                setSlug(savedDraft.slug || '');
+                setContent(savedDraft.content || '');
+                setCover(savedDraft.cover || null);
+                setHeading(savedDraft.heading || '');
+              }
+              setHasDraft(false);
+              setToast({ type: 'success', message: '초안을 복원했습니다.' });
+              setTimeout(() => setToast(null), 2500);
+            }}
+          >복원</button>
             <button
               className="px-2 py-1 border rounded hover:bg-gray-50"
               onClick={() => {
@@ -152,6 +172,15 @@ export default function WritePage() {
           <p className="text-sm text-gray-600 mb-1">커버 이미지</p>
           <CoverUpload value={cover} onChange={setCover} />
         </div>
+        <div>
+          <label className="block text-sm font-medium mt-3 mb-1" htmlFor="heading">머리말(카테고리)</label>
+          <select id="heading" className="border rounded w-full p-2" value={heading} onChange={(e) => setHeading(e.target.value)}>
+            <option value="">선택 없음</option>
+            {HEADINGS.map((h) => (
+              <option key={h} value={h}>{h}</option>
+            ))}
+          </select>
+        </div>
         {/* 런타임 예외 발생 시 페이지 전체 크래시를 방지하는 간단한 에러 바운더리 */}
         <EditorBoundary>
           <RichEditor value={content} onChange={setContent} />
@@ -183,3 +212,6 @@ class EditorBoundary extends React.Component<{ children: React.ReactNode }, { ha
     return this.props.children as React.ReactElement;
   }
 }
+// 주의: 이 파일은 Client Component입니다. Client 파일에 `export const dynamic`을 선언하면
+// Next.js 컴파일러가 Client/Server 경로 모두에서 처리하려다 중복 정의 오류가 발생합니다.
+// 동적 렌더링이 필요하다면 서버 컴포넌트 래퍼에서 선언하세요.

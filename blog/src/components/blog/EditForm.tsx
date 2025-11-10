@@ -12,6 +12,7 @@ type Post = {
   content: string;
   cover_image: string | null;
   published: boolean;
+  heading?: string | null;
 };
 
 const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
@@ -25,6 +26,8 @@ export default function EditForm({ initial }: { initial: Post }) {
   const [content, setContent] = useState(initial.content);
   const [cover, setCover] = useState<string | null>(initial.cover_image);
   const [published, setPublished] = useState<boolean>(initial.published);
+  const HEADINGS = ['자유게시판','키움캐치','sns','유머','유용한정보','개발','블로그','기타'] as const;
+  const [heading, setHeading] = useState<string>(initial.heading || '');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const originalPublished = initial.published;
 
@@ -59,7 +62,7 @@ export default function EditForm({ initial }: { initial: Post }) {
     const res = await fetch(`/api/posts/${initial.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: t, slug: s, content, cover_image: cover, published }),
+      body: JSON.stringify({ title: t, slug: s, content, cover_image: cover, published, heading: heading || null }),
     });
     const json = await res.json();
     if (!res.ok) setToast({ type: 'error', message: json.error || '업데이트 오류' });
@@ -92,6 +95,15 @@ export default function EditForm({ initial }: { initial: Post }) {
       <div>
         <p className="text-sm text-gray-600 mb-1">커버 이미지</p>
         <CoverUpload value={cover} onChange={setCover} />
+      </div>
+      <div>
+        <label className="text-sm text-gray-700">머리말(카테고리)</label>
+        <select className="border rounded w-full p-2 mt-1" value={heading} onChange={(e) => setHeading(e.target.value)}>
+          <option value="">선택 없음</option>
+          {HEADINGS.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
       </div>
       <div className="flex items-center gap-2">
         <label className="text-sm text-gray-700">발행</label>

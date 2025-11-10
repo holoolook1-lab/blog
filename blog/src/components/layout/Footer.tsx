@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SITE_NAME, TAGLINE } from '@/lib/brand';
+import VisitorStats from '@/components/analytics/VisitorStats';
 
 export default function Footer() {
   return (
@@ -8,6 +9,7 @@ export default function Footer() {
         <p>
           <span className="font-medium text-gray-800">{SITE_NAME}</span> · {TAGLINE}
         </p>
+        <VisitorStats />
         <div className="flex flex-wrap gap-3">
           <Link href="/rss.xml" className="hover:underline">RSS</Link>
           <Link href="/atom.xml" className="hover:underline">Atom</Link>

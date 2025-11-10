@@ -21,4 +21,3 @@ export default function TransferPage({ searchParams }: { searchParams: { code?: 
     </main>
   );
 }
-

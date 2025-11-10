@@ -1,34 +1,31 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
 
 export default function BookmarkButton({ postId }: { postId: string }) {
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { userId } = useAuthUser();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const is = Boolean(data.user);
-      setLoggedIn(is);
-      if (is) {
-        fetch('/api/bookmarks')
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (!data) return;
-            const exists = (data.bookmarks || []).some((b: any) => b.post_id === postId);
-            setBookmarked(Boolean(exists));
-          })
-          .catch(() => {});
-      } else {
-        setBookmarked(false);
-      }
-    }).catch(() => setLoggedIn(false));
-  }, [postId]);
+    const is = Boolean(userId);
+    if (is) {
+      fetch('/api/bookmarks')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) return;
+          const exists = (data.bookmarks || []).some((b: any) => b.post_id === postId);
+          setBookmarked(Boolean(exists));
+        })
+        .catch(() => {});
+    } else {
+      setBookmarked(false);
+    }
+  }, [postId, userId]);
 
   async function toggle() {
-    if (!loggedIn) {
+    if (!userId) {
       setError('로그인 후 이용해주세요.');
       return;
     }

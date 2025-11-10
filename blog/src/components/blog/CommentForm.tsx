@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import { ActionToast, type Toast } from './ActionToast';
 
 const MAX_LEN = 2000;
@@ -19,13 +19,9 @@ export default function CommentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { userId } = useAuthUser();
+  const isLoggedIn = Boolean(userId);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(!!data.user);
-    });
-  }, []);
 
   const showToast = (toast: Toast) => {
     setToast(toast);

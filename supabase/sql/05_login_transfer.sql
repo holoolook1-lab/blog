@@ -16,8 +16,15 @@ create table if not exists login_transfers (
 );
 
 -- 유일성 제약: 승인 코드는 중복되면 안 됨
-alter table login_transfers
-  add constraint if not exists uq_login_transfers_code unique (code);
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'uq_login_transfers_code'
+  ) then
+    alter table public.login_transfers
+      add constraint uq_login_transfers_code unique (code);
+  end if;
+end $$;
 
 -- 인덱스: 조회/만료 정리 성능 향상
 create index if not exists idx_login_transfers_code on login_transfers(code);
@@ -28,4 +35,3 @@ alter table login_transfers enable row level security;
 
 -- 선택: 만료된 코드 자동 정리를 위한 스케줄러(있다면)에서 사용할 수 있는 뷰/함수는
 -- 운영 환경 정책에 맞추어 별도 파일에서 구성하세요.
-

@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
     if (err || errCode || errDesc) {
       const qp = new URLSearchParams();
       qp.set('flow', flow);
-      qp.set('auth_error', decodeURIComponent(errDesc || errCode || err || 'unknown_error'));
+      // URLSearchParams가 자동으로 인코딩하므로 수동 디코딩 불필요
+      qp.set('auth_error', errDesc || errCode || err || 'unknown_error');
       const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
       return NextResponse.redirect(dest);
     }
@@ -91,7 +92,8 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     const qp = new URLSearchParams();
     qp.set('flow', flow);
-    qp.set('auth_error', e?.message ? decodeURIComponent(e.message) : 'exchange_failed');
+    // URLSearchParams가 자동으로 인코딩하므로 수동 디코딩 불필요
+    qp.set('auth_error', e?.message || 'exchange_failed');
     const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
     return NextResponse.redirect(dest);
   }

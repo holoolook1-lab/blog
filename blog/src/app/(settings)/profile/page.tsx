@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import ActionToast from '@/components/ui/ActionToast';
 import { compressToWebp } from '@/lib/utils/imageClient';
 import ProfileStats from '@/components/profile/ProfileStats';
@@ -10,6 +11,7 @@ type Profile = { id: string; username: string | null; avatar_url: string | null 
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { userId } = useAuthUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -18,23 +20,32 @@ export default function ProfilePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [hasUser, setHasUser] = useState<boolean>(false);
 
+  // 로그인 가드: 훅 기반으로 판별하고 필요 시 리디렉션
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const user = data.user;
-      if (!user) {
-        setHasUser(false);
-        // 로그인 필요 시 자동 리디렉션으로 UX 개선
-        router.replace('/login?redirect=/settings/profile');
-        return;
-      }
+    if (userId === null) {
+      setHasUser(false);
+      router.replace('/login?redirect=/settings/profile');
+    } else if (userId) {
       setHasUser(true);
-      const { data: p } = await supabase.from('profiles').select('id, username, avatar_url').eq('id', user.id).single();
+    }
+  }, [userId, router]);
+
+  // 프로필 초기 로드: 사용자 존재 시에만 수행
+  useEffect(() => {
+    const load = async () => {
+      if (!userId) return;
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', userId)
+        .single();
       const initial = (p as Profile) || null;
       setProfile(initial);
       setUsername(initial?.username || '');
       setAvatarUrl(initial?.avatar_url || '');
-    });
-  }, [router]);
+    };
+    load();
+  }, [userId]);
 
   const validateUsername = (u: string) => {
     const trimmed = (u || '').trim();
@@ -52,8 +63,7 @@ export default function ProfilePage() {
       setToast({ type: 'error', message: err });
       return;
     }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!userId) {
       setToast({ type: 'error', message: '로그인이 필요합니다' });
       return;
     }
@@ -62,14 +72,14 @@ export default function ProfilePage() {
       .from('profiles')
       .select('id')
       .eq('username', username)
-      .neq('id', user.id)
+      .neq('id', userId)
       .limit(1);
     if (dupe && dupe.length) {
       setToast({ type: 'error', message: '이미 사용 중인 닉네임입니다' });
       return;
     }
     setIsSaving(true);
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, username, avatar_url: avatarUrl });
+    const { error } = await supabase.from('profiles').upsert({ id: userId, username, avatar_url: avatarUrl });
     if (error) setToast({ type: 'error', message: error.message });
     else setToast({ type: 'success', message: '프로필을 저장했습니다' });
     setIsSaving(false);

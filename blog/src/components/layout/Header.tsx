@@ -5,29 +5,14 @@ import UserMenu from './UserMenu';
 import { useEffect, useState } from 'react';
 import Monogram from '@/components/brand/Monogram';
 import { SITE_NAME } from '@/lib/brand';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
+import { logout } from '@/lib/auth/logout';
 
 export default function Header() {
-  const [userId, setUserId] = useState<string | null>(null);
-  useEffect(() => {
-    let mounted = true;
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/user', { cache: 'no-store' });
-        if (!res.ok) { if (mounted) setUserId(null); return; }
-        const json = await res.json();
-        if (mounted) setUserId(json.user_id || null);
-      } catch {
-        if (mounted) setUserId(null);
-      }
-    };
-    fetchUser();
-    const onVis = () => { if (document.visibilityState === 'visible') fetchUser(); };
-    document.addEventListener('visibilitychange', onVis);
-    return () => { mounted = false; document.removeEventListener('visibilitychange', onVis); };
-  }, []);
+  const { userId } = useAuthUser();
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur">
+    <header className="border-b bg-white/80 dark:bg-neutral-900/85 dark:border-neutral-800 backdrop-blur">
       <div className="max-w-3xl mx-auto p-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Monogram size={24} />
@@ -39,19 +24,22 @@ export default function Header() {
             <>
               <UserMenu />
               <button
-                onClick={async () => {
-                  try {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                  } catch {}
-                  window.location.reload();
-                }}
-                className="inline-flex items-center rounded px-3 py-1 border hover:bg-gray-50"
+                onClick={() => logout()}
+                className="inline-flex items-center rounded px-3 py-1 border hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
                 aria-label="로그아웃"
               >
                 로그아웃
               </button>
             </>
-          ) : null}
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex items-center rounded px-4 py-2 bg-black text-white font-medium hover:bg-black/85 dark:bg-blue-600 dark:hover:bg-blue-500"
+              aria-label="로그인"
+            >
+              로그인
+            </Link>
+          )}
         </div>
       </div>
     </header>

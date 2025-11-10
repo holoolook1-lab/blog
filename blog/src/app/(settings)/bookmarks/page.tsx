@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PostCard from '@/components/blog/PostCard';
 import { supabase } from '@/lib/supabase/client';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
 
 export default function BookmarksPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { userId } = useAuthUser();
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<'new' | 'old' | 'title'>('new');
@@ -23,28 +24,28 @@ export default function BookmarksPage() {
     return sort === 'new' ? db - da : da - db;
   });
 
+  // 로그인 가드: 훅 기반으로 빠르게 판별
   useEffect(() => {
-    const run = async () => {
-      const { data: userResp } = await supabase.auth.getUser();
-      const user = userResp?.user || null;
-      if (!user) {
-        setUserId(null);
-        // 로그인 필요 시 자동 리디렉션으로 UX 개선
-        router.replace('/login?redirect=/bookmarks');
-        setLoading(false);
-        return;
-      }
-      setUserId(user.id);
+    if (userId === null) {
+      router.replace('/login?redirect=/bookmarks');
+      setLoading(false);
+    }
+  }, [userId, router]);
+
+  // 데이터 로드: 사용자 존재 시에만 호출
+  useEffect(() => {
+    const load = async () => {
+      if (!userId) return;
       const { data } = await supabase
         .from('bookmarks')
         .select('post_id, created_at, posts(title, slug, cover_image, excerpt, created_at)')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       setBookmarks((data || []).filter((b: any) => b.posts));
       setLoading(false);
     };
-    run();
-  }, [router]);
+    load();
+  }, [userId]);
 
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-4">

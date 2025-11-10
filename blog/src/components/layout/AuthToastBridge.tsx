@@ -12,7 +12,7 @@ export default function AuthToastBridge() {
     const error = params.get('auth_error');
     const flow = params.get('flow');
     if (error) {
-      setToast({ type: 'error', message: `인증 오류: ${decodeURIComponent(error)}` });
+      setToast({ type: 'error', message: `인증 오류: ${error}` });
       return;
     }
     if (success) {
@@ -26,4 +26,3 @@ export default function AuthToastBridge() {
   if (!toast) return null;
   return <ActionToast toast={toast} onClose={() => setToast(null)} />;
 }
-

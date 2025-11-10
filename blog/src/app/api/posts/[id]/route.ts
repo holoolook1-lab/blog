@@ -15,15 +15,27 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   if (owned.user_id !== user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { title, slug, content, cover_image, published } = body;
+  const { title, slug, content, cover_image, published, heading } = body;
   // XSS 방지: 저장 전에 콘텐츠/요약 정화
   const safeContent = sanitizeHtml(content || '');
   const safeExcerpt = sanitizeHtml(body.excerpt || '');
 
-  const { error } = await supabase
+  // 머리말 컬럼이 없을 수 있어 우선 시도 후 실패 시 폴백
+  let error: any = null;
+  ({ error } = await supabase
     .from('posts')
-    .update({ title, slug, content: safeContent, excerpt: safeExcerpt, cover_image, published })
-    .eq('id', id);
+    .update({ title, slug, content: safeContent, excerpt: safeExcerpt, cover_image, published, heading })
+    .eq('id', id));
+  if (error) {
+    const msg = (error.message || '').toLowerCase();
+    const isHeadingMissing = msg.includes('column') && msg.includes('heading') && (msg.includes('does not exist') || msg.includes('missing'));
+    if (isHeadingMissing) {
+      ({ error } = await supabase
+        .from('posts')
+        .update({ title, slug, content: safeContent, excerpt: safeExcerpt, cover_image, published })
+        .eq('id', id));
+    }
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   try {
     revalidatePath('/');
