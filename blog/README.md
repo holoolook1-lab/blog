@@ -87,10 +87,29 @@
   - `/api/auth/session`에서 서버 세션 토큰을 받아 클라이언트 `supabase.auth.setSession`로 동기화
 
 5) 검증 체크리스트
-- 로그인 페이지에서 Google로 로그인 클릭 시, 동의 화면 → 본인 계정 선택 → 사이트로 복귀가 되는지 확인
-- 복귀 후 `auth_success=login` 쿼리 파라미터가 붙고, 헤더/프로필 섹션에서 사용자 상태가 반영되는지 확인
-- 이메일·비밀번호 로그인도 정상 동작하는지, 에러 메시지/로딩 상태가 적절히 표시되는지 확인
-- 개인정보 처리 방침(`/privacy`)과 이용 약관(`/terms`) 동의 체크박스가 로그인/회원가입 화면에 표시되는지 확인
+다음 항목을 배포 직후 확인하세요.
+
+- 라우팅/페이지
+  - `/`, `/posts`, `/posts/[slug]`, `/bookmarks`, `/profile`, `/_not-found` 접근 가능
+  - 정적 라우트: `rss.xml`, `atom.xml`, `sitemap.xml`, `robots.txt` 정상 생성/응답
+- 이미지/메타
+  - Supabase Storage(`public`)의 이미지 최적화/블러 플레이스홀더 동작
+  - 포스트 OG/Twitter 이미지 라우트 응답(`opengraph-image-...`, `twitter-image-...`)
+- 인증/권한
+  - Google/OAuth 로그인 후 `/auth/callback` 복귀 및 세션 반영
+  - 이메일/비밀번호 로그인·회원가입 에러/로딩 피드백 정상
+  - 본인 글만 `edit/[slug]` 접근 가능, 비로그인 상태에서 보호 라우트 접근 차단
+- API 정상 동작
+  - `/api/posts`, `/api/comments`, `/api/bookmarks`, `/api/votes` 2xx 응답 및 에러 처리
+  - `/api/upload` 업로드 제한(파일 확장자/크기) 및 실패 시 토스트/메시지 반영
+- 환경변수/설정
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL` 프로덕션 값 확인
+  - 빌드 로그에 설정 경고 없음(`outputFileTracingRoot` ↔ `turbopack.root` 통일)
+- 접근성/UX
+  - 토스트 `aria-live`/`role` 적용, 포커스 트랩/키보드 내비게이션 확인
+  - 빈 상태/에러 메시지 문구/버튼 동작 일관성
+
+문제가 있으면 Vercel 빌드 로그와 콘솔 오류를 첨부해 이슈를 생성하세요.
 
 6) 주의 사항
 - 로컬 포트가 기본 3000이 아닌 경우(`3023` 등), `NEXT_PUBLIC_SITE_URL`을 해당 포트로 맞춰야 Google 로그인 콜백이 정상 복귀합니다.
