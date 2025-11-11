@@ -60,7 +60,10 @@ export async function GET(req: NextRequest) {
     const qp = new URLSearchParams();
     qp.set('flow', flow);
     qp.set('auth_success', flow);
-    const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
+    // recovery 플로우는 비밀번호 변경 화면으로 유도
+    const isRecovery = (type || flow) === 'recovery';
+    const destBase = isRecovery ? '/reset/confirm' : redirect;
+    const dest = destBase.includes('?') ? `${destBase}&${qp.toString()}` : `${destBase}?${qp.toString()}`;
     response.headers.set('Location', dest);
     return response;
   } catch (e: any) {
@@ -71,4 +74,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(dest);
   }
 }
-
