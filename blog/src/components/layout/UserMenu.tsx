@@ -9,6 +9,7 @@ export default function UserMenu() {
   const [initial, setInitial] = useState<string>('U');
   const menuRef = useRef<HTMLDivElement | null>(null);
   const firstItemRef = useRef<HTMLAnchorElement | null>(null);
+  const secondItemRef = useRef<HTMLAnchorElement | null>(null);
   const logoutRef = useRef<HTMLButtonElement | null>(null);
 
   const { email } = useAuthUser();
@@ -53,7 +54,7 @@ export default function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-36 rounded-md border bg-white dark:border-neutral-800 dark:bg-neutral-900 shadow-lg p-1 text-sm dark:text-gray-200"
+          className="absolute right-0 mt-2 w-36 rounded-md border bg-white shadow-lg p-1 text-sm"
           onKeyDown={(e) => {
             if (e.key === 'Tab') {
               const first = firstItemRef.current;
@@ -70,16 +71,29 @@ export default function UserMenu() {
             }
           }}
         >
-          <Link href="/profile" ref={firstItemRef} className="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-neutral-800" role="menuitem" tabIndex={0}
+          <Link href="/mypage" ref={firstItemRef} className="block px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setOpen(false);
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                secondItemRef.current?.focus();
+              }
+            }}
+          >마이페이지</Link>
+          <Link href="/profile" ref={secondItemRef} className="block px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setOpen(false);
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 logoutRef.current?.focus();
               }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                firstItemRef.current?.focus();
+              }
             }}
           >프로필</Link>
-          <button ref={logoutRef} onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-neutral-800" role="menuitem" tabIndex={0}
+          <button ref={logoutRef} onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setOpen(false);
               if (e.key === 'ArrowUp') {

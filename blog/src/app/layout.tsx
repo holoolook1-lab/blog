@@ -2,6 +2,7 @@ import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AuthToastBridge from '@/components/layout/AuthToastBridge';
+import AuthSessionHydrator from '@/components/layout/AuthSessionHydrator';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
@@ -46,6 +47,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* 인증 성공/실패 토스트 브릿지 */}
         <Suspense fallback={null}>
           <AuthToastBridge />
+          {/* 서버 쿠키 세션을 클라이언트 세션으로 하이드레이션 */}
+          <AuthSessionHydrator />
         </Suspense>
         {children}
         <Footer />

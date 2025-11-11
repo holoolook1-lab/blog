@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { loginWithPassword } from "./actions";
 import Link from "next/link";
 import { useTransition } from "react";
-import { signupWithPassword } from "../signup/actions";
+import { supabase } from "@/lib/supabase/client";
+// 회원가입은 별도 라우트(`/signup`)에서 처리합니다
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,12 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [showSignup, setShowSignup] = useState(false);
-  const [suEmail, setSuEmail] = useState("");
-  const [suPassword, setSuPassword] = useState("");
-  const [suConfirm, setSuConfirm] = useState("");
-  const [suMessage, setSuMessage] = useState<string | null>(null);
-  const [suPending, startSuTransition] = useTransition();
+  // 인라인 회원가입 UI 제거: 별도 페이지로 이동
 
   const redirect = params.get("redirect") || "/";
 
@@ -50,40 +46,22 @@ export default function LoginPage() {
       setMessage(res.message || "로그인 실패");
       return;
     }
-    router.replace(redirect);
+    // 서버 쿠키 세션을 클라이언트 Supabase 세션으로 동기화
+    try {
+      const sres = await fetch('/api/auth/session', { credentials: 'same-origin' });
+      if (sres.ok) {
+        const json = await sres.json();
+        const at = json?.session?.access_token;
+        const rt = json?.session?.refresh_token;
+        if (json?.ok && at && rt) {
+          await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+        }
+      }
+    } catch {}
+    router.replace(`${redirect}${redirect.includes('?') ? '&' : '?'}auth_success=login`);
   };
 
-  const onSignupInline = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuMessage(null);
-    const em = suEmail.trim();
-    const pw = suPassword.trim();
-    const cf = suConfirm.trim();
-    if (!em || !pw || !cf) {
-      setSuMessage("이메일, 비밀번호, 비밀번호 확인을 입력하세요");
-      return;
-    }
-    if (!/.+@.+\..+/.test(em)) {
-      setSuMessage("유효한 이메일을 입력하세요");
-      return;
-    }
-    if (pw.length < 8) {
-      setSuMessage("비밀번호는 최소 8자입니다");
-      return;
-    }
-    if (pw !== cf) {
-      setSuMessage("비밀번호가 일치하지 않습니다");
-      return;
-    }
-    startSuTransition(async () => {
-      const res = await signupWithPassword(em, pw, redirect);
-      if (!res.ok) {
-        setSuMessage(res.message || "회원가입 실패");
-      } else {
-        setSuMessage("확인 이메일을 전송했습니다. 받은 메일의 링크로 인증을 완료해 주세요.");
-      }
-    });
-  };
+  // 회원가입은 `/signup` 라우트에서 진행
 
 
   return (
@@ -131,71 +109,18 @@ export default function LoginPage() {
         </button>
         <p className="mt-3 text-sm text-gray-800">
           아직 회원이 아니신가요?{' '}
-          <button
-            type="button"
-            onClick={() => setShowSignup((v) => !v)}
+          <Link
+            href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
             className="text-black underline underline-offset-2"
-            aria-expanded={showSignup}
-            aria-controls="inline-signup"
           >
             가입하기
-          </button>
+          </Link>
         </p>
       </form>
       {message && <p className="mt-3 text-sm text-red-600" aria-live="polite">{message}</p>}
       <p className="mt-6 text-xs text-gray-500">가입 후 이메일 인증을 완료해 주세요.</p>
 
-      {showSignup && (
-        <section id="inline-signup" className="mt-6 border-t pt-6" aria-label="회원가입 섹션">
-          <h2 className="text-lg font-semibold">회원가입</h2>
-          <form className="mt-4 space-y-3" onSubmit={onSignupInline} aria-label="회원가입 폼">
-            <div>
-              <label className="text-sm text-gray-700" htmlFor="signup-email">이메일</label>
-              <input
-                type="email"
-                id="signup-email"
-                className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="you@example.com"
-                value={suEmail}
-                onChange={(e) => setSuEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-700" htmlFor="signup-password">비밀번호</label>
-              <input
-                type="password"
-                id="signup-password"
-                className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="최소 8자"
-                value={suPassword}
-                onChange={(e) => setSuPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-700" htmlFor="signup-confirm">비밀번호 확인</label>
-              <input
-                type="password"
-                id="signup-confirm"
-                className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="비밀번호 재입력"
-                value={suConfirm}
-                onChange={(e) => setSuConfirm(e.target.value)}
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={suPending}
-              className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black"
-            >
-              {suPending ? "가입 중..." : "가입하기"}
-            </button>
-          </form>
-          {suMessage && <p className="mt-3 text-sm text-gray-700" aria-live="polite">{suMessage}</p>}
-        </section>
-      )}
+      {/* 회원가입 인라인 섹션 제거: `/signup` 페이지로 이동 유도 */}
     </main>
   );
 }
