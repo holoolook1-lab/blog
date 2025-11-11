@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 // 환경변수가 비어 있어도 이미지 최적화가 동작하도록 기본값 설정
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hyueqldwgertapmhmmni.supabase.co';
@@ -23,9 +24,12 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
+  // 서버 파일 추적 루트를 turbopack.root와 동일하게 지정
+  outputFileTracingRoot: path.resolve(__dirname, '..'),
   turbopack: {
-    // 루트 디렉터리를 명시해 상위 디렉터리 lockfile로 인한 경고를 제거
-    root: __dirname,
+    // Vercel이 자동으로 설정하는 outputFileTracingRoot(`/vercel/path0`)와 일치시키기 위해
+    // 프로젝트 디렉터리의 상위(리포지토리 루트)를 사용합니다.
+    root: path.resolve(__dirname, '..'),
   },
 };
 
