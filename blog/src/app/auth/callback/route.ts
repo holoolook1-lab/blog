@@ -9,17 +9,14 @@ export async function GET(req: NextRequest) {
   const tokenHash = url.searchParams.get('token_hash') || '';
   const type = url.searchParams.get('type') || '';
   const flow = url.searchParams.get('flow') || 'login';
-  const transfer = url.searchParams.get('transfer') === '1';
   const err = url.searchParams.get('error');
   const errCode = url.searchParams.get('error_code');
   const errDesc = url.searchParams.get('error_description');
   const redirect = url.searchParams.get('redirect') || '/';
-  // Supabase가 에러 파라미터만 전달한 경우 에러를 함께 리디렉트
   if (!code && !tokenHash) {
     if (err || errCode || errDesc) {
       const qp = new URLSearchParams();
       qp.set('flow', flow);
-      // URLSearchParams가 자동으로 인코딩하므로 수동 디코딩 불필요
       qp.set('auth_error', errDesc || errCode || err || 'unknown_error');
       const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
       return NextResponse.redirect(dest);
@@ -38,7 +35,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(dest);
     }
 
-    // Response 객체에 쿠키를 써야 PKCE 교환 후 세션이 설정됩니다.
     const response = new NextResponse(null, { status: 302 });
     const supabase = createServerClient(projectUrl, anonKey, {
       cookies: {
@@ -57,30 +53,8 @@ export async function GET(req: NextRequest) {
     if (code) {
       await supabase.auth.exchangeCodeForSession(code);
     } else if (tokenHash) {
-      await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash });
-    }
-
-    if (transfer) {
-      try {
-        const { adminSupabase } = await import('@/lib/supabase/admin');
-        const admin = adminSupabase;
-        if (admin) {
-          const approval = Math.random().toString().slice(2, 8);
-          const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-          await admin.from('login_transfers').insert({
-            code: approval,
-            token_hash: tokenHash || null,
-            auth_code: code || null,
-            type: type || (code ? 'pkce' : 'magiclink'),
-            expires_at: expires,
-          });
-          const dest = `/auth/transfer?code=${approval}&flow=${flow}`;
-          response.headers.set('Location', dest);
-          return response;
-        }
-      } catch {
-        // adminSupabase 미구성 시 기본 리디렉션
-      }
+      const otpType = (type || 'signup') as any;
+      await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash });
     }
 
     const qp = new URLSearchParams();
@@ -92,9 +66,9 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     const qp = new URLSearchParams();
     qp.set('flow', flow);
-    // URLSearchParams가 자동으로 인코딩하므로 수동 디코딩 불필요
     qp.set('auth_error', e?.message || 'exchange_failed');
     const dest = redirect.includes('?') ? `${redirect}&${qp.toString()}` : `${redirect}?${qp.toString()}`;
     return NextResponse.redirect(dest);
   }
 }
+

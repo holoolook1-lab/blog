@@ -1,69 +1,84 @@
-'use client';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { sendMagicLink } from './actions';
-import ActionToast from '@/components/ui/ActionToast';
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { loginWithPassword } from "./actions";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const search = useSearchParams();
-  const redirect = search.get('redirect') || '/';
+  const router = useRouter();
+  const params = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const redirect = params.get("redirect") || "/";
+
+  useEffect(() => {
+    setMessage(null);
+  }, [email, password]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setToast(null);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setToast({ type: 'error', message: '올바른 이메일을 입력해주세요' });
+    setMessage(null);
+    const em = email.trim();
+    const pw = password.trim();
+    if (!em || !pw) {
+      setMessage("이메일과 비밀번호를 입력하세요");
       return;
     }
-    try {
-      setIsSubmitting(true);
-      const res = await sendMagicLink(email, redirect, 'login');
-      if (res.ok) {
-        setToast({ type: 'success', message: '매직 링크를 이메일로 전송했습니다. 메일의 링크를 클릭해 로그인하세요.' });
-      } else {
-        setToast({ type: 'error', message: res.message || '전송 중 오류가 발생했어요' });
-      }
-    } catch (err: any) {
-      setToast({ type: 'error', message: err?.message || '전송 중 오류가 발생했어요' });
-    } finally {
-      setIsSubmitting(false);
+    if (!/.+@.+\..+/.test(em)) {
+      setMessage("유효한 이메일을 입력하세요");
+      return;
     }
+    if (pw.length < 8) {
+      setMessage("비밀번호는 최소 8자입니다");
+      return;
+    }
+    setLoading(true);
+    const res = await loginWithPassword(em, pw);
+    setLoading(false);
+    if (!res.ok) {
+      setMessage(res.message || "로그인 실패");
+      return;
+    }
+    router.replace(redirect);
   };
+
   return (
-    <main className="max-w-sm mx-auto p-4 space-y-4">
-      <h1 className="text-xl font-bold">로그인</h1>
-      <form className="space-y-3" onSubmit={onSubmit}>
-        <input className="border rounded w-full p-2" type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button className="bg-black text-white w-full py-2 rounded disabled:opacity-60" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '전송 중...' : '매직 링크 보내기'}
+    <main className="mx-auto max-w-md px-6 py-12">
+      <h1 className="text-2xl font-bold">로그인</h1>
+      <form className="mt-6 space-y-3" onSubmit={onSubmit}>
+        <div>
+          <label className="text-sm text-gray-600">이메일</label>
+          <input
+            type="email"
+            className="mt-1 w-full rounded border px-3 py-2"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-sm text-gray-600">비밀번호</label>
+          <input
+            type="password"
+            className="mt-1 w-full rounded border px-3 py-2"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+        >
+          {loading ? "로그인 중..." : "로그인"}
         </button>
       </form>
-      {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
-      <div className="space-y-2 text-sm text-gray-700">
-        <h2 className="font-semibold">매직 링크란?</h2>
-        <p>
-          이메일로 전달되는 1회성 로그인 링크입니다. 받은 링크를 클릭하면 이 브라우저에서 자동으로 로그인됩니다.
-        </p>
-        <h3 className="font-semibold">로그인 절차</h3>
-        <ol className="list-decimal pl-5 space-y-1">
-          <li>위 입력란에 본인 이메일을 입력합니다.</li>
-          <li>메일함에서 "매직 링크" 안내 메일을 엽니다.</li>
-          <li>메일의 링크를 클릭하면 로그인 완료 후 리다이렉트됩니다.</li>
-        </ol>
-        <h3 className="font-semibold">주의사항</h3>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>링크는 일정 시간 후 만료될 수 있어요. 오래된 메일은 다시 요청하세요.</li>
-          <li>링크를 최초로 연 브라우저에 로그인 세션이 생성됩니다.</li>
-        </ul>
-      </div>
-      <p className="text-sm">
-        계정이 없나요? <Link className="underline" href="/signup">회원가입</Link>
-      </p>
+      {message && <p className="mt-3 text-sm text-red-600">{message}</p>}
+      <p className="mt-6 text-xs text-gray-500">계정이 없으신가요? 회원가입 페이지에서 이메일 인증 후 로그인하세요.</p>
     </main>
   );
 }
+

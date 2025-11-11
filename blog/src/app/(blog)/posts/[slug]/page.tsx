@@ -197,4 +197,4 @@ export default async function PostDetailPage({ params }: Params) {
     </article>
   );
 }
-export const revalidate = 60;
+// 중복 정의 제거: 페이지의 ISR 간격은 상단에서 300초로 설정됨

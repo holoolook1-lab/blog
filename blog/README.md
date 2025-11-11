@@ -6,7 +6,7 @@
 
 ## 주요 기능
 - 글로벌 헤더 내비게이션: `포스트`, `작성(로그인 필요)`, `프로필`, `로그인/로그아웃`
-- 로그인(매직 링크) UX 개선: 이메일 검증, 로딩/토스트, `redirect` 지원
+- 로그인(이메일·비밀번호) UX: 이메일 검증, 로딩/토스트, `redirect` 지원
 - 글 상세: 저자에게만 `편집` 링크, 발행 상태 배지(공개/비공개)
 - 글 편집: 제목/슬러그/커버/콘텐츠/발행 토글, 저장 후 상세로 이동
 - 글 작성: 자동 임시저장(localStorage), 작성 성공 후 상세로 이동
@@ -34,7 +34,7 @@
 - `GET /edit/[slug]` 글 편집(저자만 접근)
 - `GET /profile` 프로필 설정(로그인 필요)
 - `GET /login?redirect=/path` 로그인 후 리다이렉트 경로 지원
-- `GET /auth/callback?redirect=/path` 매직 링크 콜백
+- `GET /auth/callback?redirect=/path` 이메일 확인/코드 교환 콜백
 
 ## API
 - `POST /api/posts` 새 글 작성

@@ -8,5 +8,8 @@ export default function VisitorStats({ className = '' }: { className?: string })
   if (pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/auth')) {
     return null;
   }
+  // 홈 및 포스트 상세/목록 페이지에서만 통계 바를 표시
+  const isAllowed = pathname === '/' || pathname === '/posts' || pathname.startsWith('/posts/');
+  if (!isAllowed) return null;
   return <StatsBarClient className={className} />;
 }

@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
+  turbopack: {
+    // 루트 디렉터리를 명시해 상위 디렉터리 lockfile로 인한 경고를 제거
+    root: __dirname,
+  },
 };
 
 export default nextConfig;

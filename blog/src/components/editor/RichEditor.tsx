@@ -16,6 +16,8 @@ type Props = {
 export default function RichEditor({ value, onChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // 훅 순서 불일치 방지: 모든 훅은 조건부 반환 전에 선언
+  const [progress, setProgress] = useState<number>(0);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -83,7 +85,6 @@ export default function RichEditor({ value, onChange }: Props) {
     editor.chain().focus().setLink({ href: url }).run();
   };
 
-  const [progress, setProgress] = useState<number>(0);
 
   const uploadSelectedImage = async (file: File) => {
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB

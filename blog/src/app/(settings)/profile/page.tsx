@@ -126,8 +126,7 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold">프로필 설정</h1>
       {!hasUser && (
         <div className="rounded-md border p-4 text-sm text-gray-700">
-          <p>로그인이 필요합니다. 다른 브라우저/앱에서 매직 링크를 열었다면 아래 승인 코드를 입력해 현재 브라우저에서 로그인 승인을 완료할 수 있습니다.</p>
-          <TransferClaimForm />
+          <p>로그인이 필요합니다. 로그인 페이지에서 인증을 완료해 주세요.</p>
         </div>
       )}
       <ProfileStats />
@@ -147,56 +146,5 @@ export default function ProfilePage() {
       </form>
       {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
     </main>
-  );
-}
-
-function TransferClaimForm() {
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  const claim = async () => {
-    setLoading(true);
-    setMessage(null);
-    try {
-      const res = await fetch('/api/auth/transfer/claim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() }),
-      });
-      if (res.status === 200) {
-        setMessage('승인이 완료되었습니다. 페이지를 새로고침합니다...');
-        setTimeout(() => window.location.reload(), 600);
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setMessage(data?.message || '승인에 실패했습니다');
-      }
-    } catch (e: any) {
-      setMessage(e?.message || '네트워크 오류');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="mt-3">
-      <label className="text-xs text-gray-500">승인 코드</label>
-      <div className="mt-2 flex gap-2">
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="6자리 코드"
-          className="flex-1 rounded border px-3 py-2"
-        />
-        <button
-          onClick={claim}
-          disabled={loading || !code.trim()}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {loading ? '승인 중...' : '승인하기'}
-        </button>
-      </div>
-      {message && <p className="mt-2 text-sm text-gray-600">{message}</p>}
-    </div>
   );
 }
