@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { ActionToast, type Toast } from './ActionToast';
+import ActionToast from '@/components/ui/ActionToast';
+type Toast = { type: 'success' | 'error'; message: string };
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/utils/image';
 
@@ -176,7 +177,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
 
   return (
     <>
-      {toast && <ActionToast type={toast.type} message={toast.message} />}
+      {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span className="inline-block w-3 h-3 rounded-full bg-gray-300 animate-pulse" />

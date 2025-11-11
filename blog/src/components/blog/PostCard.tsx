@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
+import { getShimmerDataURL } from '@/lib/utils/shimmer';
 import { computeReadingMinutes } from '@/lib/utils/reading';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import ActionBar from '@/components/blog/ActionBar';
@@ -32,6 +33,8 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
               fill
               sizes={defaultSizes.list}
               className="object-cover"
+              placeholder="blur"
+              blurDataURL={getShimmerDataURL(16, 9)}
             />
           </div>
         </Link>

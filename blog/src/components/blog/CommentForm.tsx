@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
-import { ActionToast, type Toast } from './ActionToast';
+import ActionToast from '@/components/ui/ActionToast';
+type Toast = { type: 'success' | 'error'; message: string };
 
 const MAX_LEN = 2000;
 
@@ -82,7 +83,7 @@ export default function CommentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {toast && <ActionToast type={toast.type} message={toast.message} />}
+      {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
       <textarea
         name="content"
         rows={3}

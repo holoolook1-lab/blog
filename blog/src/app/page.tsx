@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { SITE_NAME, TAGLINE } from '@/lib/brand';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
+import { getShimmerDataURL } from '@/lib/utils/shimmer';
 import PostCard from '@/components/blog/PostCard';
 import { Mail, AtSign, Globe } from 'lucide-react';
 import VisitorPing from '@/components/analytics/VisitorPing';
@@ -63,6 +64,8 @@ export default async function HomePage() {
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover"
+                  placeholder="blur"
+                  blurDataURL={getShimmerDataURL(16, 9)}
                 />
               </div>
             </Link>

@@ -2,16 +2,20 @@ import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import CommentSection from '@/components/blog/CommentSection';
 import CommentList from '@/components/blog/CommentList';
 import ShareButtons from '@/components/blog/ShareButtons';
+import ReportForm from '@/components/blog/ReportForm';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { computeReadingMinutes } from '@/lib/utils/reading';
 import Image from 'next/image';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
+import { getShimmerDataURL } from '@/lib/utils/shimmer';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import BackToTop from '@/components/ui/BackToTop';
 import ActionBar from '@/components/blog/ActionBar';
 import EditLinkClient from '@/components/blog/EditLinkClient';
+import ProfileCard from '@/components/profile/ProfileCard';
+import { Crown, Diamond, Medal } from 'lucide-react';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -108,6 +112,33 @@ export default async function PostDetailPage({ params }: Params) {
     .limit(1);
   next = nextData && nextData.length ? nextData[0] : null;
 
+  // 작성자 활동 통계로 레벨 아이콘 계산
+  let authorScore = 0;
+  let authorLevel: 'platinum' | 'gold' | 'silver' | 'bronze' = 'bronze';
+  try {
+    // 집계 뷰(profile_stats)를 우선 사용
+    const { data: stat } = await supabase
+      .from('profile_stats')
+      .select('post_count, like_sum, level')
+      .eq('user_id', post.user_id)
+      .single();
+    if (stat) {
+      authorScore = ((stat as any)?.post_count || 0) * 2 + ((stat as any)?.like_sum || 0) * 1;
+      authorLevel = (stat as any)?.level || 'bronze';
+    } else {
+      // 폴백: 직접 집계
+      const { data: authorPosts } = await supabase
+        .from('posts')
+        .select('id, like_count')
+        .eq('user_id', post.user_id)
+        .eq('published', true);
+      const postCount = (authorPosts || []).length;
+      const likeSum = (authorPosts || []).reduce((sum, p: any) => sum + (p.like_count || 0), 0);
+      authorScore = postCount * 2 + likeSum * 1;
+      authorLevel = authorScore >= 1000 ? 'platinum' : authorScore >= 500 ? 'gold' : authorScore >= 100 ? 'silver' : 'bronze';
+    }
+  } catch {}
+
   return (
     <article className="max-w-3xl mx-auto p-4 space-y-4">
       {/* Article JSON-LD */}
@@ -141,6 +172,8 @@ export default async function PostDetailPage({ params }: Params) {
             sizes={defaultSizes.detail}
             className="object-cover"
             priority
+            placeholder="blur"
+            blurDataURL={getShimmerDataURL(16, 9)}
           />
         </div>
       )}
@@ -150,6 +183,13 @@ export default async function PostDetailPage({ params }: Params) {
           <span className={`text-xs px-2 py-0.5 rounded border ${post.published ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
             {post.published ? '공개' : '비공개'}
           </span>
+          {/* 레벨 아이콘 */}
+          {authorLevel !== 'bronze' && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border bg-gray-50">
+              {authorLevel === 'platinum' ? <Diamond size={14} /> : authorLevel === 'gold' ? <Crown size={14} /> : <Medal size={14} />}
+              레벨
+            </span>
+          )}
         </div>
         {/* 작성자에게만 편집 링크 노출: 클라이언트에서 인증 확인 */}
         <EditLinkClient authorId={post.user_id} slug={params.slug} />
@@ -166,7 +206,16 @@ export default async function PostDetailPage({ params }: Params) {
           </Link>
         </div>
       )}
-      <div className="pt-4"><ShareButtons url={`${site}/posts/${params.slug}`} title={post.title} /></div>
+      <div className="pt-4">
+        <ShareButtons url={`${site}/posts/${params.slug}`} title={post.title} />
+        {/* 신고 상세폼: 공유 영역 아래에 접기/펼치기 형태로 배치 */}
+        <ReportForm slug={params.slug} />
+      </div>
+
+      {/* 작성자 프로필 카드: 본문 하단에 고정 노출 */}
+      <div className="pt-6">
+        <ProfileCard authorId={post.user_id} />
+      </div>
       <nav className="flex justify-between pt-6">
         <div>
           {prev ? (

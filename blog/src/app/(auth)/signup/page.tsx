@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signupWithPassword } from "./actions";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
+import { markConsentInClient } from "@/lib/policies";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -11,6 +14,8 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [consentPrivacy, setConsentPrivacy] = useState(false);
+  const [consentTerms, setConsentTerms] = useState(false);
 
   const redirect = params.get("redirect") || "/";
 
@@ -40,7 +45,13 @@ export default function SignupPage() {
       setMessage("비밀번호가 일치하지 않습니다");
       return;
     }
+    if (!consentPrivacy || !consentTerms) {
+      setMessage("개인정보 처리 방침과 이용 약관에 모두 동의해 주세요");
+      return;
+    }
     setLoading(true);
+    // 동의 마커 저장(콜백 성공 시 서버에 기록)
+    markConsentInClient({ privacy: consentPrivacy, terms: consentTerms });
     const res = await signupWithPassword(em, pw, redirect);
     setLoading(false);
     if (!res.ok) {
@@ -91,10 +102,53 @@ export default function SignupPage() {
         >
           {loading ? "가입 중..." : "가입하기"}
         </button>
+        <div className="mt-4 flex flex-col gap-2 text-xs text-gray-600">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
+            <span>
+              <Link href="/privacy" className="underline">개인정보 처리 방침</Link>에 동의 (필수)
+            </span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} />
+            <span>
+              <Link href="/terms" className="underline">이용 약관</Link>에 동의 (필수)
+            </span>
+          </label>
+        </div>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={async () => {
+              setMessage(null);
+              if (!consentPrivacy || !consentTerms) {
+                setMessage('개인정보 처리 방침과 이용 약관에 모두 동의해 주세요');
+                return;
+              }
+              try {
+                const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+                const redirectTo = `${site}/auth/callback?redirect=${encodeURIComponent(redirect)}&flow=login`;
+                markConsentInClient({ privacy: consentPrivacy, terms: consentTerms });
+                await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+              } catch (e: any) {
+                setMessage(e?.message || '구글 로그인 시작 실패');
+              }
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded border px-4 py-2 bg-white hover:bg-gray-50"
+            aria-label="Google로 가입"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.4 31.9 29.1 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14 16.2 18.6 13 24 13c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4 15.9 4 8.7 8.6 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5l-6.1-5c-2 1.5-4.6 2.5-6.9 2.5-5.1 0-9.4-3.1-11.1-7.5l-6.6 5.1C8.6 39.4 15.8 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.3-4.3 7-11.3 7-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4c-11.1 0-20 8.9-20 20s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
+            </svg>
+            <span>Google로 가입</span>
+          </button>
+        </div>
       </form>
       {message && <p className="mt-3 text-sm text-gray-700">{message}</p>}
       <p className="mt-6 text-xs text-gray-500">가입 후 이메일로 받은 확인 링크로 인증을 완료하세요.</p>
     </main>
   );
 }
-

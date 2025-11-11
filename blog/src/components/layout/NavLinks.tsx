@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
+import { useAuthUser } from '@/lib/hooks/useAuthUser';
+import LogoutButton from './LogoutButton';
 
 export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { userId } = useAuthUser();
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -26,7 +29,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
       </button>
       <nav
         className={
-          `items-center gap-3 text-sm text-gray-700 ${open ? 'flex' : 'hidden'} md:flex`
+          `items-center text-sm text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-4 md:gap-3`
         }
       >
         <Link
@@ -42,6 +45,17 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
           >
             작성
           </Link>
+        )}
+        {userId && (
+          <Link
+            href="/mypage"
+            className={`hover:underline ${isActive('/mypage') ? 'font-semibold text-black' : ''} md:hidden`}
+          >
+            내 계정
+          </Link>
+        )}
+        {userId && (
+          <span className="md:hidden"><LogoutButton /></span>
         )}
       </nav>
     </div>

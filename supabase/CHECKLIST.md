@@ -14,3 +14,16 @@
 - [x] 정책 테스트 포인트 문서화
 
 정책/스키마는 요구사항을 충족하도록 설계되어 있으며, Supabase SQL Editor에서 순서대로 실행하면 적용됩니다.
+
+---
+
+## 운영자 작업 체크리스트 (해야 할 일)
+
+- [ ] Google Cloud에서 OAuth 클라이언트 생성 (Authorized redirect: `https://<REF>.supabase.co/auth/v1/callback`)
+- [ ] Supabase Authentication → Providers에서 Google 활성화 및 Client ID/Secret 저장
+- [ ] `.env.local` 설정 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`)
+- [ ] 개발 서버 포트와 `NEXT_PUBLIC_SITE_URL` 일치 확인(예: `http://localhost:3023`)
+- [ ] 브라우저 이전 세션/쿠키 정리 후 로그인 재검증
+- [ ] 개인정보 처리 방침(`/privacy`)과 이용 약관(`/terms`) 최신 본문 반영
+- [ ] `rss.xml`, `atom.xml`, `sitemap.xml` 생성 라우트 정상 동작 확인
+- [ ] 댓글/북마크 API 라우트 권한 및 RLS 정책 점검

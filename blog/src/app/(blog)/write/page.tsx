@@ -30,6 +30,7 @@ export default function WritePage() {
   }, []);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [slugEdited, setSlugEdited] = useState(false);
   const [content, setContent] = useState('');
   const [cover, setCover] = useState<string | null>(null);
   const HEADINGS = ['자유게시판','키움캐치','sns','유머','유용한정보','개발','블로그','기타'] as const;
@@ -73,6 +74,35 @@ export default function WritePage() {
     return text.slice(0, 160);
   };
 
+  // 한글 허용 슬러그 자동 생성
+  const slugifyKorean = (input: string) => {
+    const s = (input || '').normalize('NFKC').trim().toLowerCase();
+    // 공백/구분자 -> 하이픈, 허용 문자만 남김(한글/영문/숫자/하이픈)
+    const replaced = s
+      .replace(/['".,/\\:_#?!()\[\]{}]+/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9ㄱ-ㅎ가-힣-]+/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$|--/g, '-');
+    return replaced.replace(/^-+|-+$/g, '');
+  };
+
+  const isValidSlug = (x: string) => {
+    const v = (x || '').trim().toLowerCase();
+    if (v.length < 3 || v.length > 64) return false;
+    if (!/^[a-z0-9ㄱ-ㅎ가-힣-]+$/.test(v)) return false;
+    if (/--/.test(v)) return false;
+    if (/^-|-$/.test(v)) return false;
+    return true;
+  };
+
+  // 제목 변경 시 자동 슬러그(사용자가 직접 수정하지 않은 경우에만)
+  useEffect(() => {
+    if (!slugEdited) {
+      setSlug(slugifyKorean(title));
+    }
+  }, [title, slugEdited]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus(null);
@@ -81,16 +111,7 @@ export default function WritePage() {
     const t = (title || '').trim();
     const s = (slug || '').trim();
     if (!t) { setToast({ type: 'error', message: '제목을 입력하세요' }); return; }
-    // 슬러그 형식: 소문자/숫자/하이픈, 앞뒤 하이픈 금지, 연속 하이픈 금지, 3~64자
-    const isValidSlug = (x: string) => {
-      const v = x.toLowerCase();
-      if (v.length < 3 || v.length > 64) return false;
-      if (!/^[a-z0-9-]+$/.test(v)) return false;
-      if (/--/.test(v)) return false;
-      if (/^-|-$/.test(v)) return false;
-      return true;
-    };
-    if (!isValidSlug(s)) { setToast({ type: 'error', message: '슬러그는 소문자/숫자/하이픈, 3~64자이며 앞뒤/연속 하이픈 불가' }); return; }
+    if (!isValidSlug(s)) { setToast({ type: 'error', message: '슬러그는 한글/영문/숫자/하이픈, 3~64자이며 앞뒤/연속 하이픈 불가' }); return; }
     setIsSubmitting(true);
     // 중복 확인은 서버에서 처리(고유 제약 조건)하고 에러 메시지로 안내
     const res = await fetch('/api/posts', {
@@ -158,16 +179,16 @@ export default function WritePage() {
       >
         <label className="block text-sm font-medium mb-1" htmlFor="title">제목</label>
         <input id="title" className="border rounded w-full p-2" placeholder="제목" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
-        <label className="block text-sm font-medium mt-3 mb-1" htmlFor="slug">슬러그</label>
+        <label className="block text-sm font-medium mt-3 mb-1" htmlFor="slug">슬러그(제목에서 자동 생성)</label>
         <input
           id="slug"
           className="border rounded w-full p-2"
-          placeholder="슬러그(소문자/숫자/하이픈)"
+          placeholder="슬러그(한글/영문/숫자/하이픈)"
           aria-describedby="slug-help"
           value={slug}
-          onChange={(e) => setSlug(e.target.value)}
+          onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
         />
-        <p id="slug-help" className="text-xs text-gray-500">예: my-first-post · 3~64자, 앞뒤/연속 하이픈 불가</p>
+        <p id="slug-help" className="text-xs text-gray-500">제목을 바꾸면 자동으로 슬러그가 채워집니다. 필요 시 직접 수정 가능 · 3~64자, 앞뒤/연속 하이픈 불가</p>
         <div>
           <p className="text-sm text-gray-600 mb-1">커버 이미지</p>
           <CoverUpload value={cover} onChange={setCover} />

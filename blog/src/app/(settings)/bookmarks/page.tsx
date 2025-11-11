@@ -8,9 +8,9 @@ import { useAuthUser } from '@/lib/hooks/useAuthUser';
 
 export default function BookmarksPage() {
   const router = useRouter();
-  const { userId } = useAuthUser();
+  const { userId, loading } = useAuthUser();
   const [bookmarks, setBookmarks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(true);
   const [sort, setSort] = useState<'new' | 'old' | 'title'>('new');
 
   const displayed = [...bookmarks].sort((a, b) => {
@@ -24,13 +24,13 @@ export default function BookmarksPage() {
     return sort === 'new' ? db - da : da - db;
   });
 
-  // 로그인 가드: 훅 기반으로 빠르게 판별
+  // 로그인 가드: 로딩 종료 후 미로그인이면 로그인 페이지로 이동
   useEffect(() => {
-    if (userId === null) {
+    if (!loading && userId === null) {
       router.replace('/login?redirect=/bookmarks');
-      setLoading(false);
+      setListLoading(false);
     }
-  }, [userId, router]);
+  }, [loading, userId, router]);
 
   // 데이터 로드: 사용자 존재 시에만 호출
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function BookmarksPage() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       setBookmarks((data || []).filter((b: any) => b.posts));
-      setLoading(false);
+      setListLoading(false);
     };
     load();
   }, [userId]);

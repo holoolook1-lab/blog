@@ -14,6 +14,8 @@ export default function Footer() {
           <Link href="/rss.xml" className="hover:underline">RSS</Link>
           <Link href="/atom.xml" className="hover:underline">Atom</Link>
           <Link href="/feed.xml" className="hover:underline">JSON Feed</Link>
+          <Link href="/privacy" className="hover:underline">개인정보 처리 방침</Link>
+          <Link href="/terms" className="hover:underline">이용 약관</Link>
         </div>
         <p className="text-xs text-gray-400">© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
       </div>

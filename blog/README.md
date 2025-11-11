@@ -53,12 +53,66 @@
 - `NEXT_PUBLIC_SITE_NAME`
 - `NEXT_PUBLIC_SITE_DESCRIPTION`
 
-## TODO
-- 에디터 고도화(TipTap/Lexical)
-- 프로필 사용자명 중복 검사 및 UX 정리
-- 토스트 메시지 일관화(댓글/폼 전반)
-- 공유 버튼 확장
-- 이미지 최적화 파라미터/placeholder 개선
+## Google 로그인 설정 가이드 (Next.js + Supabase)
+
+이 프로젝트는 Supabase OAuth와 Next.js App Router를 사용해 Google 로그인을 지원합니다. 아래 단계를 순서대로 진행하세요.
+
+1) Google Cloud에서 OAuth 클라이언트 생성
+- Google Cloud Console → API & Services → Credentials → Create Credentials → OAuth Client ID
+- Application type: Web application
+- Authorized JavaScript origins: 로컬 개발(`http://localhost:3000` 또는 실제 사용 포트) 및 운영 도메인 추가
+- Authorized redirect URIs: `https://<YOUR-PROJECT-REF>.supabase.co/auth/v1/callback`
+  - Supabase가 Google 인증을 처리한 후, 앱에서 지정한 `redirectTo`(예: `/auth/callback`)로 다시 리다이렉트합니다.
+- 생성된 Client ID/Secret을 보관합니다.
+
+2) Supabase Auth에 Google Provider 설정
+- Supabase Dashboard → Authentication → Providers → Google 활성화
+- Client ID / Client Secret 입력 후 저장
+
+3) 앱 환경변수 설정
+- `blog/.env.local`에 다음 값을 설정합니다.
+  - `NEXT_PUBLIC_SUPABASE_URL` = Supabase 프로젝트 URL
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon 키
+  - `NEXT_PUBLIC_SITE_URL` = 로컬 개발 사이트 주소(예: `http://localhost:3023`) 또는 운영 도메인
+- 개발 서버를 재시작합니다.
+
+4) 코드 경로 및 동작
+- 로그인 페이지: `src/app/(auth)/login/page.tsx`
+  - `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })`
+  - `redirectTo`는 `${NEXT_PUBLIC_SITE_URL}/auth/callback?flow=login&redirect=...` 형태로 구성
+- 콜백 라우트: `src/app/auth/callback/route.ts`
+  - `createServerClient(projectUrl, anonKey, { cookies })`로 세션 교환 처리
+  - 환경변수가 누락된 경우 `missing_supabase_env`로 안전 리다이렉트
+- 비밀번호 로그인: `src/app/(auth)/login/actions.ts` 및 `src/app/(auth)/signup/actions.ts`
+  - `/api/auth/session`에서 서버 세션 토큰을 받아 클라이언트 `supabase.auth.setSession`로 동기화
+
+5) 검증 체크리스트
+- 로그인 페이지에서 Google로 로그인 클릭 시, 동의 화면 → 본인 계정 선택 → 사이트로 복귀가 되는지 확인
+- 복귀 후 `auth_success=login` 쿼리 파라미터가 붙고, 헤더/프로필 섹션에서 사용자 상태가 반영되는지 확인
+- 이메일·비밀번호 로그인도 정상 동작하는지, 에러 메시지/로딩 상태가 적절히 표시되는지 확인
+- 개인정보 처리 방침(`/privacy`)과 이용 약관(`/terms`) 동의 체크박스가 로그인/회원가입 화면에 표시되는지 확인
+
+6) 주의 사항
+- 로컬 포트가 기본 3000이 아닌 경우(`3023` 등), `NEXT_PUBLIC_SITE_URL`을 해당 포트로 맞춰야 Google 로그인 콜백이 정상 복귀합니다.
+- 브라우저에 이전 프로젝트의 세션/쿠키가 남아 있으면 `refresh_token` 요청 에러가 발생할 수 있습니다. 사이트 데이터 삭제 후 재시도하세요.
+
+## 운영자 체크리스트 (해야 할 일)
+
+- [ ] Supabase SQL 적용: `supabase/sql` 내 01~06 파일을 순서대로 실행
+- [ ] 스토리지 버킷 `blog-images` 생성 및 RLS 적용(필요 시 `/api/storage/setup` 호출)
+- [ ] Google OAuth: Google Cloud에서 OAuth 클라이언트 생성 및 Supabase Provider 활성화
+- [ ] `.env.local` 구성: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`
+- [ ] 서비스 롤 키(선택): 서버에서만 사용, 운영 배포 환경변수로 설정
+- [ ] 정책/문서 최신화: 개인정보 처리 방침/이용 약관 텍스트 및 버전 관리
+- [ ] 기본 페이지/피드 확인: `/login`, `/signup`, `/privacy`, `/terms`, `rss.xml`, `atom.xml`, `sitemap.xml`
+- [ ] 댓글/북마크/좋아요 등 핵심 기능 점검 및 토스트 메시지 일관성 확인
+
+## TODO (상태 업데이트)
+- [x] 에디터 고도화 — TipTap 도입 완료 (Lexical 전환은 선택)
+- [x] 프로필 사용자명 중복 검사 및 UX 정리 — 중복 확인/검증/피드백 적용
+- [x] 토스트 메시지 일관화 — `ActionToast` 공용 컴포넌트로 댓글/폼 등 적용
+- [x] 공유 버튼 확장 — Web Share API + 카카오톡(옵션, `NEXT_PUBLIC_KAKAO_JS_KEY` 필요)
+- [x] 이미지 최적화 파라미터/placeholder 개선 — Supabase 변환 파라미터 + Blur Placeholder 적용
 
 ## 아키텍처 및 컨벤션 업데이트
 
@@ -77,7 +131,7 @@
 
 - Dead code: 표준 검색 기준에서 발견되지 않음.
 - import/export: 주요 페이지와 라우트 핸들러의 모듈 의존성이 정상 동작.
-- 중복 구현: Supabase URL/KEY 환경변수 조회가 여러 파일(`posts/page.tsx`, `posts/[slug]/page.tsx`, `atom.xml/route.ts`, `rss.xml/route.ts`, `sitemap.ts`)에 반복됨. 다음 라운드에서 공통 유틸로 정리 예정.
+- Supabase 환경변수 접근: `createPublicSupabaseClient()` 유틸로 통일(피드/사이트맵/목록/상세 모두 적용).
 - 쿠키 접근 패턴: 서버/라우트/클라이언트 각각 표준화하여 `TypeError` 계열 오류를 방지.
 
 ## 개발 진행 로그
@@ -90,6 +144,6 @@
 
 ## 다음 작업 제안
 
-- Supabase 환경변수 접근을 공통 유틸로 통일하여 중복 제거.
-- 북마크 페이지에 정렬/필터 옵션 추가(최신/제목/좋아요 수 등).
-- `PostCard`에 `showExcerpt` 옵션 도입(목록/스크랩에서 요약 표시 제어).
+- [x] Supabase 환경변수 접근 공통 유틸 통일 — `createPublicSupabaseClient()` 적용 완료.
+- [x] `PostCard`에 `showExcerpt` 옵션 — 도입 완료(목록/스크랩에서 요약 표시 제어).
+- [ ] 북마크 페이지 필터 옵션 추가 — 정렬은 완료(`최신/오래된/제목`), 필터(카테고리 등)는 추후.

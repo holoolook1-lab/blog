@@ -94,15 +94,6 @@ drop policy if exists "daily_visits: insert any" on public.daily_visits;
 create policy "daily_visits: insert any" on public.daily_visits
   for insert with check (true);
 
--- updated_at 자동 갱신 트리거 (votes만 필요)
-create or replace function public.set_updated_at()
-returns trigger as $$
-begin
-  new.updated_at := now();
-  return new;
-end;
-$$ language plpgsql;
-
 drop trigger if exists set_updated_at_votes on public.votes;
 create trigger set_updated_at_votes
 before update on public.votes

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { compressToWebp } from '@/lib/utils/imageClient';
 import { getOptimizedImageUrl } from '@/lib/utils/image';
 
@@ -7,6 +7,7 @@ export default function CoverUpload({ value, onChange }: { value?: string | null
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -77,9 +78,17 @@ export default function CoverUpload({ value, onChange }: { value?: string | null
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <input type="file" accept="image/*" onChange={onSelect} />
+        <input ref={inputRef} type="file" accept="image/*" onChange={onSelect} className="hidden" />
+        <button
+          type="button"
+          className="inline-flex items-center rounded px-3 py-2 bg-black text-white text-sm hover:bg-black/85"
+          onClick={() => inputRef.current?.click()}
+          aria-label="커버 이미지 선택"
+        >
+          이미지 선택
+        </button>
         {value && (
-          <button type="button" className="border rounded px-2 py-1" onClick={() => onChange(null)}>
+          <button type="button" className="border rounded px-2 py-2 text-sm hover:bg-gray-50" onClick={() => onChange(null)}>
             제거
           </button>
         )}
