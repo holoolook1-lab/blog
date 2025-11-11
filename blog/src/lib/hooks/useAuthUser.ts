@@ -15,7 +15,7 @@ export function useAuthUser(): { userId: string | null; email: string | null; lo
     let alive = true;
     supabase.auth
       .getUser()
-      .then(({ data }) => {
+      .then(({ data }: { data: { user: { id?: string; email?: string } | null } }) => {
         if (!alive) return;
         const user = data.user || null;
         setUserId(user?.id || null);
@@ -29,7 +29,7 @@ export function useAuthUser(): { userId: string | null; email: string | null; lo
         setLoading(false);
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (!alive) return;
       const user = session?.user || null;
       setUserId(user?.id || null);

@@ -17,7 +17,7 @@ export async function GET() {
       .limit(20);
     const entries = (posts || [])
       .map(
-        (p) => `\n  <entry>\n    <title>${p.title}</title>\n    <link href="${site}/posts/${p.slug}"/>\n    <id>${site}/posts/${p.slug}</id>\n    <updated>${new Date(p.updated_at).toISOString()}</updated>\n    ${p.heading ? `<category term="${esc(p.heading)}"/>` : ''}\n    <summary><![CDATA[${p.excerpt || ''}]]></summary>\n  </entry>`
+        (p: any) => `\n  <entry>\n    <title>${p.title}</title>\n    <link href="${site}/posts/${p.slug}"/>\n    <id>${site}/posts/${p.slug}</id>\n    <updated>${new Date(p.updated_at).toISOString()}</updated>\n    ${p.heading ? `<category term="${esc(p.heading)}"/>` : ''}\n    <summary><![CDATA[${p.excerpt || ''}]]></summary>\n  </entry>`
       )
       .join('');
     const xml = `<?xml version="1.0" encoding="utf-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom">\n  <title>${name}</title>\n  <link href="${site}"/>\n  <updated>${new Date().toISOString()}</updated>${entries}\n</feed>`;

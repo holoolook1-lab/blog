@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'invalid_payload' }, { status: 400 });
     }
 
-    const ip = req.headers.get('x-forwarded-for') || req.ip || null as any;
+    const ip = (req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')) as string | null;
     const user_agent = req.headers.get('user-agent') || null;
     const { error } = await supabase
       .from('agreements')
@@ -38,4 +38,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: e?.message || 'unknown_error' }, { status: 500 });
   }
 }
-

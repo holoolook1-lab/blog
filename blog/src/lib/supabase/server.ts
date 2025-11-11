@@ -9,7 +9,7 @@ export const getServerSupabase = async () => {
     return null as unknown as ReturnType<typeof createServerClient>;
   }
   const store = await cookies();
-  return createServerClient(url, key, {
+  return createServerClient(url!, key!, {
     cookies: {
       get(name: string) {
         return store.get(name)?.value;

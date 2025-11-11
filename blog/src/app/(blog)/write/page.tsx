@@ -16,7 +16,7 @@ export default function WritePage() {
   useEffect(() => {
     let alive = true;
     supabase.auth.getUser()
-      .then(({ data }) => {
+      .then(({ data }: { data: { user: any } }) => {
         if (alive && !data.user) {
           window.location.href = '/login?redirect=/write';
         }

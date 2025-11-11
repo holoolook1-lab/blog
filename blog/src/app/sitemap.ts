@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const supabase = createPublicSupabaseClient();
     const { data: posts } = await supabase.from('posts').select('slug, updated_at').eq('published', true);
-    const items: MetadataRoute.Sitemap = (posts || []).map((p) => ({
+    const items: MetadataRoute.Sitemap = (posts || []).map((p: any) => ({
       url: `${site}/posts/${p.slug}`,
       lastModified: p.updated_at || now,
       changeFrequency: 'weekly' as const,

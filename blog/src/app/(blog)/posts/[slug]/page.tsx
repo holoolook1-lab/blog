@@ -133,7 +133,7 @@ export default async function PostDetailPage({ params }: Params) {
         .eq('user_id', post.user_id)
         .eq('published', true);
       const postCount = (authorPosts || []).length;
-      const likeSum = (authorPosts || []).reduce((sum, p: any) => sum + (p.like_count || 0), 0);
+      const likeSum = (authorPosts || []).reduce((sum: number, p: any) => sum + (p.like_count || 0), 0);
       authorScore = postCount * 2 + likeSum * 1;
       authorLevel = authorScore >= 1000 ? 'platinum' : authorScore >= 500 ? 'gold' : authorScore >= 100 ? 'silver' : 'bronze';
     }

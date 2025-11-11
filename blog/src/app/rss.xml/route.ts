@@ -16,7 +16,7 @@ export async function GET() {
       .limit(20);
     const items = (posts || [])
       .map(
-        (p) => `\n  <item>\n    <title>${p.title}</title>\n    <link>${site}/posts/${p.slug}</link>\n    <guid>${site}/posts/${p.slug}</guid>\n    ${p.heading ? `<category><![CDATA[${p.heading}]]></category>` : ''}\n    <description><![CDATA[${p.excerpt || ''}]]></description>\n    <pubDate>${new Date(p.updated_at).toUTCString()}</pubDate>\n  </item>`
+        (p: any) => `\n  <item>\n    <title>${p.title}</title>\n    <link>${site}/posts/${p.slug}</link>\n    <guid>${site}/posts/${p.slug}</guid>\n    ${p.heading ? `<category><![CDATA[${p.heading}]]></category>` : ''}\n    <description><![CDATA[${p.excerpt || ''}]]></description>\n    <pubDate>${new Date(p.updated_at).toUTCString()}</pubDate>\n  </item>`
       )
       .join('');
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n<channel>\n  <title>${name}</title>\n  <link>${site}</link>\n  <description>${description}</description>${items}\n</channel>\n</rss>`;

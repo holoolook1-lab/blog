@@ -55,7 +55,7 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
           .eq('user_id', authorId)
           .eq('published', true);
         const count = (posts || []).length;
-        const likes = (posts || []).reduce((sum, p: any) => sum + (p.like_count || 0), 0);
+        const likes = (posts || []).reduce((sum: number, p: any) => sum + (p.like_count || 0), 0);
         if (alive) { setPostCount(count); setLikeSum(likes); }
       } catch {}
       if (alive) setLoading(false);

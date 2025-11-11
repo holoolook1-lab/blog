@@ -55,7 +55,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
     if (ids.length) {
       const { data } = await supabase.from('profiles').select('id, username, avatar_url').in('id', ids);
       const map: Record<string, Profile> = {};
-      (data || []).forEach((p) => { map[p.id] = p as Profile; });
+      (data || []).forEach((p: any) => { map[p.id] = p as Profile; });
       setProfiles(map);
     } else {
       setProfiles({});
@@ -65,7 +65,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
 
   useEffect(() => {
     load();
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
+    supabase.auth.getUser().then(({ data }: { data: { user: { id?: string } | null } }) => setUserId(data.user?.id || null));
   }, [postId]);
 
   // Supabase Realtime: comments 테이블 실시간 반영

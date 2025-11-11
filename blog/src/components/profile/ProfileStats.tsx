@@ -7,7 +7,7 @@ export default function ProfileStats() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
+    supabase.auth.getUser().then(async ({ data }: { data: { user: { id: string } | null } }) => {
       const user = data.user;
       if (!user) return;
       try {
@@ -33,4 +33,3 @@ export default function ProfileStats() {
     </div>
   );
 }
-
