@@ -8,6 +8,6 @@ export default function LogoutButton() {
     await logout('/');
   };
   return (
-    <button onClick={onLogout} className="text-gray-700 hover:underline">로그아웃</button>
+    <button onClick={onLogout} className="text-gray-700 link-tone">로그아웃</button>
   );
 }

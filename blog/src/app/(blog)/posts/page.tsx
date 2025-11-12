@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import ProtectedLink from '@/components/common/ProtectedLink';
+import { outlineButton, outlineButtonSmall } from '@/lib/styles/ui';
 import Image from 'next/image';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
@@ -24,7 +26,7 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   if (supabase) {
     let query = supabase
       .from('posts')
-      .select('id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count, heading')
+      .select('id, user_id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count, heading')
       .eq('published', true);
     if (q) {
       const like = `%${q}%`;
@@ -54,7 +56,37 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
         .range(from, to);
       data = all || null;
     }
-    posts = data || [];
+    // 중복 제거: 동일 id/slug가 들어오는 경우 방지
+    const seen = new Set<string>();
+    const deduped = (data || []).filter((p: any) => {
+      const key = p.id || p.slug;
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    posts = deduped || [];
+
+    // 작성자 닉네임 매핑: profiles.username이 있으면 닉네임으로 표시, 없으면 user_id 표시
+    const userIds = Array.from(new Set((posts || []).map((p: any) => p.user_id).filter(Boolean)));
+    let profiles: Record<string, { name: string; avatar: string }> = {};
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds as any);
+      (profs || []).forEach((pr: any) => {
+        profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+      });
+    }
+
+    // 작성자 표시를 위해 posts에 authorName을 임시 주입 (렌더링에서 사용)
+    posts = (posts || []).map((p: any) => ({
+      ...p,
+      __authorName: (profiles[p.user_id]?.name || p.user_id || ''),
+      __authorAvatar: (profiles[p.user_id]?.avatar || ''),
+    }));
 
     // 총 결과 개수 조회
     let countQuery = supabase
@@ -98,7 +130,9 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
           <div className="border rounded p-6 text-center space-y-2">
             <p className="text-sm text-gray-600">아직 공개된 포스트가 없습니다.</p>
             <p className="text-sm text-gray-600">첫 글을 작성해보세요!</p>
-            <Link href="/write" className="inline-flex items-center justify-center border rounded px-3 py-1 text-sm hover:bg-gray-50">글 작성하기</Link>
+            <ProtectedLink href="/write" className={outlineButton} ariaLabel="글 작성하기">
+              글 작성하기
+            </ProtectedLink>
           </div>
         )}
       </main>
@@ -106,7 +140,7 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   }
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-4">
+    <main id="main" className="max-w-3xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">포스트</h1>
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600" aria-live="polite">
@@ -122,15 +156,15 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
       </div>
       <ul className="grid gap-6">
         {(posts || []).map((p) => (
-          <PostCard key={p.id} post={p} variant="borderless" />
+          <PostCard key={p.id} post={p} variant="polaroid" authorName={(p as any).__authorName} authorAvatarUrl={(p as any).__authorAvatar} />
         ))}
       </ul>
       <div className="flex items-center justify-between pt-2">
         {safePage > 1 ? (
-          <Link href={`/posts?page=${safePage - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm underline">이전</Link>
+          <Link href={`/posts?page=${safePage - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm link-gauge">이전</Link>
         ) : <span />}
         {(posts || []).length === pageSize ? (
-          <Link href={`/posts?page=${safePage + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm underline">더 보기</Link>
+          <Link href={`/posts?page=${safePage + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm link-gauge">더 보기</Link>
         ) : (
           <span className="text-sm text-gray-500">마지막 페이지</span>
         )}

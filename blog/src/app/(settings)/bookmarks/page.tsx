@@ -48,15 +48,39 @@ export default function BookmarksPage() {
   }, [userId]);
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-4">
+    <main id="main" className="max-w-3xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">스크랩</h1>
       {loading ? (
-        <p className="text-sm text-gray-600">불러오는 중…</p>
+        <div className="space-y-4" aria-busy="true" aria-live="polite">
+          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+          <div className="grid gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded border p-4">
+                <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-3 h-20 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : userId === null ? (
         <>
           <p className="text-sm text-gray-600">로그인 후 이용 가능합니다.</p>
-          <Link href="/login?redirect=/bookmarks" className="underline">로그인하기</Link>
+        <Link href="/login?redirect=/bookmarks" className="link-gauge">로그인하기</Link>
         </>
+      ) : listLoading ? (
+        <div className="space-y-4" aria-busy="true" aria-live="polite">
+          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+          <div className="grid gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="rounded border p-4">
+                <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-3 h-20 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : bookmarks.length === 0 ? (
         <div className="p-6 text-center space-y-2">
           <p className="text-sm text-gray-600">스크랩한 글이 없습니다.</p>
@@ -84,7 +108,7 @@ export default function BookmarksPage() {
             {displayed.map((b: any) => (
               <PostCard
                 key={b.post_id}
-                variant="borderless"
+                variant="polaroid"
                 showExcerpt={true}
                 post={{
                   id: b.post_id,

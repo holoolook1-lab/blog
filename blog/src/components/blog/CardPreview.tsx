@@ -19,7 +19,13 @@ export default function CardPreview({ platform, title, url, imageUrl }: CardPrev
       <div className="border rounded-lg overflow-hidden">
         {imageUrl && (
           <div className="relative aspect-[1.91/1] w-full">
-            <Image src={imageUrl} alt={title} fill className="object-cover" />
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 448px"
+              className="object-cover"
+            />
           </div>
         )}
         <div className="p-3 bg-gray-50">

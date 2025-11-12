@@ -4,7 +4,7 @@ import { getServerSupabase } from '@/lib/supabase/server';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-type Params = { params: { slug: string } };
+type Params = { params: Promise<{ slug: string }> };
 
 export default async function OGImage({ params }: Params) {
   // Fetch minimal data for the card
@@ -13,10 +13,11 @@ export default async function OGImage({ params }: Params) {
   try {
     const supabase = await getServerSupabase();
     if (supabase) {
+      const { slug } = await params;
       const { data } = await supabase
         .from('posts')
         .select('title, excerpt')
-        .eq('slug', params.slug)
+        .eq('slug', slug)
         .single();
       title = data?.title || title;
       excerpt = data?.excerpt || '';

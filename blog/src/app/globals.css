@@ -21,3 +21,125 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 이미지 공통 둥근 모서리 적용 */
+img { border-radius: 0.5rem; }
+
+/* 전체 이미지에 은은한 모노톤 적용 (너무 강하지 않게) */
+img {
+  filter: grayscale(0.15) saturate(0.85);
+}
+
+/* 폴로라이드 카드 내 사진은 한 단계 더 담백하게 */
+.polaroid-photo {
+  filter: grayscale(0.35) saturate(0.8);
+}
+
+/* 본문(prose) 내 임베드 미디어 반응형/라운드 처리 */
+.prose iframe,
+.prose video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+/* 접근성: 스킵 링크 스타일 */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -40px;
+  background: #111827; /* gray-900 */
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: top 0.15s ease;
+  z-index: 50;
+}
+.skip-link:focus {
+  top: 8px;
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+/* 글로벌 포커스 가시성 개선 */
+:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+/* 링크 톤 통일: 기본은 잔잔한 회색, 호버는 진한 검정 + 게이지 효과 */
+.link-tone {
+  color: #4b5563; /* gray-600 */
+  text-decoration: none;
+  transition: color 150ms ease, opacity 150ms ease;
+}
+.link-tone:hover { color: #000000; opacity: 0.9; }
+
+/* 게이지형 밑줄 효과: 오른쪽에서 왼쪽으로 채워지는 라인 */
+.link-gauge {
+  position: relative;
+  text-decoration: none;
+  padding-bottom: 2px; /* 라인 공간 확보 */
+}
+.link-gauge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px; /* 더 얇게 */
+  background-color: #111827; /* gray-900 */
+  transform: scaleX(0);
+  transform-origin: right; /* 오른쪽 기준으로 채워짐 */
+  transition: transform 180ms ease-out;
+}
+.link-gauge:hover::after { transform: scaleX(1); }
+.link-gauge:focus-visible::after { transform: scaleX(1); }
+.link-gauge:hover { color: #000000; }
+
+/* 폼 입력 필드 자간/포커스 링 통일 */
+input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  letter-spacing: -0.01em; /* 한국어 가독성 향상 */
+}
+input:focus, textarea:focus, select:focus { outline: none; }
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #111827; /* gray-900 */
+  outline-offset: 2px;
+}
+
+/* 라인 클램프 유틸리티 (웹킷 기반) */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 프로즈(본문) 내 링크에도 게이지 효과 적용, no-underline은 제외 */
+.prose a {
+  position: relative;
+  text-decoration: none;
+  padding-bottom: 2px;
+}
+.prose a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: #111827;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms ease-out;
+}
+.prose a:hover::after { transform: scaleX(1); }
+.prose a:focus-visible::after { transform: scaleX(1); }
+.clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

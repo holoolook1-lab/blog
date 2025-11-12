@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import CoverUpload from '@/components/editor/CoverUpload';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
+import { slugifyKorean, isValidSlug } from '@/lib/slug';
 import ActionToast from '@/components/ui/ActionToast';
 import { supabase } from '@/lib/supabase/client';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 
 const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
   ssr: false,
@@ -33,6 +35,12 @@ export default function WritePage() {
   const [slugEdited, setSlugEdited] = useState(false);
   const [content, setContent] = useState('');
   const [cover, setCover] = useState<string | null>(null);
+  // 사용자가 직접 커버를 선택했는지(자동 커버가 덮어쓰지 않도록 잠금)
+  const [coverLocked, setCoverLocked] = useState<boolean>(false);
+  const setCoverManual = (v: string | null) => { setCover(v); setCoverLocked(true); };
+  // 링크 미리보기 상태
+  const [linkPreview, setLinkPreview] = useState<{ url: string; title?: string; description?: string; image?: string } | null>(null);
+  const [linkLoading, setLinkLoading] = useState<boolean>(false);
   const HEADINGS = ['자유게시판','키움캐치','sns','유머','유용한정보','개발','블로그','기타'] as const;
   const [heading, setHeading] = useState<string>('');
   const [status, setStatus] = useState<string | null>(null);
@@ -74,27 +82,75 @@ export default function WritePage() {
     return text.slice(0, 160);
   };
 
-  // 한글 허용 슬러그 자동 생성
-  const slugifyKorean = (input: string) => {
-    const s = (input || '').normalize('NFKC').trim().toLowerCase();
-    // 공백/구분자 -> 하이픈, 허용 문자만 남김(한글/영문/숫자/하이픈)
-    const replaced = s
-      .replace(/['".,/\\:_#?!()\[\]{}]+/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9ㄱ-ㅎ가-힣-]+/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$|--/g, '-');
-    return replaced.replace(/^-+|-+$/g, '');
+  // 콘텐츠 기반 커버 자동 제안 (이미지/YouTube/Dailymotion + 플랫폼 폴백)
+  type CoverSuggestion = { url: string; platform?: string } | null;
+  const suggestCoverFromContent = (html: string): CoverSuggestion => {
+    const safe = sanitizeHtml(html || '');
+    // 본문 첫 이미지
+    const img = safe.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+    if (img?.[1]) return { url: img[1], platform: 'image' };
+    // YouTube
+    const y = safe.match(/(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/i);
+    if (y?.[1]) return { url: `https://img.youtube.com/vi/${y[1]}/hqdefault.jpg`, platform: 'youtube' };
+    // Dailymotion
+    const d = safe.match(/dailymotion\.com\/(?:embed\/video|video)\/([a-z0-9]+)/i);
+    if (d?.[1]) return { url: `https://www.dailymotion.com/thumbnail/video/${d[1]}`, platform: 'dailymotion' };
+    // NaverTV (공개 썸네일 URL 불명확 → 폴백 이미지 제안)
+    const n = safe.match(/tv\.naver\.com\/(?:v|embed)\/([0-9]+)/i);
+    if (n?.[1]) return { url: '/window.svg', platform: 'navertv' };
+    // Instagram/Facebook (oEmbed 필요 → 폴백 이미지 제안)
+    const ig = safe.match(/instagram\.com\/(p|reel|tv)\//i);
+    if (ig) return { url: '/window.svg', platform: 'instagram' };
+    const fb = safe.match(/facebook\.com\//i);
+    if (fb) return { url: '/window.svg', platform: 'facebook' };
+    return null;
   };
+  const suggested = suggestCoverFromContent(content);
 
-  const isValidSlug = (x: string) => {
-    const v = (x || '').trim().toLowerCase();
-    if (v.length < 3 || v.length > 64) return false;
-    if (!/^[a-z0-9ㄱ-ㅎ가-힣-]+$/.test(v)) return false;
-    if (/--/.test(v)) return false;
-    if (/^-|-$/.test(v)) return false;
-    return true;
-  };
+  // 자동 커버 적용: 이미지 최우선 → 링크 카드 썸네일 → 플랫폼 폴백
+  useEffect(() => {
+    if (coverLocked) return; // 사용자가 직접 설정했다면 자동 적용하지 않음
+    const firstImage = suggested?.platform === 'image' ? suggested.url : null;
+    const platformFallback = suggested && suggested.platform !== 'image' ? suggested.url : null;
+    const linkImage = linkPreview?.image || null;
+    const next = firstImage || linkImage || platformFallback || null;
+    if (next && next !== cover) setCover(next);
+  }, [content, suggested?.url, suggested?.platform, linkPreview?.image, coverLocked]);
+
+  // 콘텐츠에서 URL 감지 → 링크 프리뷰 요청 (엔터 입력 후 자동 링크화되어도 onChange로 감지)
+  useEffect(() => {
+    const safe = sanitizeHtml(content || '');
+    // 우선 anchor href 추출
+    const mHref = safe.match(/<a[^>]+href=["']([^"']+)["'][^>]*>/i);
+    // 폴백: 텍스트 안의 첫 http(s) URL 추출 (공백/태그 제외)
+    const mText = mHref ? null : safe.replace(/<[^>]+>/g, ' ').match(/https?:\/\/[^\s]+/i);
+    const found = (mHref?.[1] || mText?.[0] || '').trim();
+    // 이미지/비디오/embed가 아닌 일반 링크만 처리
+    const isMedia = /\.(jpg|jpeg|png|webp|gif|mp4|webm|ogg)(\?.*)?$/i.test(found) || /(youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|instagram\.com|facebook\.com|tv\.naver\.com|tiktok\.com)/i.test(found);
+    if (found && !isMedia) {
+      // 동일 링크 반복 요청 방지
+      if (linkPreview?.url === found || linkLoading) return;
+      let alive = true;
+      setLinkLoading(true);
+      fetch(`/api/link-preview?url=${encodeURIComponent(found)}`)
+        .then((r) => r.json())
+        .then((j) => {
+          if (!alive) return;
+          if (j?.ok) {
+            setLinkPreview({ url: found, title: j.title, description: j.description, image: j.image });
+          } else {
+            setLinkPreview({ url: found });
+          }
+        })
+        .catch(() => { if (alive) setLinkPreview({ url: found }); })
+        .finally(() => { if (alive) setLinkLoading(false); });
+      return () => { alive = false; };
+    }
+    // 링크가 없으면 프리뷰 초기화(사용자가 삭제한 경우)
+    if (!found && linkPreview) setLinkPreview(null);
+  }, [content]);
+
+  // 공통 유틸 사용: slugifyKorean / isValidSlug
 
   // 제목 변경 시 자동 슬러그(사용자가 직접 수정하지 않은 경우에만)
   useEffect(() => {
@@ -127,7 +183,7 @@ export default function WritePage() {
         localStorage.removeItem('draft:write');
       } catch {}
       setTimeout(() => {
-        window.location.href = `/posts/${s}`;
+      window.location.href = `/posts/${encodeURIComponent(s)}`;
       }, 500);
     }
     setIsSubmitting(false);
@@ -191,7 +247,60 @@ export default function WritePage() {
         <p id="slug-help" className="text-xs text-gray-500">제목을 바꾸면 자동으로 슬러그가 채워집니다. 필요 시 직접 수정 가능 · 3~64자, 앞뒤/연속 하이픈 불가</p>
         <div>
           <p className="text-sm text-gray-600 mb-1">커버 이미지</p>
-          <CoverUpload value={cover} onChange={setCover} />
+          <CoverUpload value={cover} onChange={setCoverManual} />
+          {/* 자동 제안: 콘텐츠에서 썸네일을 찾아 제안 + 플랫폼 폴백 */}
+          {suggested && (
+            <div className="mt-2 border rounded p-2 flex items-center gap-3">
+              <img src={suggested.url} alt="제안 커버" className="w-24 h-16 object-cover rounded" loading="lazy" decoding="async" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-600">{suggested.platform === 'image' ? '본문 첫 이미지를 커버로 사용할 수 있어요.' : suggested.platform === 'youtube' ? 'YouTube 썸네일을 자동으로 가져왔습니다.' : suggested.platform === 'dailymotion' ? 'Dailymotion 썸네일을 자동으로 가져왔습니다.' : suggested.platform === 'navertv' ? 'NaverTV는 공개 썸네일 제공이 제한되어 기본 이미지를 제안합니다.' : suggested.platform === 'instagram' ? 'Instagram은 썸네일 API 제약으로 기본 이미지를 제안합니다.' : suggested.platform === 'facebook' ? 'Facebook은 썸네일 API 제약으로 기본 이미지를 제안합니다.' : '콘텐츠에서 추출한 썸네일을 커버로 설정할 수 있어요.'}</p>
+                <button type="button" className="mt-1 px-2 py-1 border rounded text-xs hover:bg-gray-50" onClick={() => setCoverManual(suggested.url)}>이 썸네일을 커버로 설정</button>
+              </div>
+            </div>
+          )}
+          {!suggested && (
+            <p className="mt-1 text-xs text-gray-500">콘텐츠에서 자동으로 찾을 수 있는 썸네일이 없습니다. 저장 시 서버가 주요 플랫폼 포함 글이면 썸네일을 자동 적용합니다.</p>
+          )}
+          {/* 링크 프리뷰: 일반 기사/페이지 링크 붙여넣기 시 카드 미리보기 + 커버 설정 버튼 */}
+          {linkPreview && (
+            <div className="mt-3 border rounded p-3 bg-gray-50">
+              <p className="text-xs text-gray-600 mb-2">링크 미리보기</p>
+              <div className="flex items-start gap-3">
+                <div className="w-28 h-18 shrink-0 border rounded bg-white overflow-hidden">
+                  {linkPreview.image ? (
+                    <img src={linkPreview.image} alt="링크 이미지" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">이미지 없음</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{linkPreview.title || linkPreview.url}</p>
+                  {linkLoading ? (
+                    <p className="text-xs text-gray-500 mt-0.5">메타데이터 불러오는 중…</p>
+                  ) : (
+                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{linkPreview.description || '설명이 없습니다.'}</p>
+                  )}
+                  <div className="mt-2 flex items-center gap-2">
+                    {linkPreview.image && (
+                      <button type="button" className="px-2 py-1 border rounded text-xs hover:bg-gray-100" onClick={() => setCoverManual(linkPreview.image!)}>이 미리보기 이미지를 커버로 설정</button>
+                    )}
+                    {linkPreview.description && (
+                      <button
+                        type="button"
+                        className="px-2 py-1 border rounded text-xs hover:bg-gray-100"
+                        onClick={() => {
+                          const desc = (linkPreview.description || '').trim();
+                          if (!desc) return;
+                          setContent(`<p>${desc}</p>` + (content || ''));
+                        }}
+                      >설명을 본문 서두에 삽입</button>
+                    )}
+                    <a href={linkPreview.url} target="_blank" rel="noopener noreferrer" className="px-2 py-1 border rounded text-xs hover:bg-gray-100">원문 열기</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mt-3 mb-1" htmlFor="heading">머리말(카테고리)</label>
@@ -206,7 +315,7 @@ export default function WritePage() {
         <EditorBoundary>
           <RichEditor value={content} onChange={setContent} />
         </EditorBoundary>
-        <button className="bg-black text-white px-3 py-1 rounded disabled:opacity-60" type="submit" disabled={isSubmitting}>{isSubmitting ? '작성 중...' : '작성'}</button>
+<button className={`${outlineButtonSmall} disabled:opacity-60`} type="submit" disabled={isSubmitting}>{isSubmitting ? '작성 중...' : '작성'}</button>
         <p className="text-xs text-gray-500">Ctrl+Enter로 빠르게 작성할 수 있습니다.</p>
       </form>
       {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}

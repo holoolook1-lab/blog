@@ -11,7 +11,11 @@ export default function PostsSearch() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      const isTyping = tag === 'input' || tag === 'textarea' || (e.target as HTMLElement)?.isContentEditable;
+      const key = e.key.toLowerCase();
+      if (!isTyping && !e.ctrlKey && !e.metaKey && !e.altKey && (key === 's' || key === '/')) {
+        e.preventDefault();
         inputRef.current?.focus();
       }
     };
@@ -66,7 +70,6 @@ export default function PostsSearch() {
       router.push(next);
     }, 350);
     return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   return (

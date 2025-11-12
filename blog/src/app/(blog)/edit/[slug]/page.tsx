@@ -1,7 +1,8 @@
 import { getServerSupabase } from '@/lib/supabase/server';
 import EditForm from '@/components/blog/EditForm';
+import { normalizeSlug } from '@/lib/slug';
 
-type Params = { params: { slug: string } };
+type Params = { params: Promise<{ slug: string }> };
 
 export default async function EditPage({ params }: Params) {
   const supabase = await getServerSupabase();
@@ -23,10 +24,14 @@ export default async function EditPage({ params }: Params) {
     );
   }
 
+  const { slug } = await params;
+  let clean = (slug || '').toString();
+  try { clean = decodeURIComponent(clean); } catch {}
+  clean = normalizeSlug(clean);
   const { data: post } = await supabase
     .from('posts')
     .select('id, user_id, title, slug, content, cover_image, published')
-    .eq('slug', params.slug)
+    .eq('slug', clean)
     .single();
 
   if (!post) return <main className="max-w-3xl mx-auto p-4">존재하지 않는 포스트입니다.</main>;

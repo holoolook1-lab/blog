@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 
 export default function ReportButton({ slug }: { slug: string }) {
   const [sending, setSending] = useState(false);
@@ -40,7 +41,7 @@ export default function ReportButton({ slug }: { slug: string }) {
       <button
         onClick={handleClick}
         disabled={sending}
-        className="inline-flex items-center px-2 py-1 text-xs rounded border bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50"
+        className={`${outlineButtonSmall} border-red-600 text-red-700 hover:bg-red-50 disabled:opacity-50`}
         aria-label="글 신고"
         title="이 글을 신고합니다"
       >
@@ -52,4 +53,3 @@ export default function ReportButton({ slug }: { slug: string }) {
     </div>
   );
 }
-

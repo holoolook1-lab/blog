@@ -205,7 +205,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                     className="rounded-full"
                   />
                 ) : (
-                  <img src={url} alt="avatar" className="w-6 h-6 rounded-full" />
+                  <img src={url} alt="avatar" className="w-6 h-6 rounded-full" loading="lazy" decoding="async" />
                 );
               })()
             ) : (
@@ -215,14 +215,14 @@ export default function ClientCommentList({ postId }: { postId: string }) {
             )}
             <span>{profiles[c.user_id]?.username || '익명'}</span>
             {userId === c.user_id && <span className="ml-1 bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-[11px]">내 댓글</span>}
-            <span>· {new Date(c.created_at).toLocaleString('ko-KR')}</span>
+            <span>· {formatDateTimeKR(c.created_at)}</span>
           </div>
           {editingId === c.id ? (
             <div className="space-y-2">
               <textarea className="border rounded w-full p-2" value={editContent} onChange={(e) => setEditContent(e.target.value)} />
               <div className="flex gap-2">
-                <button className="bg-black text-white px-3 py-1 rounded" onClick={() => submitEdit(c.id)}>수정 완료</button>
-                <button className="border px-3 py-1 rounded" onClick={() => setEditingId(null)}>취소</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => submitEdit(c.id)}>수정 완료</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => setEditingId(null)}>취소</button>
               </div>
             </div>
           ) : (
@@ -232,14 +232,14 @@ export default function ClientCommentList({ postId }: { postId: string }) {
           <div className="flex gap-2 mt-2">
             {userId === c.user_id && editingId !== c.id && (
               <>
-                <button className="border px-3 py-1 rounded" onClick={() => startEdit(c)}>수정</button>
-                <button className="border px-3 py-1 rounded" onClick={() => remove(c.id)}>삭제</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => startEdit(c)}>수정</button>
+                <button className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`} onClick={() => remove(c.id)}>삭제</button>
               </>
             )}
             {userId ? (
-              <button className="border px-3 py-1 rounded" onClick={() => setReplyToId(replyToId === c.id ? null : c.id)}>답글</button>
+              <button className={`${outlineButtonSmall}`} onClick={() => setReplyToId(replyToId === c.id ? null : c.id)}>답글</button>
             ) : (
-              <button className="border px-3 py-1 rounded" onClick={() => showToast({ type: 'error', message: '로그인 후 답글을 작성할 수 있습니다.' })}>답글</button>
+              <button className={`${outlineButtonSmall}`} onClick={() => showToast({ type: 'error', message: '로그인 후 답글을 작성할 수 있습니다.' })}>답글</button>
             )}
           </div>
 
@@ -270,8 +270,8 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                   {replyContent.length} / {MAX_LEN}
                 </span>
                 <div className="flex gap-2">
-                  <button className="bg-black text-white px-3 py-1 rounded" onClick={() => submitReply(c.id)}>답글 작성</button>
-                  <button className="border px-3 py-1 rounded" onClick={() => setReplyToId(null)}>취소</button>
+                  <button className={`${outlineButtonSmall}`} onClick={() => submitReply(c.id)}>답글 작성</button>
+                  <button className={`${outlineButtonSmall}`} onClick={() => setReplyToId(null)}>취소</button>
                 </div>
               </div>
               <p className="text-xs text-gray-500">Ctrl+Enter로 답글을 빠르게 작성할 수 있습니다.</p>
@@ -300,7 +300,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                             className="rounded-full"
                           />
                         ) : (
-                          <img src={url} alt="avatar" className="w-5 h-5 rounded-full" />
+                          <img src={url} alt="avatar" className="w-5 h-5 rounded-full" loading="lazy" decoding="async" />
                         );
                       })()
                     ) : (
@@ -310,14 +310,14 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                     )}
                     <span>{profiles[r.user_id]?.username || '익명'}</span>
                     {userId === r.user_id && <span className="ml-1 bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-[11px]">내 댓글</span>}
-                    <span>· {new Date(r.created_at).toLocaleString('ko-KR')}</span>
+            <span>· {formatDateTimeKR(r.created_at)}</span>
                   </div>
                   {editingId === r.id ? (
                     <div className="space-y-2">
                       <textarea className="border rounded w-full p-2" value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                       <div className="flex gap-2">
-                        <button className="bg-black text-white px-3 py-1 rounded" onClick={() => submitEdit(r.id)}>수정 완료</button>
-                        <button className="border px-3 py-1 rounded" onClick={() => setEditingId(null)}>취소</button>
+                        <button className={`${outlineButtonSmall}`} onClick={() => submitEdit(r.id)}>수정 완료</button>
+                        <button className={`${outlineButtonSmall}`} onClick={() => setEditingId(null)}>취소</button>
                       </div>
                     </div>
                   ) : (
@@ -326,8 +326,8 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                   <div className="flex gap-2 mt-2">
                     {userId === r.user_id && editingId !== r.id && (
                       <>
-                        <button className="border px-3 py-1 rounded" onClick={() => startEdit(r)}>수정</button>
-                        <button className="border px-3 py-1 rounded" onClick={() => remove(r.id)}>삭제</button>
+                        <button className={`${outlineButtonSmall}`} onClick={() => startEdit(r)}>수정</button>
+                        <button className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`} onClick={() => remove(r.id)}>삭제</button>
                       </>
                     )}
                   </div>
@@ -341,3 +341,5 @@ export default function ClientCommentList({ postId }: { postId: string }) {
     </>
   );
 }
+import { formatDateTimeKR } from '@/lib/date';
+import { outlineButtonSmall } from '@/lib/styles/ui';

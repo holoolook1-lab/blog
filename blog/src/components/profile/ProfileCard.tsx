@@ -1,7 +1,10 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { Crown, Diamond, Medal } from 'lucide-react';
+ import { useEffect, useState } from 'react';
+ import Image from 'next/image';
+ import { supabase } from '@/lib/supabase/client';
+ import Link from 'next/link';
+ import { getOptimizedImageUrl } from '@/lib/utils/image';
+ import { Crown, Diamond, Medal } from 'lucide-react';
 
 type Profile = { username?: string | null; avatar_url?: string | null; bio?: string | null };
 
@@ -82,7 +85,7 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
       ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-100 border"><Crown size={14} /> 골드</span>
       : level === 'silver'
         ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-gray-100 border"><Medal size={14} /> 실버</span>
-        : null;
+        : <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-50 border"><Medal size={14} /> 브론즈</span>;
 
   const username = (profile.username || '').slice(0, 20);
   const fontFamily = 'var(--font-family, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR)';
@@ -94,17 +97,25 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
       style={{ fontFamily }}
       aria-label="작성자 프로필"
     >
-      <div className="flex flex-col sm:flex-row items-start gap-4">
-        <div className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] rounded-full overflow-hidden border" style={{ borderColor: themeColor }}>
+      <div className="flex flex-row lg:flex-col items-start gap-4">
+        <div className="relative w-[72px] h-[72px] sm:w-[120px] sm:h-[120px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border" style={{ borderColor: themeColor }}>
           {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt="프로필 이미지" className="w-full h-full object-cover" />
+            <Image
+              src={getOptimizedImageUrl(profile.avatar_url || '', { width: 150, quality: 85, format: 'webp' })}
+              alt="프로필 이미지"
+              fill
+              sizes="(max-width:640px) 72px, (max-width:1024px) 120px, 150px"
+              className="object-cover"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">이미지 없음</div>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <p className="text-lg font-bold" style={{ color: themeColor }}>{username || '사용자'}</p>
+            <Link href={`/user/${authorId}`} className="text-lg font-bold link-gauge" style={{ color: themeColor }}>
+              {username || '사용자'}
+            </Link>
             {badge}
           </div>
           <div className="mt-2 text-sm text-gray-600">

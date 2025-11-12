@@ -6,6 +6,7 @@ import Monogram from '@/components/brand/Monogram';
 import { SITE_NAME } from '@/lib/brand';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import Image from 'next/image';
+import { outlineButton } from '@/lib/styles/ui';
 
 export default function Header() {
   const { userId, email } = useAuthUser();
@@ -35,12 +36,12 @@ export default function Header() {
   }, [userId]);
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur">
-      <div className="max-w-3xl mx-auto p-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header className="border-b bg-white/80 backdrop-blur antialiased">
+      <div className="max-w-3xl mx-auto px-3 py-2 md:py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 md:gap-3">
           {avatarUrl ? (
             <div className="w-6 h-6 rounded-full overflow-hidden">
-              <img src={avatarUrl} alt="내 아바타" className="w-6 h-6 object-cover" />
+              <img src={avatarUrl} alt="내 아바타" className="w-6 h-6 object-cover" loading="lazy" decoding="async" />
             </div>
           ) : userId && email ? (
             <div className="w-6 h-6 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center">
@@ -49,16 +50,16 @@ export default function Header() {
           ) : (
             <Monogram size={24} />
           )}
-          <Link href="/" className="font-bold" aria-label={(SITE_NAME || '블로그') + ' 홈으로 이동'}>{SITE_NAME || '블로그'}</Link>
+          <Link href="/" className="font-bold text-base md:text-lg tracking-tight break-keep whitespace-nowrap" aria-label={(SITE_NAME || '블로그') + ' 홈으로 이동'}>{SITE_NAME || '블로그'}</Link>
           <NavLinks showWrite={!!userId} />
         </div>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base">
           {userId ? (
             <></>
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center rounded px-4 py-2 bg-black text-white font-medium hover:bg-black/85"
+              className={`${outlineButton} min-h-[44px]`}
               aria-label="로그인"
             >
               로그인

@@ -1,12 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
+import ActionToast from '@/components/ui/ActionToast';
+import { Bookmark } from 'lucide-react';
 
 export default function BookmarkButton({ postId }: { postId: string }) {
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { userId } = useAuthUser();
+  const { requireAuth } = useRequireAuth();
 
   useEffect(() => {
     const is = Boolean(userId);
@@ -25,10 +30,7 @@ export default function BookmarkButton({ postId }: { postId: string }) {
   }, [postId, userId]);
 
   async function toggle() {
-    if (!userId) {
-      setError('로그인 후 이용해주세요.');
-      return;
-    }
+    if (!requireAuth()) return;
     setLoading(true);
     setError(null);
     try {
@@ -57,9 +59,20 @@ export default function BookmarkButton({ postId }: { postId: string }) {
   }
 
   return (
-    <button type="button" className="inline-flex items-center gap-2 border rounded px-2 py-1 text-sm hover:bg-gray-50 disabled:opacity-50" disabled={loading} onClick={toggle}>
-      {bookmarked ? '★ 스크랩 해제' : '☆ 스크랩'}
-      {error && <span className="text-xs text-red-600">{error}</span>}
-    </button>
+    <>
+      <button
+        type="button"
+        className={`${bookmarked ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100' : 'hover:bg-gray-100'} inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm disabled:opacity-50`}
+        disabled={loading}
+        onClick={toggle}
+        aria-label={bookmarked ? '스크랩 해제' : '스크랩'}
+        title={bookmarked ? '스크랩 해제' : '스크랩'}
+      >
+        <Bookmark size={18} className={bookmarked ? 'fill-yellow-500 text-yellow-600' : 'text-gray-700'} />
+        <span className="font-medium">{bookmarked ? '저장됨' : '저장'}</span>
+        {error && <span className="text-xs text-red-600">{error}</span>}
+      </button>
+      {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
+    </>
   );
 }

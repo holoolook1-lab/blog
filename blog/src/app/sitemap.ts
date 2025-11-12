@@ -1,6 +1,7 @@
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import type { MetadataRoute } from 'next';
 import { getPublicSiteMeta } from '@/lib/site';
+import { buildPostUrl } from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -11,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createPublicSupabaseClient();
     const { data: posts } = await supabase.from('posts').select('slug, updated_at').eq('published', true);
     const items: MetadataRoute.Sitemap = (posts || []).map((p: any) => ({
-      url: `${site}/posts/${p.slug}`,
+      url: buildPostUrl(site, p.slug || ''),
       lastModified: p.updated_at || now,
       changeFrequency: 'weekly' as const,
       priority: 0.7,

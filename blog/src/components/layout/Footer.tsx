@@ -11,13 +11,13 @@ export default function Footer() {
         </p>
         <VisitorStats />
         <div className="flex flex-wrap gap-3">
-          <Link href="/rss.xml" className="hover:underline">RSS</Link>
-          <Link href="/atom.xml" className="hover:underline">Atom</Link>
-          <Link href="/feed.xml" className="hover:underline">JSON Feed</Link>
-          <Link href="/privacy" className="hover:underline">개인정보 처리 방침</Link>
-          <Link href="/terms" className="hover:underline">이용 약관</Link>
+          <Link href="/rss.xml" className="link-gauge">RSS</Link>
+          <Link href="/atom.xml" className="link-gauge">Atom</Link>
+          <Link href="/feed.xml" className="link-gauge">JSON Feed</Link>
+          <Link href="/privacy" className="link-gauge">개인정보 처리 방침</Link>
+          <Link href="/terms" className="link-gauge">이용 약관</Link>
         </div>
-        <p className="text-xs text-gray-400">© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+        <p className="text-xs text-black font-medium">© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
       </div>
     </footer>
   );

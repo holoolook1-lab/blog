@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import LogoutButton from './LogoutButton';
+import ProtectedLink from '@/components/common/ProtectedLink';
 
 export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   const pathname = usePathname();
@@ -18,38 +19,37 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 md:gap-3">
       <button
         type="button"
-        className="p-2 rounded md:hidden hover:bg-gray-100"
+        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px]"
         aria-label="메뉴 토글"
         onClick={() => setOpen((v) => !v)}
       >
-        <Menu size={18} />
+        <Menu size={20} />
       </button>
       <nav
         className={
-          `items-center text-sm text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-4 md:gap-3`
+          `items-center text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-3 md:gap-4`
         }
       >
         <Link
           href="/posts"
-          className={`hover:underline ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
+          className={`px-2 py-1 md:px-0 md:py-0 link-gauge ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
         >
           포스트
         </Link>
-        {showWrite && (
-          <Link
-            href="/write"
-            className={`hover:underline ${isActive('/write') ? 'font-semibold text-black' : ''}`}
-          >
-            작성
-          </Link>
-        )}
+        <ProtectedLink
+          href="/write"
+          className={`px-2 py-1 md:px-0 md:py-0 link-gauge ${isActive('/write') ? 'font-semibold text-black' : ''}`}
+          ariaLabel="글 작성"
+        >
+          작성
+        </ProtectedLink>
         {userId && (
           <Link
             href="/mypage"
-            className={`hover:underline ${isActive('/mypage') ? 'font-semibold text-black' : ''} md:hidden`}
+            className={`px-2 py-1 link-gauge ${isActive('/mypage') ? 'font-semibold text-black' : ''} md:hidden`}
           >
             내 계정
           </Link>

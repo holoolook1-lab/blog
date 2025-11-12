@@ -104,7 +104,7 @@ export default function CommentForm({
         <button
           type="submit"
           disabled={!isLoggedIn || isSubmitting || !content.trim()}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
+          className={`${outlineButtonSmall} disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2`}
           aria-busy={isSubmitting}
         >
           {isSubmitting && (
@@ -120,3 +120,4 @@ export default function CommentForm({
     </form>
   );
 }
+import { outlineButtonSmall } from '@/lib/styles/ui';

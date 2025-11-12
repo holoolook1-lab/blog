@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from 'react';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 import { compressToWebp } from '@/lib/utils/imageClient';
 import { getOptimizedImageUrl } from '@/lib/utils/image';
 
@@ -81,14 +82,14 @@ export default function CoverUpload({ value, onChange }: { value?: string | null
         <input ref={inputRef} type="file" accept="image/*" onChange={onSelect} className="hidden" />
         <button
           type="button"
-          className="inline-flex items-center rounded px-3 py-2 bg-black text-white text-sm hover:bg-black/85"
+          className={outlineButtonSmall}
           onClick={() => inputRef.current?.click()}
           aria-label="커버 이미지 선택"
         >
           이미지 선택
         </button>
         {value && (
-          <button type="button" className="border rounded px-2 py-2 text-sm hover:bg-gray-50" onClick={() => onChange(null)}>
+          <button type="button" className={outlineButtonSmall} onClick={() => onChange(null)}>
             제거
           </button>
         )}
@@ -109,7 +110,7 @@ export default function CoverUpload({ value, onChange }: { value?: string | null
             // Supabase 공개 URL이면 작은 사이즈로 변환해 트래픽을 줄입니다.
             preview = getOptimizedImageUrl(value, { width: 1024, quality: 80, format: 'webp' });
           } catch {}
-          return <img src={preview} alt="cover" className="w-full rounded" />;
+          return <img src={preview} alt="cover" className="w-full rounded" loading="lazy" decoding="async" />;
         })()
       )}
     </div>

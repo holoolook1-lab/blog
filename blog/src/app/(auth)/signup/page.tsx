@@ -5,6 +5,7 @@ import { signupWithPassword } from "./actions";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { markConsentInClient } from "@/lib/policies";
+import { outlineButton } from "@/lib/styles/ui";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-6 py-12">
+    <main id="main" className="mx-auto max-w-md px-6 py-12">
       <h1 className="text-2xl font-bold">회원가입</h1>
       <form className="mt-6 space-y-3" onSubmit={onSubmit}>
         <div>
@@ -73,6 +74,7 @@ export default function SignupPage() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
         </div>
         <div>
@@ -83,6 +85,7 @@ export default function SignupPage() {
             placeholder="최소 8자"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
           />
         </div>
         <div>
@@ -93,12 +96,13 @@ export default function SignupPage() {
             placeholder="비밀번호 재입력"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+          className={`${outlineButton} w-full disabled:opacity-50`}
         >
           {loading ? "가입 중..." : "가입하기"}
         </button>
@@ -106,13 +110,13 @@ export default function SignupPage() {
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
             <span>
-              <Link href="/privacy" className="underline">개인정보 처리 방침</Link>에 동의 (필수)
+            <Link href="/privacy" className="link-gauge">개인정보 처리 방침</Link>에 동의 (필수)
             </span>
           </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} />
             <span>
-              <Link href="/terms" className="underline">이용 약관</Link>에 동의 (필수)
+            <Link href="/terms" className="link-gauge">이용 약관</Link>에 동의 (필수)
             </span>
           </label>
         </div>
@@ -134,7 +138,7 @@ export default function SignupPage() {
                 setMessage(e?.message || '구글 로그인 시작 실패');
               }
             }}
-            className="w-full inline-flex items-center justify-center gap-2 rounded border px-4 py-2 bg-white hover:bg-gray-50"
+            className={`${outlineButton} w-full inline-flex items-center justify-center gap-2`}
             aria-label="Google로 가입"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">

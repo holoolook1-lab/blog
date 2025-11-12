@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updatePassword } from "../actions";
+import { outlineButton } from "@/lib/styles/ui";
 
 export default function ResetConfirmPage() {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function ResetConfirmPage() {
             className="mt-1 w-full rounded border px-3 py-2"
             required
             minLength={8}
+            autoComplete="new-password"
           />
         </label>
         <label className="block">
@@ -63,12 +65,13 @@ export default function ResetConfirmPage() {
             className="mt-1 w-full rounded border px-3 py-2"
             required
             minLength={8}
+            autoComplete="new-password"
           />
         </label>
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded bg-black text-white py-2 disabled:opacity-60"
+          className={`${outlineButton} w-full disabled:opacity-60`}
         >
           {pending ? "변경 중..." : "비밀번호 변경"}
         </button>
@@ -76,4 +79,3 @@ export default function ResetConfirmPage() {
     </main>
   );
 }
-

@@ -1,13 +1,10 @@
-export type PublicSiteMeta = {
-  url: string;
-  name: string;
-  description: string;
-};
+export function buildPostPath(slug: string): string {
+  const s = String(slug || '');
+  return `/posts/${encodeURIComponent(s)}`;
+}
 
-export function getPublicSiteMeta(): PublicSiteMeta {
-  const url = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const name = process.env.NEXT_PUBLIC_SITE_NAME || '블로그';
-  const description = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '';
-  return { url, name, description };
+export function buildPostUrl(base: string, slug: string): string {
+  const origin = String(base || '').replace(/\/+$/, '');
+  return `${origin}${buildPostPath(slug)}`;
 }
 

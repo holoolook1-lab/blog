@@ -1,5 +1,7 @@
 "use client";
 import Link from 'next/link';
+import ProtectedLink from '@/components/common/ProtectedLink';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
@@ -20,6 +22,9 @@ export default function MyPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [recentBookmarks, setRecentBookmarks] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [myPostsLoading, setMyPostsLoading] = useState(true);
 
   // 로그인 가드: 로딩 종료 후 미로그인이면 로그인 페이지로 이동
   useEffect(() => {
@@ -32,6 +37,7 @@ export default function MyPage() {
   useEffect(() => {
     const load = async () => {
       if (!userId) return;
+      setDataLoading(true);
       const { data } = await supabase.auth.getUser();
       const u = data?.user;
       setEmail(u?.email ?? null);
@@ -67,8 +73,28 @@ export default function MyPage() {
           .range(0, 4);
         setRecentBookmarks((bookmarks || []).filter((b: any) => b.posts));
       } catch {}
+      setDataLoading(false);
     };
     load();
+  }, [userId]);
+
+  // 내 글 전체 목록 로드(최대 50개)
+  useEffect(() => {
+    const loadMine = async () => {
+      if (!userId) return;
+      setMyPostsLoading(true);
+      try {
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('id, title, slug, created_at, published')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        setMyPosts(posts || []);
+      } catch {}
+      setMyPostsLoading(false);
+    };
+    loadMine();
   }, [userId]);
 
   const validateUsername = (u: string) => {
@@ -117,7 +143,7 @@ export default function MyPage() {
   };
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-6">
+    <main id="main" className="max-w-3xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">내 계정</h1>
         <span className="text-xs text-gray-500">마이페이지 · 프로필 통합</span>
@@ -126,7 +152,15 @@ export default function MyPage() {
       {/* 프로필 설정 */}
       <section className="rounded border p-4 bg-white">
         <h2 className="text-lg font-semibold">프로필 설정</h2>
-        <p className="text-sm text-gray-600">이메일: {email || '-'}</p>
+        {dataLoading ? (
+          <div className="mt-2 space-y-2" aria-busy="true" aria-live="polite">
+            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">이메일: {email || '-'}</p>
+        )}
         <form className="mt-3 space-y-3" onSubmit={onSave} aria-label="프로필 설정">
           <div>
             <input className="border rounded w-full p-2" placeholder="닉네임 (한글/영문/숫자/_/-, 2~24자)" value={username || ''} onChange={(e) => setUsername(e.target.value)} />
@@ -136,8 +170,7 @@ export default function MyPage() {
             {avatarUrl ? (
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={avatarUrl} alt="아바타 미리보기" className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt="아바타 미리보기" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <span className="text-xs text-gray-600">미리보기</span>
               </div>
@@ -161,8 +194,8 @@ export default function MyPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="bg-black text-white px-3 py-1 rounded disabled:opacity-60" type="submit" disabled={isSaving}>{isSaving ? '저장 중...' : '저장'}</button>
-            <Link href="/write" className="border rounded px-3 py-1 hover:bg-gray-50">글 작성</Link>
+<button className={`${outlineButtonSmall} disabled:opacity-60`} type="submit" disabled={isSaving}>{isSaving ? '저장 중...' : '저장'}</button>
+          <ProtectedLink href="/write" className="border rounded px-3 py-1 hover:bg-gray-50" ariaLabel="글 작성">글 작성</ProtectedLink>
           </div>
         </form>
         {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
@@ -172,14 +205,24 @@ export default function MyPage() {
       <section className="rounded border p-4 bg-white">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">최근 작성</h2>
-          <Link href="/posts" className="text-sm text-gray-600 hover:underline">전체 보기</Link>
+        <Link href="/posts" className="text-sm text-gray-600 link-gauge">전체 보기</Link>
         </div>
-        {recentPosts.length === 0 ? (
+        {dataLoading ? (
+          <div className="mt-3 grid grid-cols-1 gap-3" aria-busy="true" aria-live="polite">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded border p-4">
+                <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-3 h-16 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : recentPosts.length === 0 ? (
           <p className="mt-2 text-sm text-gray-600">아직 작성한 글이 없습니다. 첫 글을 작성해보세요.</p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3">
             {recentPosts.map((p) => (
-              <PostCard key={p.id} post={p} variant="borderless" />
+              <PostCard key={p.id} post={p} variant="polaroid" />
             ))}
           </div>
         )}
@@ -190,15 +233,83 @@ export default function MyPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">최근 스크랩</h2>
         </div>
-        {recentBookmarks.length === 0 ? (
+        {dataLoading ? (
+          <div className="mt-3 grid grid-cols-1 gap-3" aria-busy="true" aria-live="polite">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded border p-4">
+                <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                <div className="mt-3 h-16 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : recentBookmarks.length === 0 ? (
           <p className="mt-2 text-sm text-gray-600">스크랩한 글이 없습니다.</p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3">
             {recentBookmarks.map((b) => (
-              <PostCard key={b.post_id} post={b.posts} variant="borderless" />
+              <PostCard key={b.post_id} post={b.posts} variant="polaroid" />
             ))}
           </div>
         )}
+      </section>
+
+      {/* 내 글 관리 */}
+      <section className="rounded border p-4 bg-white">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">내 글 관리</h2>
+          <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="새 글 작성">새 글 작성</ProtectedLink>
+        </div>
+        {myPostsLoading ? (
+          <div className="mt-3 space-y-2" aria-busy="true" aria-live="polite">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between border rounded p-3">
+                <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
+                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : myPosts.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600">작성한 글이 없습니다.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {myPosts.map((p) => (
+              <li key={p.id} className="flex items-center justify-between border rounded p-3">
+                <div className="min-w-0">
+            <Link href={`/posts/${encodeURIComponent(p.slug)}`} className="text-sm font-medium link-gauge break-words">
+                    {p.title}
+                  </Link>
+                  <p className="text-xs text-gray-500 mt-0.5">{new Date(p.created_at).toLocaleDateString('ko-KR')} · {p.published ? '공개' : '비공개'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+            <Link href={`/posts/${encodeURIComponent(p.slug)}`} className={outlineButtonSmall}>보기</Link>
+                  <button
+                    className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`}
+                    onClick={async () => {
+                      if (!userId) { setToast({ type: 'error', message: '로그인이 필요합니다' }); return; }
+                      const confirmed = window.confirm('정말 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.');
+                      if (!confirmed) return;
+                      setToast(null);
+                      try {
+                        const res = await fetch(`/api/posts/${p.id}`, { method: 'DELETE' });
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(json.error || '삭제 실패');
+                        setMyPosts((prev) => prev.filter((x) => x.id !== p.id));
+                        setRecentPosts((prev) => prev.filter((x) => x.id !== p.id));
+                        setToast({ type: 'success', message: '삭제했습니다' });
+                      } catch (err: any) {
+                        setToast({ type: 'error', message: err?.message || '삭제 실패' });
+                      }
+                    }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
       </section>
     </main>
   );

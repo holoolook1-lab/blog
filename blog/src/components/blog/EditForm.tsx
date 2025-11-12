@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 import CoverUpload from '@/components/editor/CoverUpload';
 import ActionToast from '@/components/ui/ActionToast';
 import { supabase } from '@/lib/supabase/client';
+import { isValidSlug } from '@/lib/slug';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 
 type Post = {
   id: string;
@@ -45,7 +47,7 @@ export default function EditForm({ initial }: { initial: Post }) {
       if (/^-|-$/.test(x)) return false;
       return true;
     };
-    if (!isValidSlug(s)) { setToast({ type: 'error', message: '슬러그는 소문자/숫자/하이픈, 3~64자이며 앞뒤/연속 하이픈 불가' }); return; }
+    if (!isValidSlug(s)) { setToast({ type: 'error', message: '슬러그는 한글/영문/숫자/하이픈, 3~64자이며 앞뒤/연속 하이픈 불가' }); return; }
     if (published !== originalPublished) {
       const changingTo = published ? '공개' : '비공개';
       const ok = confirm(`발행 상태를 "${changingTo}"로 변경하시겠습니까?`);
@@ -69,7 +71,7 @@ export default function EditForm({ initial }: { initial: Post }) {
     else {
       setToast({ type: 'success', message: '업데이트 완료, 글로 이동합니다' });
       setTimeout(() => {
-        window.location.href = `/posts/${slug}`;
+    window.location.href = `/posts/${encodeURIComponent(slug)}`;
       }, 600);
     }
   };
@@ -111,7 +113,7 @@ export default function EditForm({ initial }: { initial: Post }) {
       </div>
       <RichEditor value={content} onChange={setContent} />
       <div className="flex gap-2">
-        <button className="bg-black text-white px-3 py-1 rounded" type="submit">업데이트</button>
+  <button className={outlineButtonSmall} type="submit">업데이트</button>
         <button className="bg-red-600 text-white px-3 py-1 rounded" type="button" onClick={onDelete}>삭제</button>
       </div>
       {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}

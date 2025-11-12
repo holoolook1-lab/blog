@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { markConsentInClient } from "@/lib/policies";
+import { outlineButton } from "@/lib/styles/ui";
 // 회원가입은 별도 라우트(`/signup`)에서 처리합니다
 
 export default function LoginPage() {
@@ -79,7 +80,7 @@ export default function LoginPage() {
 
 
   return (
-    <main className="mx-auto max-w-md px-6 py-12">
+    <main id="main" className="mx-auto max-w-md px-6 py-12">
       <h1 className="text-2xl font-bold">로그인</h1>
       <form className="mt-6 space-y-3" onSubmit={onSubmit} aria-label="로그인 폼">
         <div>
@@ -91,6 +92,7 @@ export default function LoginPage() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
             required
             aria-required
           />
@@ -104,11 +106,12 @@ export default function LoginPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             required
             aria-required
           />
           <div className="mt-2 text-right">
-            <Link href="/reset" className="text-sm text-black underline underline-offset-2">
+            <Link href="/reset" className="text-sm link-gauge">
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -116,7 +119,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black"
+          className={`${outlineButton} w-full disabled:opacity-50`}
           aria-label="로그인"
         >
           {loading ? "로그인 중..." : "로그인"}
@@ -125,13 +128,13 @@ export default function LoginPage() {
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
             <span>
-              <Link href="/privacy" className="underline">개인정보 처리 방침</Link>에 동의
+              <Link href="/privacy" className="link-gauge">개인정보 처리 방침</Link>에 동의
             </span>
           </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} />
             <span>
-              <Link href="/terms" className="underline">이용 약관</Link>에 동의
+              <Link href="/terms" className="link-gauge">이용 약관</Link>에 동의
             </span>
           </label>
         </div>
@@ -139,7 +142,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={onGoogleLogin}
-            className="w-full inline-flex items-center justify-center gap-2 rounded border px-4 py-2 bg-white hover:bg-gray-50"
+            className={`${outlineButton} w-full inline-flex items-center justify-center gap-2`}
             aria-label="구글로 계속하기"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
@@ -155,7 +158,7 @@ export default function LoginPage() {
           아직 회원이 아니신가요?{' '}
           <Link
             href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
-            className="text-black underline underline-offset-2"
+            className="link-gauge"
           >
             가입하기
           </Link>
