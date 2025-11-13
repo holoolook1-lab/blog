@@ -48,30 +48,30 @@ export default function VoteButtons({ postId, initialLikes = 0, initialDislikes 
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1" role="group" aria-label="투표 버튼" aria-busy={loading}>
       <button
         type="button"
-        className="group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50"
+        className="group inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs hover:bg-gray-100 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[36px]"
         disabled={loading}
         onClick={() => handleVote(1)}
         aria-label="좋아요"
         title="좋아요"
       >
-        <ThumbsUp size={18} className="text-gray-700 group-hover:text-black" />
+        <ThumbsUp size={16} className="text-gray-700 group-hover:text-black" aria-hidden="true" focusable="false" />
         <span className="font-medium tabular-nums">{likes}</span>
       </button>
       <button
         type="button"
-        className="group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50"
+        className="group inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs hover:bg-gray-100 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[36px]"
         disabled={loading}
         onClick={() => handleVote(-1)}
         aria-label="비추천"
         title="비추천"
       >
-        <ThumbsDown size={18} className="text-gray-700 group-hover:text-black" />
+        <ThumbsDown size={16} className="text-gray-700 group-hover:text-black" aria-hidden="true" focusable="false" />
         <span className="font-medium tabular-nums">{dislikes}</span>
       </button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-600" role="alert" aria-live="assertive">{error}</span>}
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
     </div>
   );

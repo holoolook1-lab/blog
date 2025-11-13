@@ -1,5 +1,5 @@
 "use client";
- import { useEffect, useState } from 'react';
+ import { useEffect, useRef, useState } from 'react';
  import Image from 'next/image';
  import { supabase } from '@/lib/supabase/client';
  import Link from 'next/link';
@@ -13,6 +13,8 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
   const [postCount, setPostCount] = useState<number>(0);
   const [likeSum, setLikeSum] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const loadedRef = useRef<boolean>(false);
 
   useEffect(() => {
     let alive = true;
@@ -34,6 +36,7 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
             setPostCount((stat as any)?.post_count || 0);
             setLikeSum((stat as any)?.like_sum || 0);
             setLoading(false);
+            loadedRef.current = true;
             return;
           }
         }
@@ -61,17 +64,26 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
         const likes = (posts || []).reduce((sum: number, p: any) => sum + (p.like_count || 0), 0);
         if (alive) { setPostCount(count); setLikeSum(likes); }
       } catch {}
-      if (alive) setLoading(false);
+      if (alive) { setLoading(false); loadedRef.current = true; }
     };
-    load();
-    return () => { alive = false; };
+    const el = containerRef.current;
+    // IntersectionObserver로 가시화될 때만 로딩(모바일 초기 렌더 비용 감소)
+    const observer = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      if (!e) return;
+      if (e.isIntersecting && !loadedRef.current) {
+        load();
+      }
+    }, { threshold: 0.1, rootMargin: '100px 0px' });
+    if (el) observer.observe(el);
+    return () => { observer.disconnect(); alive = false; };
   }, [authorId]);
 
   // 점수 공식: 글 수를 추천보다 2배 가중치(글×2 + 추천×1)
   const score = postCount * 2 + likeSum * 1;
   const level = score >= 1000 ? 'platinum' : score >= 500 ? 'gold' : score >= 100 ? 'silver' : 'bronze';
   const borderClass = level === 'platinum'
-    ? 'border-2 border-[#e5e4e2] shadow-lg animate-pulse'
+    ? 'border-2 border-[#e5e4e2] shadow-lg'
     : level === 'gold'
       ? 'border-2 border-[#d4af37] shadow-md'
       : level === 'silver'
@@ -80,12 +92,12 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
   const bgClass = level === 'gold' ? 'bg-amber-50' : level === 'platinum' ? 'bg-zinc-50' : 'bg-white';
 
   const badge = level === 'platinum'
-    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-zinc-100 border"><Diamond size={14} /> 플래티넘</span>
+    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-zinc-100 border"><Diamond size={14} aria-hidden="true" focusable="false" /> 플래티넘</span>
     : level === 'gold'
-      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-100 border"><Crown size={14} /> 골드</span>
+      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-100 border"><Crown size={14} aria-hidden="true" focusable="false" /> 골드</span>
       : level === 'silver'
-        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-gray-100 border"><Medal size={14} /> 실버</span>
-        : <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-50 border"><Medal size={14} /> 브론즈</span>;
+        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-gray-100 border"><Medal size={14} aria-hidden="true" focusable="false" /> 실버</span>
+        : <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-50 border"><Medal size={14} aria-hidden="true" focusable="false" /> 브론즈</span>;
 
   const username = (profile.username || '').slice(0, 20);
   const fontFamily = 'var(--font-family, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR)';
@@ -93,16 +105,17 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
 
   return (
     <section
-      className={`${borderClass} ${bgClass} rounded-lg p-4 transition-transform duration-200 hover:scale-[1.05]`}
+      className={`${borderClass} ${bgClass} rounded-lg p-4`}
       style={{ fontFamily }}
       aria-label="작성자 프로필"
+      ref={containerRef}
     >
       <div className="flex flex-row lg:flex-col items-start gap-4">
         <div className="relative w-[72px] h-[72px] sm:w-[120px] sm:h-[120px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border" style={{ borderColor: themeColor }}>
           {profile.avatar_url ? (
             <Image
               src={getOptimizedImageUrl(profile.avatar_url || '', { width: 150, quality: 85, format: 'webp' })}
-              alt="프로필 이미지"
+              alt={`${(profile.username || '').slice(0, 20) || '사용자'}의 프로필 이미지`}
               fill
               sizes="(max-width:640px) 72px, (max-width:1024px) 120px, 150px"
               className="object-cover"
@@ -113,7 +126,7 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <Link href={`/user/${authorId}`} className="text-lg font-bold link-gauge" style={{ color: themeColor }}>
+            <Link href={`/user/${authorId}`} className="text-lg font-bold link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded" style={{ color: themeColor }}>
               {username || '사용자'}
             </Link>
             {badge}

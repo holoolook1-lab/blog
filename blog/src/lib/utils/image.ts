@@ -25,6 +25,7 @@ export function getOptimizedImageUrl(url: string, opts: TransformOptions = {}): 
 
 // 리스트/디테일에서 사용할 기본 sizes 값
 export const defaultSizes = {
-  list: '(max-width: 768px) 100vw, 768px',
+  // 카드 그리드가 md부터 2열이므로 50vw로 요청, 모바일은 100vw
+  list: '(max-width: 768px) 100vw, 50vw',
   detail: '(max-width: 768px) 100vw, 1024px',
 };

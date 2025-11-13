@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-bold">이용 약관 (v{TERMS_VERSION})</h1>
+    <main id="main" role="main" aria-labelledby="terms-title" className="max-w-3xl mx-auto p-6 space-y-4">
+      <h1 id="terms-title" className="text-2xl font-bold">이용 약관 (v{TERMS_VERSION})</h1>
       <p className="text-sm text-gray-600">시행일: 2025-11-11</p>
 
       <section className="space-y-2 text-sm text-gray-700">

@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { getPublicSiteMeta } from '@/lib/site';
 import { getServerSupabase } from '@/lib/supabase/server';
 
 export const size = { width: 1200, height: 630 };
@@ -14,17 +15,20 @@ export default async function OGImage({ params }: Params) {
     const supabase = await getServerSupabase();
     if (supabase) {
       const { slug } = await params;
+      const rawSlug = (slug || '').toString();
+      let cleanSlug = rawSlug.trim();
+      try { cleanSlug = decodeURIComponent(cleanSlug); } catch {}
       const { data } = await supabase
         .from('posts')
         .select('title, excerpt')
-        .eq('slug', slug)
+        .eq('slug', cleanSlug)
         .single();
       title = data?.title || title;
       excerpt = data?.excerpt || '';
     }
   } catch {}
 
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '내 블로그';
+const { name: siteName } = getPublicSiteMeta();
 
   return new ImageResponse(
     (

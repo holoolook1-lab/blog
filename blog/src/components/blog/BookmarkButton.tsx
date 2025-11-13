@@ -62,15 +62,17 @@ export default function BookmarkButton({ postId }: { postId: string }) {
     <>
       <button
         type="button"
-        className={`${bookmarked ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100' : 'hover:bg-gray-100'} inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm disabled:opacity-50`}
+        className={`${bookmarked ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100' : 'hover:bg-gray-100'} inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[36px]`}
         disabled={loading}
         onClick={toggle}
         aria-label={bookmarked ? '스크랩 해제' : '스크랩'}
+        aria-busy={loading}
+        aria-pressed={bookmarked}
         title={bookmarked ? '스크랩 해제' : '스크랩'}
       >
-        <Bookmark size={18} className={bookmarked ? 'fill-yellow-500 text-yellow-600' : 'text-gray-700'} />
+        <Bookmark size={16} className={bookmarked ? 'fill-yellow-500 text-yellow-600' : 'text-gray-700'} aria-hidden="true" focusable="false" />
         <span className="font-medium">{bookmarked ? '저장됨' : '저장'}</span>
-        {error && <span className="text-xs text-red-600">{error}</span>}
+        {error && <span className="text-xs text-red-600" role="alert" aria-live="assertive">{error}</span>}
       </button>
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
     </>

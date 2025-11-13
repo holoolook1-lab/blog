@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
+import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import ActionToast from '@/components/ui/ActionToast';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 type Toast = { type: 'success' | 'error'; message: string };
 
 const MAX_LEN = 2000;
@@ -22,6 +24,10 @@ export default function CommentForm({
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
   const { userId } = useAuthUser();
   const isLoggedIn = Boolean(userId);
+  const { requireAuth } = useRequireAuth();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmBtnRef = useRef<HTMLButtonElement | null>(null);
+  const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
 
 
   const showToast = (toast: Toast) => {
@@ -41,7 +47,11 @@ export default function CommentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || isSubmitting || !isLoggedIn) return;
+    if (!content.trim() || isSubmitting) return;
+    if (!isLoggedIn) {
+      setConfirmOpen(true);
+      return;
+    }
 
     const now = Date.now();
     if (now - lastSubmitTime < 8000) {
@@ -81,6 +91,21 @@ export default function CommentForm({
     }
   };
 
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const t = setTimeout(() => {
+      confirmBtnRef.current?.focus();
+    }, 10);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      clearTimeout(t);
+    };
+  }, [confirmOpen]);
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
@@ -88,22 +113,22 @@ export default function CommentForm({
         name="content"
         rows={3}
         className="w-full rounded-md border bg-transparent px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        placeholder={isLoggedIn ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다.'}
+        placeholder={'댓글을 입력하세요...'}
         value={content}
         onChange={handleContentChange}
         onKeyDown={handleKeyDown}
-        disabled={!isLoggedIn || isSubmitting}
-        aria-disabled={!isLoggedIn || isSubmitting}
+        disabled={isSubmitting}
+        aria-disabled={isSubmitting}
         aria-live="polite"
-        aria-describedby="comment-hint"
+        aria-describedby="comment-hint comment-count"
       />
       <div className="flex items-center justify-between">
-        <span className={`text-sm ${content.length > MAX_LEN ? 'text-red-500' : 'text-gray-500'}`}>
+        <span id="comment-count" className={`text-sm ${content.length > MAX_LEN ? 'text-red-500' : 'text-gray-500'}`}>
           {content.length} / {MAX_LEN}
         </span>
         <button
           type="submit"
-          disabled={!isLoggedIn || isSubmitting || !content.trim()}
+          disabled={isSubmitting || !content.trim()}
           className={`${outlineButtonSmall} disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2`}
           aria-busy={isSubmitting}
         >
@@ -117,7 +142,41 @@ export default function CommentForm({
         </button>
       </div>
       <p id="comment-hint" className="text-xs text-gray-500">Ctrl+Enter로 빠르게 댓글을 등록할 수 있습니다.</p>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setConfirmOpen(false)} />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="login-confirm-title"
+            className="relative z-10 w-[92%] max-w-sm rounded border bg-white p-4 shadow-lg"
+          >
+            <h3 id="login-confirm-title" className="text-sm font-semibold">로그인 페이지로 이동합니다</h3>
+            <p className="mt-2 text-sm text-gray-700">댓글 등록을 위해 로그인이 필요합니다. 계속하시겠습니까?</p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                ref={confirmBtnRef}
+                className={`${outlineButtonSmall}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setConfirmOpen(false);
+                  requireAuth();
+                }}
+              >
+                확인
+              </button>
+              <button
+                ref={cancelBtnRef}
+                className={`${outlineButtonSmall}`}
+                onClick={(e) => { e.preventDefault(); setConfirmOpen(false); }}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
-import { outlineButtonSmall } from '@/lib/styles/ui';

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PostCard from '@/components/blog/PostCard';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 
@@ -53,7 +54,7 @@ export default function BookmarksPage() {
       {loading ? (
         <div className="space-y-4" aria-busy="true" aria-live="polite">
           <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-          <div className="grid gap-6">
+          <div className="grid gap-6 sm:grid-cols-2">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="rounded border p-4">
                 <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
@@ -71,7 +72,7 @@ export default function BookmarksPage() {
       ) : listLoading ? (
         <div className="space-y-4" aria-busy="true" aria-live="polite">
           <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-          <div className="grid gap-6">
+          <div className="grid gap-6 sm:grid-cols-2">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="rounded border p-4">
                 <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
@@ -84,7 +85,7 @@ export default function BookmarksPage() {
       ) : bookmarks.length === 0 ? (
         <div className="p-6 text-center space-y-2">
           <p className="text-sm text-gray-600">스크랩한 글이 없습니다.</p>
-          <Link href="/posts" className="inline-flex items-center justify-center rounded px-3 py-1 text-sm hover:bg-gray-50">글 둘러보기</Link>
+          <Link href="/posts" className={outlineButtonSmall}>글 둘러보기</Link>
         </div>
       ) : (
         <>
@@ -104,7 +105,7 @@ export default function BookmarksPage() {
               </select>
             </label>
           </div>
-          <ul className="grid gap-6">
+          <div className="grid gap-6 sm:grid-cols-2">
             {displayed.map((b: any) => (
               <PostCard
                 key={b.post_id}
@@ -123,7 +124,7 @@ export default function BookmarksPage() {
                 }}
               />
             ))}
-          </ul>
+          </div>
         </>
       )}
     </main>

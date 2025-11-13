@@ -73,6 +73,6 @@ export async function POST(req: Request) {
     revalidatePath('/feed.xml');
   } catch {}
   if (!data) return badRequest('insert_failed');
-  return NextResponse.json({ id: data.id });
+  return NextResponse.json({ id: data.id, slug: s });
 }
   

@@ -163,8 +163,18 @@ export default function MyPage() {
         )}
         <form className="mt-3 space-y-3" onSubmit={onSave} aria-label="프로필 설정">
           <div>
-            <input className="border rounded w-full p-2" placeholder="닉네임 (한글/영문/숫자/_/-, 2~24자)" value={username || ''} onChange={(e) => setUsername(e.target.value)} />
-            <p className="text-xs text-gray-500 mt-1">중복 닉네임은 저장할 수 없습니다.</p>
+            <label className="text-sm text-gray-700" htmlFor="mypage-username">닉네임</label>
+            <input
+              id="mypage-username"
+              className="mt-1 border rounded w-full p-2 focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="닉네임 (한글/영문/숫자/_/-, 2~24자)"
+              value={username || ''}
+              onChange={(e) => setUsername(e.target.value)}
+              aria-describedby="mypage-username-hint"
+              aria-required
+              required
+            />
+            <p id="mypage-username-hint" className="text-xs text-gray-500 mt-1">중복 닉네임은 저장할 수 없습니다.</p>
           </div>
           <div className="space-y-2">
             {avatarUrl ? (
@@ -194,7 +204,8 @@ export default function MyPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-<button className={`${outlineButtonSmall} disabled:opacity-60`} type="submit" disabled={isSaving}>{isSaving ? '저장 중...' : '저장'}</button>
+<button className={`${outlineButtonSmall} disabled:opacity-60`} type="submit" disabled={isSaving} aria-busy={isSaving} aria-describedby="mypage-save-hint">{isSaving ? '저장 중...' : '저장'}</button>
+            <p id="mypage-save-hint" className="sr-only">프로필 정보를 저장합니다. 저장 중에는 버튼이 비활성화됩니다.</p>
           <ProtectedLink href="/write" className="border rounded px-3 py-1 hover:bg-gray-50" ariaLabel="글 작성">글 작성</ProtectedLink>
           </div>
         </form>
@@ -287,8 +298,6 @@ export default function MyPage() {
                     className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`}
                     onClick={async () => {
                       if (!userId) { setToast({ type: 'error', message: '로그인이 필요합니다' }); return; }
-                      const confirmed = window.confirm('정말 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.');
-                      if (!confirmed) return;
                       setToast(null);
                       try {
                         const res = await fetch(`/api/posts/${p.id}`, { method: 'DELETE' });

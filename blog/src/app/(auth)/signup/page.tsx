@@ -5,7 +5,7 @@ import { signupWithPassword } from "./actions";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { markConsentInClient } from "@/lib/policies";
-import { outlineButton } from "@/lib/styles/ui";
+import { outlineButtonSmall } from "@/lib/styles/ui";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -65,47 +65,65 @@ export default function SignupPage() {
   return (
     <main id="main" className="mx-auto max-w-md px-6 py-12">
       <h1 className="text-2xl font-bold">회원가입</h1>
-      <form className="mt-6 space-y-3" onSubmit={onSubmit}>
+      <form className="mt-6 space-y-3" onSubmit={onSubmit} aria-label="회원가입 폼">
         <div>
-          <label className="text-sm text-gray-600">이메일</label>
+          <label className="text-sm text-gray-600" htmlFor="signup-email">이메일</label>
           <input
             type="email"
-            className="mt-1 w-full rounded border px-3 py-2"
+            id="signup-email"
+            className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            required
+            aria-required
+            aria-invalid={Boolean(message)}
+            aria-describedby={message ? "signup-error" : undefined}
           />
         </div>
         <div>
-          <label className="text-sm text-gray-600">비밀번호</label>
+          <label className="text-sm text-gray-600" htmlFor="signup-password">비밀번호</label>
           <input
             type="password"
-            className="mt-1 w-full rounded border px-3 py-2"
+            id="signup-password"
+            className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
             placeholder="최소 8자"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
+            required
+            aria-required
+            aria-invalid={Boolean(message)}
+            aria-describedby={message ? "signup-error" : undefined}
           />
         </div>
         <div>
-          <label className="text-sm text-gray-600">비밀번호 확인</label>
+          <label className="text-sm text-gray-600" htmlFor="signup-confirm">비밀번호 확인</label>
           <input
             type="password"
-            className="mt-1 w-full rounded border px-3 py-2"
+            id="signup-confirm"
+            className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
             placeholder="비밀번호 재입력"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="new-password"
+            required
+            aria-required
+            aria-invalid={Boolean(message)}
+            aria-describedby={message ? "signup-error" : undefined}
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className={`${outlineButton} w-full disabled:opacity-50`}
+          className={`${outlineButtonSmall} w-full disabled:opacity-50`}
+          aria-busy={loading}
+          aria-describedby="signup-submit-hint"
         >
           {loading ? "가입 중..." : "가입하기"}
         </button>
+        <p id="signup-submit-hint" className="sr-only">이메일과 비밀번호를 입력해 가입하세요. 로딩 중에는 버튼이 비활성화됩니다.</p>
         <div className="mt-4 flex flex-col gap-2 text-xs text-gray-600">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
@@ -120,7 +138,7 @@ export default function SignupPage() {
             </span>
           </label>
         </div>
-        <div className="mt-3">
+        <div className="mt-3" aria-describedby="signup-oauth-hint">
           <button
             type="button"
             onClick={async () => {
@@ -138,7 +156,7 @@ export default function SignupPage() {
                 setMessage(e?.message || '구글 로그인 시작 실패');
               }
             }}
-            className={`${outlineButton} w-full inline-flex items-center justify-center gap-2`}
+            className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2`}
             aria-label="Google로 가입"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
@@ -149,9 +167,10 @@ export default function SignupPage() {
             </svg>
             <span>Google로 가입</span>
           </button>
+          <p id="signup-oauth-hint" className="sr-only">구글 계정으로 회원가입합니다. 새 창 또는 리다이렉트가 발생할 수 있습니다.</p>
         </div>
       </form>
-      {message && <p className="mt-3 text-sm text-gray-700">{message}</p>}
+      {message && <p id="signup-error" className="mt-3 text-sm text-red-600" aria-live="assertive" role="alert">{message}</p>}
       <p className="mt-6 text-xs text-gray-500">가입 후 이메일로 받은 확인 링크로 인증을 완료하세요.</p>
     </main>
   );

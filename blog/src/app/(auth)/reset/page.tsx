@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { requestPasswordReset } from "./actions";
-import { outlineButton } from "@/lib/styles/ui";
+import { outlineButtonSmall } from "@/lib/styles/ui";
 
 export default function ResetRequestPage() {
   const params = useSearchParams();
@@ -56,7 +56,7 @@ export default function ResetRequestPage() {
         <button
           type="submit"
           disabled={pending}
-          className={`${outlineButton} w-full disabled:opacity-60`}
+          className={`${outlineButtonSmall} w-full disabled:opacity-60`}
         >
           {pending ? "전송 중..." : "재설정 이메일 보내기"}
         </button>

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-bold">개인정보 처리 방침 (v{PRIVACY_VERSION})</h1>
+    <main id="main" role="main" aria-labelledby="privacy-title" className="max-w-3xl mx-auto p-6 space-y-4">
+      <h1 id="privacy-title" className="text-2xl font-bold">개인정보 처리 방침 (v{PRIVACY_VERSION})</h1>
       <p className="text-sm text-gray-600">시행일: 2025-11-11</p>
 
       <section className="space-y-2 text-sm text-gray-700">

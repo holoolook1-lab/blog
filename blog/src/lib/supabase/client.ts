@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicEnvOrThrow, hasSupabasePublicEnv } from '@/lib/env';
+import { HARDCODED_SUPABASE_URL, HARDCODED_SUPABASE_ANON_KEY, hasHardcodedSupabase } from '@/lib/supabase/hardcoded';
 
 // 환경변수가 없는 로컬 프리뷰를 위해 안전 스텁 제공
 function createSupabaseStub(): any {
@@ -37,9 +38,10 @@ function createSupabaseStub(): any {
 }
 
 export const supabase: any = (() => {
-  if (hasSupabasePublicEnv()) {
-    const { url, key } = getSupabasePublicEnvOrThrow();
-    return createClient(url, key);
+  if (hasSupabasePublicEnv() || hasHardcodedSupabase()) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || HARDCODED_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || HARDCODED_SUPABASE_ANON_KEY;
+    return createClient(url!, key!);
   }
   return createSupabaseStub();
 })();

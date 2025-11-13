@@ -35,6 +35,7 @@ export default function UserMenu() {
         className="w-8 h-8 rounded-full bg-gray-800 text-white text-sm flex items-center justify-center"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls="user-menu"
         aria-label="사용자 메뉴"
         onClick={() => setOpen((v) => !v)}
         onKeyDown={(e) => {
@@ -54,6 +55,7 @@ export default function UserMenu() {
       {open && (
         <div
           role="menu"
+          id="user-menu"
           className="absolute right-0 mt-2 w-36 rounded-md border bg-white shadow-lg p-1 text-sm"
           onKeyDown={(e) => {
             if (e.key === 'Tab') {
@@ -93,7 +95,7 @@ export default function UserMenu() {
               }
             }}
           >프로필</Link>
-          <button ref={logoutRef} onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
+          <button ref={logoutRef} type="button" onClick={onLogout} className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 focus:outline-none focus:bg-gray-100" role="menuitem" tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setOpen(false);
               if (e.key === 'ArrowUp') {

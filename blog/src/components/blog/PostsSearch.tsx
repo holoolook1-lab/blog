@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 export default function PostsSearch() {
@@ -8,6 +9,7 @@ export default function PostsSearch() {
   const params = useSearchParams();
   const [q, setQ] = useState<string>(params.get('q') || '');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,7 +35,9 @@ export default function PostsSearch() {
       sp.delete('q');
       sp.set('page', '1');
     }
-    router.push(`${pathname}?${sp.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${sp.toString()}`);
+    });
     try {
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -45,7 +49,9 @@ export default function PostsSearch() {
     const sp = new URLSearchParams(params.toString());
     sp.delete('q');
     sp.set('page', '1');
-    router.push(`${pathname}?${sp.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${sp.toString()}`);
+    });
     try {
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -73,7 +79,7 @@ export default function PostsSearch() {
   }, [q]);
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-2">
+    <form onSubmit={onSubmit} className="flex items-center gap-2" role="search" aria-busy={isPending} aria-describedby="search-hint search-submit-hint">
       <label htmlFor="search" className="text-sm text-gray-700">검색</label>
       <input
         id="search"
@@ -84,11 +90,14 @@ export default function PostsSearch() {
         placeholder="제목이나 본문에서 검색"
         className="flex-1 border rounded px-3 py-1 text-sm"
         aria-label="포스트 검색"
+        aria-describedby="search-hint"
       />
-      <button type="submit" className="border rounded px-3 py-1 text-sm">찾기</button>
+      <button type="submit" className={outlineButtonSmall} disabled={isPending} aria-describedby="search-submit-hint" aria-busy={isPending}>찾기</button>
       {params.get('q') && (
-        <button type="button" className="border rounded px-3 py-1 text-sm" onClick={onClear} aria-label="검색 초기화">초기화</button>
+        <button type="button" className={outlineButtonSmall} onClick={onClear} aria-label="검색 초기화" disabled={isPending} aria-busy={isPending}>초기화</button>
       )}
+      <p id="search-hint" className="sr-only">S 또는 / 키로 검색창에 포커스됩니다.</p>
+      <p id="search-submit-hint" className="sr-only">검색을 누르면 목록이 업데이트됩니다.</p>
     </form>
   );
 }

@@ -16,8 +16,14 @@ type Props = {
 export default function RichEditor({ value, onChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [editorNotice, setEditorNotice] = useState<string | null>(null);
   // 훅 순서 불일치 방지: 모든 훅은 조건부 반환 전에 선언
   const [progress, setProgress] = useState<number>(0);
+  // 프롬프트 대체용 입력 상태
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [showVideoInput, setShowVideoInput] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
   // 일반 URL → 링크 카드 삽입 도우미
   const escapeHtml = (s: string) => s
     .replace(/&/g, '&amp;')
@@ -246,20 +252,34 @@ export default function RichEditor({ value, onChange }: Props) {
   if (!editor) return null;
 
   const toggleLink = () => {
-    const url = prompt('링크 URL을 입력하세요');
-    if (!url) return;
-    editor.chain().focus().setLink({ href: url }).run();
+    setShowLinkInput((v) => !v);
+    setEditorNotice(null);
+  };
+
+  const handleLinkInsert = () => {
+    const url = linkUrl.trim();
+    if (!url) { setShowLinkInput(false); return; }
+    editor?.chain().focus().setLink({ href: url }).run();
+    setLinkUrl('');
+    setShowLinkInput(false);
   };
 
   const insertVideo = () => {
-    const url = prompt('동영상 공유 링크(URL)를 입력하세요');
-    if (!url) return;
+    setShowVideoInput((v) => !v);
+    setEditorNotice(null);
+  };
+
+  const handleVideoInsert = () => {
+    const url = videoUrl.trim();
+    if (!url) { setShowVideoInput(false); return; }
     const embed = makeVideoEmbed(url);
     if (!embed) {
-      alert('지원하는 동영상 링크 형식이 아닙니다. (YouTube/Vimeo/mp4/webm/ogg)');
+      setEditorNotice('지원되지 않는 동영상 링크입니다. (YouTube/Vimeo/Dailymotion/NaverTV/Twitch/TikTok/Instagram/Facebook/mp4/webm/ogg)');
       return;
     }
-    editor.chain().focus().insertContent(embed).run();
+    editor?.chain().focus().insertContent(embed).run();
+    setVideoUrl('');
+    setShowVideoInput(false);
   };
 
 
@@ -335,45 +355,153 @@ export default function RichEditor({ value, onChange }: Props) {
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleBold().run()}>
+      <div className="flex flex-wrap gap-1" role="toolbar" aria-label="서식 도구">
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          aria-label="굵게"
+          aria-pressed={editor.isActive('bold')}
+        >
           굵게
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleItalic().run()}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          aria-label="기울임"
+          aria-pressed={editor.isActive('italic')}
+        >
           기울임
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          aria-label="제목 2"
+          aria-pressed={editor.isActive('heading', { level: 2 })}
+        >
           H2
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          aria-label="글머리 기호 목록"
+          aria-pressed={editor.isActive('bulletList')}
+        >
           목록
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={toggleLink}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={toggleLink}
+          aria-label="링크 삽입"
+          aria-expanded={showLinkInput}
+          aria-controls="editor-link-panel"
+        >
           링크
         </button>
-        <button type="button" className="border rounded px-2 py-1 disabled:opacity-50" onClick={uploadImage} disabled={uploading} aria-busy={uploading}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={uploadImage}
+          disabled={uploading}
+          aria-busy={uploading}
+          aria-label={uploading ? '이미지 업로드 중' : '이미지 삽입'}
+        >
           {uploading ? '이미지 업로드 중…' : '이미지'}
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={insertVideo}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={insertVideo}
+          aria-label="동영상 삽입"
+          aria-expanded={showVideoInput}
+          aria-controls="editor-video-panel"
+        >
           비디오
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          aria-label="코드 블록"
+          aria-pressed={editor.isActive('codeBlock')}
+        >
           코드블록
         </button>
-        <button type="button" className="border rounded px-2 py-1" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+        <button
+          type="button"
+          className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          aria-label="인용"
+          aria-pressed={editor.isActive('blockquote')}
+        >
           인용
         </button>
       </div>
+      {showLinkInput && (
+        <div id="editor-link-panel" className="mt-2 space-y-2">
+          <p className="text-xs text-gray-600">링크 삽입</p>
+          <div className="flex items-center gap-2">
+            <label htmlFor="editor-link-url" className="sr-only">링크 주소</label>
+            <input
+              type="url"
+              className="border rounded px-2 py-2 w-full md:w-96"
+              placeholder="링크 주소를 입력하세요 (예: https://example.com)"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              id="editor-link-url"
+              aria-describedby="editor-link-hint"
+            />
+            <button type="button" className="border rounded px-2 py-1" onClick={handleLinkInsert}>삽입</button>
+            <button type="button" className="border rounded px-2 py-1" onClick={() => { setShowLinkInput(false); setLinkUrl(''); }}>취소</button>
+          </div>
+          <p id="editor-link-hint" className="sr-only">엔터 또는 삽입 버튼으로 링크를 적용합니다.</p>
+        </div>
+      )}
+      {showVideoInput && (
+        <div id="editor-video-panel" className="mt-2 space-y-2">
+          <p className="text-xs text-gray-600">동영상 삽입</p>
+          <div className="flex items-center gap-2">
+            <label htmlFor="editor-video-url" className="sr-only">동영상 링크</label>
+            <input
+              type="url"
+              className="border rounded px-2 py-2 w-full md:w-96"
+              placeholder="동영상 링크를 입력하세요 (YouTube/Vimeo/NaverTV/Twitch 등)"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              id="editor-video-url"
+              aria-describedby="editor-video-hint"
+            />
+            <button type="button" className="border rounded px-2 py-1" onClick={handleVideoInsert}>삽입</button>
+            <button type="button" className="border rounded px-2 py-1" onClick={() => { setShowVideoInput(false); setVideoUrl(''); }}>취소</button>
+          </div>
+          <p id="editor-video-hint" className="sr-only">지원되는 플랫폼 링크만 임베드됩니다. 실패 시 일반 링크로 삽입됩니다.</p>
+        </div>
+      )}
+      {editorNotice && (
+        <p className="text-sm text-gray-600">{editorNotice}</p>
+      )}
       <EditorContent editor={editor} />
       {uploading && (
-        <div className="space-y-1">
+        <div className="space-y-1" role="status" aria-live="polite" aria-label="이미지 업로드 진행">
           <p className="text-sm text-gray-600">업로드 중... {progress}%</p>
-          <div className="h-2 w-full bg-gray-200 rounded">
-            <div className="h-2 bg-primary rounded" style={{ width: `${progress}%` }} />
+          <div className="h-2 w-full bg-gray-200 rounded" aria-hidden="true">
+            <div
+              className="h-2 bg-primary rounded"
+              style={{ width: `${progress}%` }}
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="업로드 진행률"
+            />
           </div>
         </div>
       )}
-      {uploadError && <p className="text-sm text-red-600">업로드 오류: {uploadError}</p>}
+      {uploadError && <p className="text-sm text-red-600" role="alert" aria-live="assertive">업로드 오류: {uploadError}</p>}
       {/* 별도 미리보기 없이 에디터 자체를 WYSIWYG으로 사용합니다. */}
     </div>
   );

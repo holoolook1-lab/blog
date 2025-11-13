@@ -39,17 +39,17 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
     {
       name: 'Twitter',
       url: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
-      icon: <Twitter size={20} />,
+      icon: <Twitter size={20} aria-hidden="true" focusable="false" />,
     },
     {
       name: 'Facebook',
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      icon: <Facebook size={20} />,
+      icon: <Facebook size={20} aria-hidden="true" focusable="false" />,
     },
     {
       name: 'LinkedIn',
       url: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`,
-      icon: <Linkedin size={20} />,
+      icon: <Linkedin size={20} aria-hidden="true" focusable="false" />,
     },
   ];
 
@@ -107,16 +107,18 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-1" role="group" aria-label="공유 옵션">
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
-      <span className="text-sm font-medium">공유하기:</span>
+      <span className="text-xs font-medium">공유하기:</span>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
         aria-label="소셜 공유 미리보기"
         title="소셜 공유 미리보기"
+        aria-expanded={isModalOpen}
+        aria-controls="share-dialog"
       >
-        <Eye size={20} />
+        <Eye size={16} aria-hidden="true" focusable="false" />
       </button>
       {shareOptions.map((option) => (
         <a
@@ -124,7 +126,7 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
           href={option.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
           aria-label={`${option.name}에 공유`}
           title={`${option.name}에 공유`}
         >
@@ -134,27 +136,28 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
       {kakaoKey && (
         <button
           onClick={shareKakao}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
           aria-label="카카오톡 공유"
           title="카카오톡 공유"
         >
-          <MessageSquare size={20} />
+          <MessageSquare size={16} aria-hidden="true" focusable="false" />
         </button>
       )}
       <button
         onClick={nativeShare}
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
         aria-label="네이티브 공유"
         title="네이티브 공유"
       >
-        <Share2 size={20} />
+        <Share2 size={16} aria-hidden="true" focusable="false" />
       </button>
       <button
         onClick={copyToClipboard}
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
         aria-label="URL 복사"
+        title="URL 복사"
       >
-        <Link size={20} />
+        <Link size={16} aria-hidden="true" focusable="false" />
       </button>
       {isModalOpen && <ShareModal url={url} title={title || ''} onClose={() => setIsModalOpen(false)} />}
     </div>

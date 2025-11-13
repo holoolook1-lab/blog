@@ -19,45 +19,66 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   };
 
   return (
-    <div className="flex items-center gap-2 md:gap-3">
+    <div className="relative flex items-center gap-2 md:gap-3">
       <button
         type="button"
-        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px]"
+        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px] absolute right-0 top-1/2 -translate-y-1/2 z-10"
         aria-label="메뉴 토글"
+        aria-expanded={open}
+        aria-controls="primary-nav"
         onClick={() => setOpen((v) => !v)}
       >
-        <Menu size={20} />
+        <span aria-hidden="true"><Menu size={20} /></span>
       </button>
       <nav
+        id="primary-nav"
+        role="navigation"
+        aria-label="주요 메뉴"
         className={
-          `items-center text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-3 md:gap-4`
+          `items-center text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-3 md:gap-4 pr-12 md:pr-0 z-20`
         }
       >
         <Link
           href="/posts"
-          className={`px-2 py-1 md:px-0 md:py-0 link-gauge ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
+          className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
+          aria-current={isActive('/posts') ? 'page' : undefined}
         >
           포스트
         </Link>
         <ProtectedLink
           href="/write"
-          className={`px-2 py-1 md:px-0 md:py-0 link-gauge ${isActive('/write') ? 'font-semibold text-black' : ''}`}
+          className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/write') ? 'font-semibold text-black' : ''}`}
           ariaLabel="글 작성"
+          ariaCurrent={isActive('/write') ? 'page' : undefined}
         >
           작성
         </ProtectedLink>
         {userId && (
           <Link
             href="/mypage"
-            className={`px-2 py-1 link-gauge ${isActive('/mypage') ? 'font-semibold text-black' : ''} md:hidden`}
+            className={`px-2 py-1 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/mypage') ? 'font-semibold text-black' : ''}`}
+            aria-current={isActive('/mypage') ? 'page' : undefined}
           >
             내 계정
           </Link>
         )}
         {userId && (
-          <span className="md:hidden"><LogoutButton /></span>
+          <span className="md:hidden">
+            {/* 모바일에서는 같은 내비 내에 표시되지만 라벨을 분리해 보조 메뉴를 명확화 */}
+            <nav aria-label="계정 메뉴">
+              <LogoutButton />
+            </nav>
+          </span>
         )}
       </nav>
+      {userId && (
+        <div className="hidden md:block">
+          {/* 데스크탑에서는 주요 메뉴와 분리된 보조 내비로 표시 */}
+          <nav aria-label="계정 메뉴">
+            <LogoutButton />
+          </nav>
+        </div>
+      )}
     </div>
   );
 }

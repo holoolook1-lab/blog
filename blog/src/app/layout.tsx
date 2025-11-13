@@ -5,10 +5,9 @@ import AuthToastBridge from '@/components/layout/AuthToastBridge';
 import AuthSessionHydrator from '@/components/layout/AuthSessionHydrator';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { getPublicSiteMeta } from '@/lib/site';
 
-const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '내 블로그';
-const siteDesc = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '개발 블로그입니다';
+const { url: site, name: siteName, description: siteDesc } = getPublicSiteMeta();
 
 export const metadata: Metadata = {
   metadataBase: new URL(site),

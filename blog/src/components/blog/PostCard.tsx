@@ -21,7 +21,7 @@ type Post = {
   dislike_count?: number | null;
 };
 
-export default function PostCard({ post, variant = 'borderless', showExcerpt = true, authorName, authorAvatarUrl }: { post: Post; variant?: 'borderless' | 'card' | 'polaroid'; showExcerpt?: boolean; authorName?: string; authorAvatarUrl?: string }) {
+export default function PostCard({ post, variant = 'borderless', showExcerpt = true, authorName, authorAvatarUrl, priority = false }: { post: Post; variant?: 'borderless' | 'card' | 'polaroid'; showExcerpt?: boolean; authorName?: string; authorAvatarUrl?: string; priority?: boolean }) {
   const safe = sanitizeHtml(post.content || '');
   const mins = computeReadingMinutes(safe);
   const isPolaroid = variant === 'polaroid';
@@ -46,6 +46,19 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
       if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(src)) {
         return { type: 'file' as const, src };
       }
+    }
+    // 일반 텍스트/링크 형태의 유튜브 URL을 임베드로 변환
+    const ytId = (() => {
+      const m1 = safe.match(/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^"'\s]*v=([A-Za-z0-9_-]{11})/i);
+      if (m1 && m1[1]) return m1[1];
+      const m2 = safe.match(/https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})/i);
+      if (m2 && m2[1]) return m2[1];
+      const m3 = safe.match(/https?:\/\/(?:www\.)?youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/i);
+      if (m3 && m3[1]) return m3[1];
+      return null;
+    })();
+    if (ytId) {
+      return { type: 'iframe' as const, src: `https://www.youtube.com/embed/${ytId}` };
     }
     return null;
   };
@@ -102,10 +115,10 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
     return trimmed.length > 140 ? trimmed.slice(0, 140) + '…' : trimmed;
   })();
   return (
-    <li className={wrapperClass}>
+    <article className={wrapperClass} aria-labelledby={`card-title-${post.id}`}>
       {/* 카드 내부 프로필 헤더 */}
       {(authorName || authorAvatarUrl) && (
-        <div className={isPolaroid ? 'px-5 pt-5' : 'p-4'}>
+        <div className={isPolaroid ? 'p-4 md:p-5' : 'p-4 md:p-5'}>
           <div className="flex items-center gap-3">
             <div className="relative w-9 h-9 rounded-full overflow-hidden border bg-gray-100">
               {authorAvatarUrl ? (
@@ -139,7 +152,7 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
         )
       ) : post.cover_image && (
         isPolaroid ? (
-          <Link href={`/posts/${encodeURIComponent(post.slug)}`}>
+          <Link href={`/posts/${post.slug}`} aria-label={post.title} className="focus:outline-none focus:ring-2 focus:ring-black rounded">
             <div className="p-3">
               <div className="relative w-full aspect-[16/9] bg-white border rounded-lg shadow-sm overflow-hidden">
                 <Image
@@ -150,13 +163,14 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
                   className="object-cover polaroid-photo"
                   placeholder="blur"
                   blurDataURL={getShimmerDataURL(16, 9)}
+                  priority={priority}
                 />
               </div>
             </div>
           </Link>
         ) : (
-          <Link href={`/posts/${encodeURIComponent(post.slug)}`}>
-            <div className="relative w-full aspect-[16/9]">
+          <Link href={`/posts/${post.slug}`} aria-label={post.title} className="focus:outline-none focus:ring-2 focus:ring-black rounded">
+            <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden">
               <Image
                 src={getOptimizedImageUrl(post.cover_image, { width: 768, quality: 80, format: 'webp' })}
                 alt={post.title}
@@ -165,13 +179,14 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
                 className="object-cover"
                 placeholder="blur"
                 blurDataURL={getShimmerDataURL(16, 9)}
+                priority={priority}
               />
             </div>
           </Link>
         )
       )}
-      <div className={isPolaroid ? 'px-5 pb-5' : 'p-4'}>
-          <Link href={`/posts/${encodeURIComponent(post.slug)}`} className="text-lg font-semibold clamp-2 break-keep link-gauge">
+      <div className={isPolaroid ? 'p-4 md:p-5' : 'p-4 md:p-5'}>
+          <Link id={`card-title-${post.id}`} href={`/posts/${post.slug}`} className="text-lg font-semibold clamp-2 break-keep link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded">
           {post.title}
         </Link>
         {isPolaroid ? (
@@ -201,6 +216,6 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
         )}
         {showExcerpt && summary && <p className="text-sm text-gray-600 mt-2 break-words clamp-3">{summary}</p>}
       </div>
-    </li>
+    </article>
   );
 }

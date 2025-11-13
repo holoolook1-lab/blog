@@ -7,18 +7,16 @@ import ReportForm from '@/components/blog/ReportForm';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { computeReadingMinutes } from '@/lib/utils/reading';
 import { formatDateKR } from '@/lib/date';
-import Image from 'next/image';
-import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
-import { getShimmerDataURL } from '@/lib/utils/shimmer';
+// 커버 이미지를 본문에서 제거하면서 관련 이미지 유틸 import 삭제
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { normalizeSlug } from '@/lib/slug';
+// 슬러그는 라우터에서 디코드된 상태로 전달되므로 추가 정규화는 생략합니다.
+import { getPublicSiteMeta, buildPostUrl } from '@/lib/site';
 import BackToTop from '@/components/ui/BackToTop';
 import ActionBar from '@/components/blog/ActionBar';
 import EditLinkClient from '@/components/blog/EditLinkClient';
 import ProfileCard from '@/components/profile/ProfileCard';
-import { Crown, Diamond, Medal } from 'lucide-react';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -30,22 +28,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .from('posts')
     .select('title, excerpt, cover_image, created_at, updated_at')
     .eq('slug', cleanSlug)
-    .single();
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    .maybeSingle();
+  const { url: site, name: siteName } = getPublicSiteMeta();
   const title = post?.title || '포스트';
   const description = post?.excerpt || '';
   const images = post?.cover_image ? [`${post.cover_image}`] : undefined;
   return {
     title,
     description,
-    alternates: { canonical: `${site}/posts/${cleanSlug}` },
+    alternates: { canonical: buildPostUrl(site, cleanSlug) },
     openGraph: {
       type: 'article',
       title,
       description,
-      url: `${site}/posts/${cleanSlug}`,
+      url: buildPostUrl(site, cleanSlug),
       images,
-      siteName: process.env.NEXT_PUBLIC_SITE_NAME || '블로그',
+      siteName: siteName || '블로그',
       locale: 'ko_KR',
       publishedTime: post?.created_at || undefined,
       modifiedTime: post?.updated_at || undefined,
@@ -65,7 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -74,8 +72,8 @@ export default async function PostDetailPage({ params }: Params) {
   const supabase = (await getServerSupabase()) || createPublicSupabaseClient();
   if (!supabase) {
     return (
-      <main className="max-w-3xl mx-auto p-4 space-y-4">
-        <h1 className="text-2xl font-bold">포스트</h1>
+      <main id="main" role="main" aria-labelledby="post-title" className="max-w-3xl mx-auto p-4 space-y-4">
+        <h1 id="post-title" className="text-2xl font-bold">포스트</h1>
         <p className="text-sm text-gray-600">환경변수 설정 후 콘텐츠가 표시됩니다.</p>
       </main>
     );
@@ -88,21 +86,46 @@ export default async function PostDetailPage({ params }: Params) {
   const rawSlug = (slug || '').toString();
   let cleanSlug = rawSlug.trim();
   try { cleanSlug = decodeURIComponent(cleanSlug); } catch {}
-  cleanSlug = normalizeSlug(cleanSlug);
-  const { data: post } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('slug', cleanSlug)
-    .single();
+  // 원본/디코드/소문자 폴백 순서로 조회
+  let post: any = null;
+  {
+    const { data } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('slug', cleanSlug)
+      .maybeSingle();
+    post = data || null;
+  }
+  if (!post) {
+    const { data } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('slug', rawSlug)
+      .maybeSingle();
+    post = data || null;
+  }
+  if (!post) {
+    const { data } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('slug', cleanSlug.toLowerCase())
+      .maybeSingle();
+    post = data || null;
+  }
 
   if (!post) return notFound();
 
   const safe = sanitizeHtml(post.content);
+  const { url: site, name: siteName } = getPublicSiteMeta();
   // 상세 페이지에서 임베드 자동 재생 파라미터 주입
   const enableAutoplay = (html: string) => {
     if (!html) return '';
+    // 영상/임베드가 없으면 조기 반환하여 문자열 처리 비용을 절감
+    if (!/(<iframe|<video|youtube\.com|vimeo\.com|dailymotion\.com|twitch\.tv|naver\.com|facebook\.com)/i.test(html)) {
+      return html;
+    }
     let out = html;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = site;
     let parentHost = 'localhost';
     try {
       const u = new URL(siteUrl);
@@ -176,93 +199,24 @@ export default async function PostDetailPage({ params }: Params) {
     });
     // HTML5 <video>
     out = out.replace(/<video(?![^>]*autoplay)([^>]*)>/gi, '<video$1 autoplay muted playsinline>');
+    // 접근성: title 속성이 없는 모든 iframe에 기본 제목 추가
+    out = out.replace(/<iframe[^>]*>/gi, (m) => {
+      return /\btitle\s*=\s*["'][^"']*["']/.test(m) ? m : m.replace('<iframe', '<iframe title="임베드 콘텐츠"');
+    });
     return out;
   };
   const safeWithAutoplay = enableAutoplay(safe);
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '블로그';
+  // 공통 메타 유틸에서 가져온 site/siteName 사용
 
   // 읽기 시간 계산(대략 200 wpm)
   const readingMinutes = computeReadingMinutes(safe);
 
-  // 이전/다음 글 조회 (created_at + id 타이브레이커)
-  let prev: any | null = null;
-  let next: any | null = null;
-  // 1차: created_at 비교
-  const { data: prevData1 } = await supabase
-    .from('posts')
-    .select('slug, title, id, created_at')
-    .eq('published', true)
-    .lt('created_at', post.created_at)
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false })
-    .limit(1);
-  if (prevData1 && prevData1.length) {
-    prev = prevData1[0];
-  } else {
-    // 2차: 동일 시각에서 id 타이브레이커
-    const { data: prevData2 } = await supabase
-      .from('posts')
-      .select('slug, title, id, created_at')
-      .eq('published', true)
-      .eq('created_at', post.created_at)
-      .lt('id', post.id)
-      .order('id', { ascending: false })
-      .limit(1);
-    prev = prevData2 && prevData2.length ? prevData2[0] : null;
-  }
+  // 이전/다음 글 조회 제거: 초기 응답 시간을 줄이기 위해 생략합니다.
 
-  const { data: nextData1 } = await supabase
-    .from('posts')
-    .select('slug, title, id, created_at')
-    .eq('published', true)
-    .gt('created_at', post.created_at)
-    .order('created_at', { ascending: true })
-    .order('id', { ascending: true })
-    .limit(1);
-  if (nextData1 && nextData1.length) {
-    next = nextData1[0];
-  } else {
-    const { data: nextData2 } = await supabase
-      .from('posts')
-      .select('slug, title, id, created_at')
-      .eq('published', true)
-      .eq('created_at', post.created_at)
-      .gt('id', post.id)
-      .order('id', { ascending: true })
-      .limit(1);
-    next = nextData2 && nextData2.length ? nextData2[0] : null;
-  }
-
-  // 작성자 활동 통계로 레벨 아이콘 계산
-  let authorScore = 0;
-  let authorLevel: 'platinum' | 'gold' | 'silver' | 'bronze' = 'bronze';
-  try {
-    // 집계 뷰(profile_stats)를 우선 사용
-    const { data: stat } = await supabase
-      .from('profile_stats')
-      .select('post_count, like_sum, level')
-      .eq('user_id', post.user_id)
-      .single();
-    if (stat) {
-      authorScore = ((stat as any)?.post_count || 0) * 2 + ((stat as any)?.like_sum || 0) * 1;
-      authorLevel = (stat as any)?.level || 'bronze';
-    } else {
-      // 폴백: 직접 집계
-      const { data: authorPosts } = await supabase
-        .from('posts')
-        .select('id, like_count')
-        .eq('user_id', post.user_id)
-        .eq('published', true);
-      const postCount = (authorPosts || []).length;
-      const likeSum = (authorPosts || []).reduce((sum: number, p: any) => sum + (p.like_count || 0), 0);
-      authorScore = postCount * 2 + likeSum * 1;
-      authorLevel = authorScore >= 1000 ? 'platinum' : authorScore >= 500 ? 'gold' : authorScore >= 100 ? 'silver' : 'bronze';
-    }
-  } catch {}
+  // 작성자 활동 통계 조회 제거: 중복 집계를 피하고 초기 응답 시간을 줄입니다.
 
   return (
-    <article id="main" className="max-w-5xl mx-auto p-4 space-y-4">
+    <article id="main" className="max-w-5xl mx-auto p-4 space-y-4" aria-labelledby="post-title">
       {/* Article JSON-LD */}
       <script
         type="application/ld+json"
@@ -276,7 +230,7 @@ export default async function PostDetailPage({ params }: Params) {
             image: post.cover_image ? [post.cover_image] : undefined,
             mainEntityOfPage: {
               '@type': 'WebPage',
-              '@id': `${site}/posts/${slug}`,
+              '@id': buildPostUrl(site, cleanSlug),
             },
             publisher: {
               '@type': 'Organization',
@@ -289,20 +243,7 @@ export default async function PostDetailPage({ params }: Params) {
       <div className="block lg:hidden">
         <ProfileCard authorId={post.user_id} />
       </div>
-      {post.cover_image && (
-        <div className="relative w-full aspect-[16/9] rounded overflow-hidden">
-          <Image
-            src={getOptimizedImageUrl(post.cover_image, { width: 1024, quality: 85, format: 'webp' })}
-            alt={post.title}
-            fill
-            sizes={defaultSizes.detail}
-            className="object-cover"
-            priority
-            placeholder="blur"
-            blurDataURL={getShimmerDataURL(16, 9)}
-          />
-        </div>
-      )}
+      {/* 요청에 따라 본문 상단 커버 이미지를 렌더링하지 않습니다 */}
       <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8">
         {/* 데스크탑 좌측 고정 프로필 */}
         <aside className="hidden lg:block">
@@ -311,14 +252,9 @@ export default async function PostDetailPage({ params }: Params) {
         <div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">{post.title}</h1>
+          <h1 id="post-title" className="text-3xl font-bold">{post.title}</h1>
           <span className={`text-xs px-2 py-0.5 rounded border ${post.published ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
             {post.published ? '공개' : '비공개'}
-          </span>
-          {/* 레벨/배지 표시: 모든 등급 노출 */}
-          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border bg-gray-50">
-            {authorLevel === 'platinum' ? <Diamond size={14} /> : authorLevel === 'gold' ? <Crown size={14} /> : <Medal size={14} />}
-            {authorLevel === 'platinum' ? '플래티넘' : authorLevel === 'gold' ? '골드' : authorLevel === 'silver' ? '실버' : '브론즈'}
           </span>
         </div>
         {/* 작성자에게만 편집 링크 노출: 클라이언트에서 인증 확인 */}
@@ -331,7 +267,11 @@ export default async function PostDetailPage({ params }: Params) {
       <div className="prose mt-4" dangerouslySetInnerHTML={{ __html: safeWithAutoplay }} />
       {post.heading && (
         <div className="pt-4">
-          <Link href={`/posts?heading=${encodeURIComponent(post.heading)}`} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-gray-50 hover:bg-gray-100">
+          <Link
+            href={`/posts?heading=${encodeURIComponent(post.heading)}`}
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black"
+            aria-label={`카테고리 ${post.heading} 글 보기`}
+          >
             #{post.heading}
           </Link>
         </div>
@@ -343,30 +283,9 @@ export default async function PostDetailPage({ params }: Params) {
       </div>
       </div>{/* /content column */}
       </div>{/* /grid */}
-      <nav className="flex justify-between pt-6">
-        <div>
-          {prev ? (
-        <Link href={`/posts/${encodeURIComponent(prev.slug)}`} className="text-sm text-gray-700 link-gauge">
-              ← {prev.title}
-            </Link>
-          ) : <span />}
-        </div>
-        <div>
-          {next ? (
-        <Link href={`/posts/${encodeURIComponent(next.slug)}`} className="text-sm text-gray-700 link-gauge">
-              {next.title} →
-            </Link>
-          ) : <span />}
-        </div>
-      </nav>
+      {/* 이전/다음 내비게이션 제거: 초기 로딩 성능 최적화 */}
       <section className="mt-8">
         <h2 className="font-semibold">댓글</h2>
-        {!user && (
-          <p className="text-sm text-gray-600 mt-1">
-            댓글 작성은 로그인 후 가능합니다.{' '}
-        <Link href={`/login?redirect=/posts/${slug}`} className="link-gauge">로그인하기</Link>
-          </p>
-        )}
         <CommentSection postId={post.id} />
       </section>
       <BackToTop />

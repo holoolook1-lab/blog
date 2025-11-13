@@ -23,7 +23,7 @@ export default function BackToTop() {
   return (
     <button
       onClick={goTop}
-      className="fixed bottom-6 right-6 rounded-full bg-primary text-white shadow-lg px-4 py-2 text-sm hover:bg-primary/85"
+      className="fixed bottom-6 right-6 rounded-full bg-primary text-white shadow-lg px-3 py-1.5 text-xs hover:bg-primary/85 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
       aria-label="맨 위로 이동"
       title="맨 위로 이동"
     >

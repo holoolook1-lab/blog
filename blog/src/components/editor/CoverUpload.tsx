@@ -110,7 +110,7 @@ export default function CoverUpload({ value, onChange }: { value?: string | null
             // Supabase 공개 URL이면 작은 사이즈로 변환해 트래픽을 줄입니다.
             preview = getOptimizedImageUrl(value, { width: 1024, quality: 80, format: 'webp' });
           } catch {}
-          return <img src={preview} alt="cover" className="w-full rounded" loading="lazy" decoding="async" />;
+          return <img src={preview} alt="커버 이미지" className="w-full rounded" loading="lazy" decoding="async" />;
         })()
       )}
     </div>

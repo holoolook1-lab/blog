@@ -13,10 +13,9 @@ export default function ActionBar({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`} role="group" aria-label="글 액션">
       <VoteButtons postId={postId} initialLikes={initialLikes} initialDislikes={initialDislikes} />
       <BookmarkButton postId={postId} />
     </div>
   );
 }
-

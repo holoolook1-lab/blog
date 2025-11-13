@@ -179,7 +179,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
     <>
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
       {loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-gray-600" role="status" aria-live="polite">
           <span className="inline-block w-3 h-3 rounded-full bg-gray-300 animate-pulse" />
           댓글을 불러오는 중...
         </div>
@@ -196,16 +196,17 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                   const u = new URL(url);
                   isSupabasePublic = /\/storage\/v1\/object\/public\//.test(u.pathname);
                 } catch {}
+                const displayName = profiles[c.user_id]?.username || '익명';
                 return isSupabasePublic ? (
                   <Image
                     src={getOptimizedImageUrl(url, { width: 48, quality: 80, format: 'webp' })}
-                    alt="avatar"
+                    alt={`${displayName}의 아바타`}
                     width={24}
                     height={24}
                     className="rounded-full"
                   />
                 ) : (
-                  <img src={url} alt="avatar" className="w-6 h-6 rounded-full" loading="lazy" decoding="async" />
+                  <img src={url} alt={`${displayName}의 아바타`} className="w-6 h-6 rounded-full" loading="lazy" decoding="async" />
                 );
               })()
             ) : (
@@ -219,10 +220,10 @@ export default function ClientCommentList({ postId }: { postId: string }) {
           </div>
           {editingId === c.id ? (
             <div className="space-y-2">
-              <textarea className="border rounded w-full p-2" value={editContent} onChange={(e) => setEditContent(e.target.value)} />
+              <textarea className="border rounded w-full p-2" value={editContent} onChange={(e) => setEditContent(e.target.value)} aria-label="댓글 수정 입력" />
               <div className="flex gap-2">
-                <button className={`${outlineButtonSmall}`} onClick={() => submitEdit(c.id)}>수정 완료</button>
-                <button className={`${outlineButtonSmall}`} onClick={() => setEditingId(null)}>취소</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => submitEdit(c.id)} aria-label="댓글 수정 완료">수정 완료</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => setEditingId(null)} aria-label="댓글 수정 취소">취소</button>
               </div>
             </div>
           ) : (
@@ -232,19 +233,28 @@ export default function ClientCommentList({ postId }: { postId: string }) {
           <div className="flex gap-2 mt-2">
             {userId === c.user_id && editingId !== c.id && (
               <>
-                <button className={`${outlineButtonSmall}`} onClick={() => startEdit(c)}>수정</button>
-                <button className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`} onClick={() => remove(c.id)}>삭제</button>
+                <button className={`${outlineButtonSmall}`} onClick={() => startEdit(c)} aria-label="댓글 수정">수정</button>
+                <button className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`} onClick={() => remove(c.id)} aria-label="댓글 삭제">삭제</button>
               </>
             )}
             {userId ? (
-              <button className={`${outlineButtonSmall}`} onClick={() => setReplyToId(replyToId === c.id ? null : c.id)}>답글</button>
+              <button
+                className={`${outlineButtonSmall}`}
+                onClick={() => setReplyToId(replyToId === c.id ? null : c.id)}
+                aria-expanded={replyToId === c.id}
+                aria-controls={`reply-panel-${c.id}`}
+                aria-label={replyToId === c.id ? '답글 입력 닫기' : '답글 입력 열기'}
+              >
+                답글
+              </button>
             ) : (
-              <button className={`${outlineButtonSmall}`} onClick={() => showToast({ type: 'error', message: '로그인 후 답글을 작성할 수 있습니다.' })}>답글</button>
+              <button className={`${outlineButtonSmall}`} onClick={() => showToast({ type: 'error', message: '로그인 후 답글을 작성할 수 있습니다.' })} aria-label="로그인 필요: 답글 작성">답글</button>
             )}
           </div>
 
           {replyToId === c.id && (
-            <div className="ml-4 mt-2 space-y-2">
+            <div className="ml-4 mt-2 space-y-2" id={`reply-panel-${c.id}`}
+            >
               <textarea
                 className="border rounded w-full p-2"
                 value={replyContent}
@@ -264,17 +274,19 @@ export default function ClientCommentList({ postId }: { postId: string }) {
                   }
                 }}
                 placeholder="답글을 입력하세요..."
+                aria-label="답글 입력"
+                aria-describedby={`reply-hint-${c.id}`}
               />
               <div className="flex items-center justify-between">
                 <span className={`text-sm ${replyContent.length > MAX_LEN ? 'text-red-500' : 'text-gray-500'}`}>
                   {replyContent.length} / {MAX_LEN}
                 </span>
                 <div className="flex gap-2">
-                  <button className={`${outlineButtonSmall}`} onClick={() => submitReply(c.id)}>답글 작성</button>
-                  <button className={`${outlineButtonSmall}`} onClick={() => setReplyToId(null)}>취소</button>
+                  <button className={`${outlineButtonSmall}`} onClick={() => submitReply(c.id)} aria-label="답글 제출">답글 작성</button>
+                  <button className={`${outlineButtonSmall}`} onClick={() => setReplyToId(null)} aria-label="답글 입력 취소">취소</button>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">Ctrl+Enter로 답글을 빠르게 작성할 수 있습니다.</p>
+              <p className="text-xs text-gray-500" id={`reply-hint-${c.id}`}>Ctrl+Enter로 답글을 빠르게 작성할 수 있습니다.</p>
             </div>
           )}
 

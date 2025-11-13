@@ -43,15 +43,17 @@ export default function ReportForm({ slug }: Props) {
   return (
     <div className="mt-2">
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center px-2 py-1 text-xs rounded border bg-red-50 text-red-700 hover:bg-red-100"
         aria-expanded={open}
+        aria-controls="report-panel"
       >
         신고하기
       </button>
 
       {open && (
-        <div className="mt-2 border rounded p-3 bg-gray-50">
+        <div id="report-panel" className="mt-2 border rounded p-3 bg-gray-50">
           <div className="flex flex-col gap-2">
             <label className="text-xs text-gray-700">신고 유형</label>
             <select
@@ -78,26 +80,30 @@ export default function ReportForm({ slug }: Props) {
           </div>
           <div className="mt-3 flex items-center gap-2">
             <button
+              type="button"
               onClick={submit}
               disabled={sending}
               className="inline-flex items-center px-3 py-1.5 text-xs rounded border bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              aria-busy={sending}
+              aria-describedby="reportform-submit-hint"
             >
               {sending ? '전송 중...' : '신고 제출'}
             </button>
             <button
+              type="button"
               onClick={() => setOpen(false)}
               className="inline-flex items-center px-3 py-1.5 text-xs rounded border bg-gray-100 hover:bg-gray-200"
             >
               취소
             </button>
           </div>
+          <p id="reportform-submit-hint" className="sr-only">신고 제출 처리 중에는 버튼이 비활성화됩니다.</p>
         </div>
       )}
 
       {ok !== null && (
-        <p className={`mt-1 text-xs ${ok ? 'text-green-700' : 'text-red-700'}`}>{feedback}</p>
+        <p className={`mt-1 text-xs ${ok ? 'text-green-700' : 'text-red-700'}`} role="status" aria-live="polite">{feedback}</p>
       )}
     </div>
   );
 }
-

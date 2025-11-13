@@ -28,7 +28,7 @@ export default function ImageUpload() {
             // Supabase 공개 URL이면 작은 사이즈로 변환해 트래픽을 줄입니다.
             preview = getOptimizedImageUrl(url, { width: 768, quality: 80, format: 'webp' });
           } catch {}
-          return <img src={preview} alt="uploaded" className="max-w-full" loading="lazy" decoding="async" />;
+          return <img src={preview} alt="업로드된 이미지" className="max-w-full" loading="lazy" decoding="async" />;
         })()
       )}
     </div>

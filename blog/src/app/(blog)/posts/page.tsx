@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import ProtectedLink from '@/components/common/ProtectedLink';
-import { outlineButton, outlineButtonSmall } from '@/lib/styles/ui';
+import { outlineButtonSmall } from '@/lib/styles/ui';
 import Image from 'next/image';
 import { getOptimizedImageUrl, defaultSizes } from '@/lib/utils/image';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
@@ -118,19 +118,19 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   // 빈 상태 처리
   if (!posts || posts.length === 0) {
     return (
-      <main className="max-w-3xl mx-auto p-4 space-y-4">
-        <h1 className="text-2xl font-bold">포스트</h1>
+      <main className="max-w-3xl mx-auto p-4 space-y-4" role="main" aria-labelledby="posts-title">
+        <h1 id="posts-title" className="text-2xl font-bold">포스트</h1>
         <PostsSearch />
         {q ? (
           <div className="border rounded p-6 text-center space-y-2">
             <p className="text-sm text-gray-600">검색어 "{q}"에 대한 결과가 없습니다.</p>
-            <Link href="/posts" className="inline-flex items-center justify-center border rounded px-3 py-1 text-sm hover:bg-gray-50">검색 초기화</Link>
+            <Link href="/posts" className={outlineButtonSmall}>검색 초기화</Link>
           </div>
         ) : (
           <div className="border rounded p-6 text-center space-y-2">
             <p className="text-sm text-gray-600">아직 공개된 포스트가 없습니다.</p>
             <p className="text-sm text-gray-600">첫 글을 작성해보세요!</p>
-            <ProtectedLink href="/write" className={outlineButton} ariaLabel="글 작성하기">
+            <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="글 작성하기">
               글 작성하기
             </ProtectedLink>
           </div>
@@ -140,10 +140,10 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   }
 
   return (
-    <main id="main" className="max-w-3xl mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">포스트</h1>
+    <main id="main" className="max-w-3xl mx-auto p-4 space-y-4" role="main" aria-labelledby="posts-title">
+      <h1 id="posts-title" className="text-2xl font-bold">포스트</h1>
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600" aria-live="polite">
+        <p className="text-sm text-gray-600" aria-live="polite" role="status">
           {q ? (
             <>현재 검색어: <span className="font-medium text-gray-800">{q}</span> · 결과: {totalCount}건</>
           ) : heading ? (
@@ -154,11 +154,13 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
         </p>
         <PostsSearch />
       </div>
-      <ul className="grid gap-6">
-        {(posts || []).map((p) => (
-          <PostCard key={p.id} post={p} variant="polaroid" authorName={(p as any).__authorName} authorAvatarUrl={(p as any).__authorAvatar} />
+      <div className="grid gap-6 sm:grid-cols-2" role="list" aria-label="포스트 목록">
+        {(posts || []).map((p, i) => (
+          <div role="listitem" aria-label={p.title} key={p.id}>
+            <PostCard post={p} variant="polaroid" authorName={(p as any).__authorName} authorAvatarUrl={(p as any).__authorAvatar} priority={i === 0} />
+          </div>
         ))}
-      </ul>
+      </div>
       <div className="flex items-center justify-between pt-2">
         {safePage > 1 ? (
           <Link href={`/posts?page=${safePage - 1}${q ? `&q=${encodeURIComponent(q)}` : ''}${heading ? `&heading=${encodeURIComponent(heading)}` : ''}`} className="text-sm link-gauge">이전</Link>

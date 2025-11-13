@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updatePassword } from "../actions";
-import { outlineButton } from "@/lib/styles/ui";
+import { outlineButtonSmall } from "@/lib/styles/ui";
 
 export default function ResetConfirmPage() {
   const router = useRouter();
@@ -41,8 +41,8 @@ export default function ResetConfirmPage() {
     <main className="max-w-md mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">새 비밀번호 설정</h1>
       <p className="text-sm text-gray-600">메일의 링크로 진입하셨다면 여기서 새 비밀번호를 설정할 수 있습니다.</p>
-      {message && <div className="rounded border border-green-200 bg-green-50 p-2 text-green-700 text-sm">{message}</div>}
-      {error && <div className="rounded border border-red-200 bg-red-50 p-2 text-red-700 text-sm">{error}</div>}
+      {message && <div id="reset-message" className="rounded border border-green-200 bg-green-50 p-2 text-green-700 text-sm" aria-live="polite" role="status">{message}</div>}
+      {error && <div id="reset-error" className="rounded border border-red-200 bg-red-50 p-2 text-red-700 text-sm" aria-live="assertive" role="alert">{error}</div>}
       <form onSubmit={onSubmit} className="space-y-3">
         <label className="block">
           <span className="text-sm">새 비밀번호</span>
@@ -50,10 +50,12 @@ export default function ResetConfirmPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border px-3 py-2"
+            className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
             required
             minLength={8}
             autoComplete="new-password"
+            aria-invalid={Boolean(error)}
+            aria-describedby="reset-error"
           />
         </label>
         <label className="block">
@@ -62,19 +64,24 @@ export default function ResetConfirmPage() {
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1 w-full rounded border px-3 py-2"
+            className="mt-1 w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
             required
             minLength={8}
             autoComplete="new-password"
+            aria-invalid={Boolean(error)}
+            aria-describedby="reset-error"
           />
         </label>
         <button
           type="submit"
           disabled={pending}
-          className={`${outlineButton} w-full disabled:opacity-60`}
+          className={`${outlineButtonSmall} w-full disabled:opacity-60`}
+          aria-busy={pending}
+          aria-describedby="reset-submit-hint"
         >
           {pending ? "변경 중..." : "비밀번호 변경"}
         </button>
+        <p id="reset-submit-hint" className="sr-only">비밀번호 변경을 제출합니다. 처리 중에는 버튼이 비활성화됩니다.</p>
       </form>
     </main>
   );

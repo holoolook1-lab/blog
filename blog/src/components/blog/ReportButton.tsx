@@ -39,16 +39,20 @@ export default function ReportButton({ slug }: { slug: string }) {
   return (
     <div className="mt-2">
       <button
+        type="button"
         onClick={handleClick}
         disabled={sending}
         className={`${outlineButtonSmall} border-red-600 text-red-700 hover:bg-red-50 disabled:opacity-50`}
         aria-label="글 신고"
+        aria-busy={sending}
+        aria-describedby="report-submit-hint"
         title="이 글을 신고합니다"
       >
         {sending ? '신고 중...' : '신고하기'}
       </button>
+      <p id="report-submit-hint" className="sr-only">신고 처리 중에는 버튼이 비활성화됩니다.</p>
       {ok !== null && (
-        <p className={`mt-1 text-xs ${ok ? 'text-green-700' : 'text-red-700'}`}>{feedback}</p>
+        <p className={`mt-1 text-xs ${ok ? 'text-green-700' : 'text-red-700'}`} role="status" aria-live="polite">{feedback}</p>
       )}
     </div>
   );

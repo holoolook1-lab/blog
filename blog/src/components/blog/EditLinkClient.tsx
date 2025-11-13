@@ -13,6 +13,6 @@ export default function EditLinkClient({ authorId, slug }: { authorId: string; s
 
   if (!isOwner) return null;
   return (
-    <Link href={`/edit/${slug}`} className="text-sm text-blue-600 link-gauge">편집</Link>
+    <Link href={`/edit/${slug}`} className="text-sm text-blue-600 link-gauge" aria-label="글 편집">편집</Link>
   );
 }

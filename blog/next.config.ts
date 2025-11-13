@@ -14,15 +14,25 @@ const hostname = (() => {
 const nextConfig: NextConfig = {
   images: {
     // 원격 이미지 최적화 허용: Supabase Storage 공개 객체
-    remotePatterns: hostname
-      ? [
-          {
-            protocol: 'https',
-            hostname,
-            pathname: '/storage/v1/object/public/**',
-          },
-        ]
-      : [],
+    remotePatterns: [
+      // Supabase Storage 공개 객체 (프로젝트별 호스트)
+      ...(hostname
+        ? [
+            {
+              protocol: 'https',
+              hostname,
+              pathname: '/storage/v1/object/public/**',
+            } as const,
+          ]
+        : []),
+      // YouTube 썸네일 이미지
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+        // 예: /vi/<videoId>/maxresdefault.jpg
+        pathname: '/vi/**',
+      } as const,
+    ],
   },
   // 서버 파일 추적 루트를 turbopack.root와 동일하게 지정
   outputFileTracingRoot: path.resolve(__dirname, '..'),

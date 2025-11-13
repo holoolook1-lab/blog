@@ -14,6 +14,10 @@ function todayDateStr() {
 
 export async function POST() {
   const supabase = await getServerSupabase();
+  if (!supabase) {
+    // 로컬에서 Supabase 공개 환경변수가 없으면 안전하게 종료
+    return NextResponse.json({ ok: false, error: 'supabase_env_missing' }, { status: 500 });
+  }
 
   const c = await cookies();
   let visitorId = c.get('visitor_id')?.value || '';

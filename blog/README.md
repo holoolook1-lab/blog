@@ -53,6 +53,18 @@
 - `NEXT_PUBLIC_SITE_NAME`
 - `NEXT_PUBLIC_SITE_DESCRIPTION`
 
+### 로컬 개발: 하드코딩 폴백(보안 무시)
+로컬에서 환경변수 없이 바로 실행하려면 하드코딩 폴백을 사용할 수 있습니다. 다음 파일에 프로젝트 값을 직접 채워 넣으세요:
+
+- 파일: `src/lib/supabase/hardcoded.ts`
+
+```ts
+export const HARDCODED_SUPABASE_URL = 'https://xxxx.supabase.co';
+export const HARDCODED_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+```
+
+애플리케이션은 환경변수가 없을 때 위 상수를 자동으로 사용합니다. 배포 시에는 반드시 상수를 비워두고 환경변수를 사용하세요.
+
 ## Google 로그인 설정 가이드 (Next.js + Supabase)
 
 이 프로젝트는 Supabase OAuth와 Next.js App Router를 사용해 Google 로그인을 지원합니다. 아래 단계를 순서대로 진행하세요.

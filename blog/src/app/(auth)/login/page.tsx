@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { markConsentInClient } from "@/lib/policies";
-import { outlineButton } from "@/lib/styles/ui";
+import { outlineButtonSmall } from "@/lib/styles/ui";
 // 회원가입은 별도 라우트(`/signup`)에서 처리합니다
 
 export default function LoginPage() {
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [consentPrivacy, setConsentPrivacy] = useState(false);
   const [consentTerms, setConsentTerms] = useState(false);
@@ -62,12 +63,15 @@ export default function LoginPage() {
         }
       }
     } catch {}
-    router.replace(`${redirect}${redirect.includes('?') ? '&' : '?'}auth_success=login`);
+    // 이미 클라이언트 세션을 설정했으므로 별도 하이드레이션 신호를 보내지 않습니다.
+    // (OAuth 플로우는 /auth/callback에서 auth_success를 처리)
+    router.replace(redirect);
   };
 
   const onGoogleLogin = async () => {
     setMessage(null);
     try {
+      setOauthLoading(true);
       const site = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
       const redirectTo = `${site}/auth/callback?redirect=${encodeURIComponent(redirect)}&flow=login`;
       // 선택적 동의 마커 저장(로그인 화면에서는 필수는 아님)
@@ -75,6 +79,8 @@ export default function LoginPage() {
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
     } catch (e: any) {
       setMessage(e?.message || '구글 로그인 시작 실패');
+    } finally {
+      setOauthLoading(false);
     }
   };
 
@@ -95,6 +101,8 @@ export default function LoginPage() {
             autoComplete="username"
             required
             aria-required
+            aria-invalid={Boolean(message)}
+            aria-describedby={message ? "login-error" : undefined}
           />
         </div>
         <div>
@@ -109,6 +117,8 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
             aria-required
+            aria-invalid={Boolean(message)}
+            aria-describedby={message ? "login-error" : undefined}
           />
           <div className="mt-2 text-right">
             <Link href="/reset" className="text-sm link-gauge">
@@ -119,11 +129,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className={`${outlineButton} w-full disabled:opacity-50`}
+          className={`${outlineButtonSmall} w-full disabled:opacity-50`}
           aria-label="로그인"
+          aria-busy={loading}
+          aria-describedby="login-submit-hint"
         >
           {loading ? "로그인 중..." : "로그인"}
         </button>
+        <p id="login-submit-hint" className="sr-only">이메일과 비밀번호 입력 후 로그인 버튼을 누르세요. 로딩 중에는 버튼이 비활성화됩니다.</p>
         <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
@@ -138,11 +151,13 @@ export default function LoginPage() {
             </span>
           </label>
         </div>
-        <div className="mt-3">
+        <div className="mt-3" aria-describedby="login-oauth-hint">
           <button
             type="button"
             onClick={onGoogleLogin}
-            className={`${outlineButton} w-full inline-flex items-center justify-center gap-2`}
+            className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2 disabled:opacity-50`}
+            disabled={oauthLoading}
+            aria-busy={oauthLoading}
             aria-label="구글로 계속하기"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
@@ -151,8 +166,9 @@ export default function LoginPage() {
               <path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5l-6.1-5c-2 1.5-4.6 2.5-6.9 2.5-5.1 0-9.4-3.1-11.1-7.5l-6.6 5.1C8.6 39.4 15.8 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.3-4.3 7-11.3 7-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4c-11.1 0-20 8.9-20 20s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
             </svg>
-            <span>Google로 계속하기</span>
+            <span>{oauthLoading ? 'Google 준비 중...' : 'Google로 계속하기'}</span>
           </button>
+          <p id="login-oauth-hint" className="sr-only">구글 계정으로 로그인합니다. 새 창 또는 리다이렉트가 발생할 수 있습니다.</p>
         </div>
         <p className="mt-3 text-sm text-gray-800">
           아직 회원이 아니신가요?{' '}
@@ -164,7 +180,7 @@ export default function LoginPage() {
           </Link>
         </p>
       </form>
-      {message && <p className="mt-3 text-sm text-red-600" aria-live="polite">{message}</p>}
+      {message && <p id="login-error" className="mt-3 text-sm text-red-600" aria-live="assertive" role="alert">{message}</p>}
       <p className="mt-6 text-xs text-gray-500">가입 후 이메일 인증을 완료해 주세요.</p>
 
       {/* 회원가입 인라인 섹션 제거: `/signup` 페이지로 이동 유도 */}
