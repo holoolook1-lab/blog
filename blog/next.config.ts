@@ -13,6 +13,8 @@ const hostname = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    // 원격 이미지 최적화를 비활성화하여 도메인 허용 문제로 인한 썸네일 깨짐을 방지
+    unoptimized: true,
     // 원격 이미지 최적화 허용: Supabase Storage 공개 객체
     remotePatterns: [
       // Supabase Storage 공개 객체 (프로젝트별 호스트)

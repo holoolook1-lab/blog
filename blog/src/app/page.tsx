@@ -23,32 +23,15 @@ const SocialLink = ({ href, icon, label }: { href: string; icon: React.ReactNode
 
 export default async function HomePage() {
   let recent: any[] = [];
-  const supabase = createPublicSupabaseClient();
   try {
-    const { data } = await supabase
-      .from('posts')
-      .select('id, user_id, title, slug, excerpt, cover_image, created_at')
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .range(0, 5);
-    recent = data || [];
-    // 작성자 프로필(닉네임/아바타) 매핑
-    const userIds = Array.from(new Set((recent || []).map((p: any) => p.user_id).filter(Boolean)));
-    if (userIds.length) {
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds as any);
-      const nameMap: Record<string, string> = {};
-      const avatarMap: Record<string, string> = {};
-      (profs || []).forEach((pr: any) => {
-        nameMap[pr.id] = pr.username || '';
-        avatarMap[pr.id] = pr.avatar_url || '';
-      });
-      recent = (recent || []).map((p: any) => ({
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const res = await fetch(`${origin}/api/public/recent`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const json = await res.json();
+      recent = (json?.posts || []).map((p: any) => ({
         ...p,
-        __authorName: nameMap[p.user_id] || p.user_id || '',
-        __authorAvatar: avatarMap[p.user_id] || '',
+        __authorName: p.authorName,
+        __authorAvatar: p.authorAvatarUrl,
       }));
     }
   } catch {}
