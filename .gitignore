@@ -1,0 +1,13 @@
+# Ignore local backup archives and large binary snapshots
+backup_snapshot_*.zip
+*.zip
+
+# Node / IDE common ignores
+node_modules/
+.env*
+.DS_Store
+dist/
+.next/
+out/
+coverage/
+*.log
