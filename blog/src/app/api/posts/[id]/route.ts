@@ -69,11 +69,11 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
-    revalidateTag('posts:list');
-    revalidateTag(`post:${s}`);
-    revalidateTag('feed:rss');
-    revalidateTag('feed:atom');
-    revalidateTag('feed:sitemap');
+    revalidateTag('posts:list', 'auto');
+    revalidateTag(`post:${s}`, 'auto');
+    revalidateTag('feed:rss', 'auto');
+    revalidateTag('feed:atom', 'auto');
+    revalidateTag('feed:sitemap', 'auto');
   } catch {}
   return NextResponse.json({ ok: true });
 }
@@ -101,11 +101,11 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
-    revalidateTag('posts:list');
-    if (toDelete?.slug) revalidateTag(`post:${toDelete.slug}`);
-    revalidateTag('feed:rss');
-    revalidateTag('feed:atom');
-    revalidateTag('feed:sitemap');
+    revalidateTag('posts:list', 'auto');
+    if (toDelete?.slug) revalidateTag(`post:${toDelete.slug}`, 'auto');
+    revalidateTag('feed:rss', 'auto');
+    revalidateTag('feed:atom', 'auto');
+    revalidateTag('feed:sitemap', 'auto');
   } catch {}
   return NextResponse.json({ ok: true });
 }

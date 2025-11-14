@@ -6,8 +6,7 @@ import { PRIVACY_VERSION } from '@/lib/policies';
 export const metadata: Metadata = {
   title: `개인정보 처리 방침 v${PRIVACY_VERSION}`,
   description: '라키라키 블로그 서비스의 개인정보 처리 방침',
-  alternates: { canonical: '/privacy' },
-  alternates: { languages: { en: '/en/privacy', ko: '/privacy' } },
+  alternates: { canonical: '/privacy', languages: { en: '/en/privacy', ko: '/privacy' } },
 };
 
 export default function PrivacyPolicyPage() {

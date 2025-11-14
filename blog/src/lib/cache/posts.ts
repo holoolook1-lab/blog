@@ -98,17 +98,13 @@ export const getPublicPostsCached = unstable_cache(
   { revalidate: 60, tags: ['posts:list'] }
 );
 
-export const getPostBySlugCached = unstable_cache(
-  async (slug: string) => {
-    const supabase = createPublicSupabaseClient();
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .maybeSingle();
-    return data || null;
-  },
-  (slug: string) => [`post:${slug}`],
-  { revalidate: 600, tags: (slug: string) => [`post:${slug}`] as any }
-);
+export async function getPostBySlugCached(slug: string) {
+  const supabase = createPublicSupabaseClient();
+  const { data } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('slug', slug)
+    .eq('published', true)
+    .maybeSingle();
+  return data || null;
+}

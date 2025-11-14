@@ -6,8 +6,7 @@ import { TERMS_VERSION } from '@/lib/policies';
 export const metadata: Metadata = {
   title: `이용 약관 v${TERMS_VERSION}`,
   description: '라키라키 블로그 서비스의 이용 약관',
-  alternates: { canonical: '/terms' },
-  alternates: { languages: { en: '/en/terms', ko: '/terms' } },
+  alternates: { canonical: '/terms', languages: { en: '/en/terms', ko: '/terms' } },
 };
 
 export default function TermsPage() {

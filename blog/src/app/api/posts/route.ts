@@ -71,11 +71,11 @@ export async function POST(req: Request) {
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
-    revalidateTag('posts:list');
-    revalidateTag(`post:${s}`);
-    revalidateTag('feed:rss');
-    revalidateTag('feed:atom');
-    revalidateTag('feed:sitemap');
+    revalidateTag('posts:list', 'auto');
+    revalidateTag(`post:${s}`, 'auto');
+    revalidateTag('feed:rss', 'auto');
+    revalidateTag('feed:atom', 'auto');
+    revalidateTag('feed:sitemap', 'auto');
   } catch {}
   if (!data) return badRequest('insert_failed');
   return NextResponse.json({ id: data.id, slug: s });
