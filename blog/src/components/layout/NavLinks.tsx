@@ -63,7 +63,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
     }
     
     previousPathnameRef.current = pathname;
-  }, [pathname]); // open 의존성 제거
+  }, [pathname, open]); // open 의존성 추가
 
   // 메뉴 항목 클릭 시 메뉴 닫기
   const handleMenuClick = () => {

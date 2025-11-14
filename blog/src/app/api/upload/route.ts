@@ -15,8 +15,8 @@ export async function POST(req: Request) {
   if (!file) return NextResponse.json({ error: 'file_required' }, { status: 400 });
 
   const mime = file.type;
-  const allowed = ['image/webp'];
-  if (!allowed.includes(mime)) return NextResponse.json({ error: 'invalid_type', hint: 'client_convert_to_webp' }, { status: 415 });
+  const allowed = ['image/webp', 'image/jpeg', 'image/png'];
+  if (!allowed.includes(mime)) return NextResponse.json({ error: 'invalid_type', hint: 'only_webp_jpeg_png_allowed' }, { status: 415 });
 
   if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'file_too_large' }, { status: 413 });
 

@@ -74,13 +74,14 @@ const nextConfig: NextConfig = {
     
     const csp = [
       "default-src 'self'",
-      `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
+      `img-src 'self' https: data: blob: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:" : "script-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
       'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
+      "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -88,13 +89,14 @@ const nextConfig: NextConfig = {
 
     const cspReportOnly = [
       "default-src 'self'",
-      `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
+      `img-src 'self' https: data: blob: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:" : "script-src 'self' blob:",
       (isDevelopment || isVercel) ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
       'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
+      "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
