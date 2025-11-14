@@ -34,7 +34,6 @@ export const metadata: Metadata = {
       'application/atom+xml': '/atom.xml',
     },
     languages: {
-      en: '/en',
       ko: '/',
     },
   },

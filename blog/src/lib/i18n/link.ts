@@ -1,3 +1,3 @@
-export function prefixPath(locale: string) {
-  return locale === 'en' ? '/en' : '';
+export function prefixPath(_locale: string) {
+  return '';
 }

@@ -7,12 +7,10 @@ import { Menu } from 'lucide-react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import LogoutButton from './LogoutButton';
 import ProtectedLink from '@/components/common/ProtectedLink';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   const t = useTranslations('nav');
-  const locale = useLocale();
-  const prefix = locale === 'en' ? '/en' : '';
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { userId } = useAuthUser();
@@ -43,14 +41,14 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         }
       >
         <Link
-          href={`${prefix}/posts`}
+          href={`/posts`}
           className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
           aria-current={isActive('/posts') ? 'page' : undefined}
         >
           {t('posts')}
         </Link>
         <ProtectedLink
-          href={`${prefix}/write`}
+          href={`/write`}
           className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/write') ? 'font-semibold text-black' : ''}`}
           ariaLabel={t('write')}
           ariaCurrent={isActive('/write') ? 'page' : undefined}
@@ -59,7 +57,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         </ProtectedLink>
         {userId && (
           <Link
-            href={`${prefix}/mypage`}
+            href={`/mypage`}
             className={`px-2 py-1 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/mypage') ? 'font-semibold text-black' : ''}`}
             aria-current={isActive('/mypage') ? 'page' : undefined}
           >

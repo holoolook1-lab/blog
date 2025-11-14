@@ -27,20 +27,6 @@ const authTokenLimit = hasKV
   : null;
 
 export async function middleware(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  const localeMatch = path.match(/^\/(en|ko)(\/(.*))?$/);
-  if (localeMatch) {
-    const locale = localeMatch[1];
-    const rest = localeMatch[2] ? `/${localeMatch[2].replace(/^\//, '')}` : '';
-    const target = new URL(rest || '/', req.nextUrl.origin);
-    const res = NextResponse.rewrite(target);
-    res.cookies.set('locale', locale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
-    res.headers.set('X-Content-Type-Options', 'nosniff');
-    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.headers.set('X-Frame-Options', 'SAMEORIGIN');
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-    return res;
-  }
   const res = NextResponse.next();
 
   res.headers.set('X-Content-Type-Options', 'nosniff');
@@ -120,8 +106,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/(en|ko)',
-    '/(en|ko)/:path*',
     '/write/:path*',
     '/edit/:path*',
     '/api/comments/:path*',

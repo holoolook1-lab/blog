@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    alternates: { canonical: buildPostUrl(site, cleanSlug), languages: { en: `/en/posts/${cleanSlug}`, ko: `/posts/${cleanSlug}` } },
+    alternates: { canonical: buildPostUrl(site, cleanSlug), languages: { ko: `/posts/${cleanSlug}` } },
     openGraph: {
       type: 'article',
       title,
@@ -102,6 +102,32 @@ export default async function PostDetailPage({ params }: Params) {
   if (!post) return notFound();
 
   const safe = sanitizeHtml(post.content);
+  const convertPlainLinksToEmbeds = (html: string) => {
+    if (!html) return '';
+    let out = html;
+    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^"'\s]*v=([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    });
+    out = out.replace(/https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    });
+    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    });
+    out = out.replace(/https?:\/\/(?:player\.)?vimeo\.com\/video\/([0-9]+)/gi, (_m, id) => {
+      return `<iframe src="https://player.vimeo.com/video/${id}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    });
+    out = out.replace(/https?:\/\/www\.dailymotion\.com\/video\/([A-Za-z0-9]+)/gi, (_m, id) => {
+      return `<iframe src="https://www.dailymotion.com/embed/video/${id}" width="560" height="315" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+    });
+    out = out.replace(/https?:\/\/(?:www\.)?twitch\.tv\/videos\/([0-9]+)/gi, (_m, id) => {
+      const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      let parent = 'localhost';
+      try { parent = new URL(site).hostname; } catch {}
+      return `<iframe src="https://player.twitch.tv/?video=${id}&parent=${parent}" width="560" height="315" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+    });
+    return out;
+  };
   const { url: site, name: siteName } = getPublicSiteMeta();
   // 상세 페이지에서 임베드 자동 재생 파라미터 주입
   const enableAutoplay = (html: string) => {
@@ -191,7 +217,7 @@ export default async function PostDetailPage({ params }: Params) {
     });
     return out;
   };
-  const safeWithAutoplay = enableAutoplay(safe);
+  const safeWithAutoplay = enableAutoplay(convertPlainLinksToEmbeds(safe));
   // 공통 메타 유틸에서 가져온 site/siteName 사용
 
   // 읽기 시간 계산(대략 200 wpm)
