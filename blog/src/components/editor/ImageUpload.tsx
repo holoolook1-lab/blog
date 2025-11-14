@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getOptimizedImageUrl } from '@/lib/utils/image';
+import { compressToWebp } from '@/lib/utils/imageClient';
 
 export default function ImageUpload() {
   const [loading, setLoading] = useState(false);
@@ -9,8 +10,16 @@ export default function ImageUpload() {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
+    let toUpload: File = file;
+    try {
+      if (file.type !== 'image/webp') {
+        toUpload = await compressToWebp(file, { maxWidth: 1920, quality: 0.82 });
+      }
+    } catch {
+      // 변환 실패 시 원본 업로드로 폴백
+    }
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', toUpload);
     const res = await fetch('/api/upload', { method: 'POST', body: form });
     const json = await res.json();
     setLoading(false);
