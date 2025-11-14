@@ -5,8 +5,20 @@ import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import type { AriaAttributes } from 'react';
 
 export default function ProtectedLink({ href, children, className, ariaLabel, ariaCurrent }: { href: string; children: React.ReactNode; className?: string; ariaLabel?: string; ariaCurrent?: AriaAttributes['aria-current'] }) {
-  const { userId } = useAuthUser();
+  const { userId, loading } = useAuthUser();
   const router = useRouter();
+
+  if (loading) {
+    return (
+      <span
+        className={`${className || ''} opacity-60 pointer-events-none`}
+        aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
+        aria-current={ariaCurrent}
+      >
+        {children}
+      </span>
+    );
+  }
 
   if (userId) {
     return (

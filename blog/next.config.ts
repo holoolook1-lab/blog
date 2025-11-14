@@ -59,11 +59,29 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
     ].join('; ');
+
+    const cspReportOnly = [
+      "default-src 'self'",
+      `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
+      "media-src 'self' https:",
+      // inline 금지(위반 탐지 목적)
+      "script-src 'self'",
+      "style-src 'self'",
+      "font-src 'self' https: data:",
+      `connect-src 'self' https: wss: ${supabaseHost}`,
+      'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      // 보고용 엔드포인트
+      'report-uri /api/csp-report'
+    ].join('; ');
     return [
       {
         source: '/(.*)',
         headers: [
           { key: 'Content-Security-Policy', value: csp },
+          { key: 'Content-Security-Policy-Report-Only', value: cspReportOnly },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },

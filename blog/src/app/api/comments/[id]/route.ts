@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   // XSS 방지: 저장 전에 콘텐츠 정화
   content = sanitizeHtml(content);
 
-  const { error } = await supabase.from('comments').update({ content }).eq('id', id);
+  const { error } = await supabase.from('comments').update({ content }).eq('id', id).eq('user_id', user.id);
   if (error) return badRequest(error.message);
   return NextResponse.json({ ok: true });
 }
@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return unauthorized();
-  const { error } = await supabase.from('comments').delete().eq('id', id);
+  const { error } = await supabase.from('comments').delete().eq('id', id).eq('user_id', user.id);
   if (error) return badRequest(error.message);
   return NextResponse.json({ ok: true });
 }

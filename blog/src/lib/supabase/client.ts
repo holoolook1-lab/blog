@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase/types';
 import { getSupabasePublicEnvOrThrow, hasSupabasePublicEnv } from '@/lib/env';
 import { HARDCODED_SUPABASE_URL, HARDCODED_SUPABASE_ANON_KEY, hasHardcodedSupabase } from '@/lib/supabase/hardcoded';
 
@@ -37,11 +38,11 @@ function createSupabaseStub(): any {
   };
 }
 
-export const supabase: any = (() => {
+export const supabase: ReturnType<typeof createClient<Database>> | any = (() => {
   if (hasSupabasePublicEnv() || hasHardcodedSupabase()) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || HARDCODED_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || HARDCODED_SUPABASE_ANON_KEY;
-    return createClient(url!, key!);
+    return createClient<Database>(url!, key!);
   }
   return createSupabaseStub();
 })();

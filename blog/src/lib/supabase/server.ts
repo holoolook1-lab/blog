@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import type { Database } from '@/lib/supabase/types';
 import { hasSupabasePublicEnv } from '@/lib/env';
 import { HARDCODED_SUPABASE_URL, HARDCODED_SUPABASE_ANON_KEY, hasHardcodedSupabase } from '@/lib/supabase/hardcoded';
 
@@ -10,7 +11,7 @@ export const getServerSupabase = async () => {
     return null as unknown as ReturnType<typeof createServerClient>;
   }
   const store = await cookies();
-  return createServerClient(url!, key!, {
+  return createServerClient<Database>(url!, key!, {
     cookies: {
       get(name: string) {
         return store.get(name)?.value;

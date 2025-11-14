@@ -57,6 +57,12 @@ export default function LoginPage() {
     try {
       if (res.access_token && res.refresh_token) {
         await supabase.auth.setSession({ access_token: res.access_token, refresh_token: res.refresh_token });
+        await fetch('/api/auth/session/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ access_token: res.access_token, refresh_token: res.refresh_token })
+        });
       }
     } catch {}
     // 이미 클라이언트 세션을 설정했으므로 별도 하이드레이션 신호를 보내지 않습니다.

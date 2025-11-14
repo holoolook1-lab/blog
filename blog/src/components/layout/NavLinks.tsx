@@ -37,9 +37,10 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         role="navigation"
         aria-label="주요 메뉴"
         className={
-          `text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex flex-col md:flex-row items-start md:items-center flex-wrap gap-2 md:gap-4 pr-12 md:pr-0 z-20`
+          `text-sm md:text-base text-gray-700 ${open ? 'block' : 'hidden'} md:flex md:flex-row items-start md:items-center gap-2 md:gap-4 pr-12 md:pr-0 z-20`
         }
       >
+        <div className="md:contents absolute md:static left-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-[720px] bg-white md:bg-transparent border md:border-0 rounded md:rounded-none shadow-sm md:shadow-none p-3 md:p-0">
         <Link
           href={`/posts`}
           className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
@@ -65,12 +66,13 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
           </Link>
         )}
         {userId && (
-          <span className="md:hidden">
+          <span className="md:hidden block pt-2 border-t mt-2">
             <nav aria-label={t('accountMenu')}>
               <LogoutButton />
             </nav>
           </span>
         )}
+        </div>
       </nav>
       {userId && (
         <div className="hidden md:block">

@@ -30,6 +30,11 @@ export async function POST(req: Request) {
   // XSS 방지: 저장 전에 콘텐츠 정화
   content = sanitizeHtml(content);
 
+  // RPC가 존재하면 사용, 없으면 일반 insert로 폴백
+  try {
+    const { data: rpc } = await (supabase as any).rpc('insert_comment', { p_post_id: post_id, p_user_id: user.id, p_parent_id: parent_id || null, p_content: content });
+    if (rpc && (rpc as any).id) return NextResponse.json({ id: (rpc as any).id });
+  } catch {}
   const { data, error } = await supabase
     .from('comments')
     .insert({ post_id, user_id: user.id, parent_id: parent_id || null, content })

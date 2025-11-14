@@ -4,6 +4,7 @@ import Footer from '@/components/layout/Footer';
 import AuthToastBridge from '@/components/layout/AuthToastBridge';
 import AuthSessionHydrator from '@/components/layout/AuthSessionHydrator';
 import { Suspense } from 'react';
+import { cookies } from 'next/headers';
 import type { Metadata } from 'next';
 import { getPublicSiteMeta } from '@/lib/site';
 import { NextIntlClientProvider } from 'next-intl';
@@ -46,6 +47,8 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages(locale);
+  let nonce: string | undefined = undefined;
+  try { nonce = (await cookies()).get('cspnonce')?.value; } catch {}
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-white text-black antialiased">
@@ -60,6 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <script
             type="application/ld+json"
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 '@context': 'https://schema.org',
@@ -71,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
           <script
             type="application/ld+json"
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 '@context': 'https://schema.org',

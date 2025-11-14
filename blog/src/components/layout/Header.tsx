@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import NavLinks from './NavLinks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Monogram from '@/components/brand/Monogram';
 import { SITE_NAME } from '@/lib/brand';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
@@ -11,7 +11,21 @@ import { useTranslations } from 'next-intl';
 export default function Header() {
   const t = useTranslations('common');
   const { userId, email } = useAuthUser();
-  const [/*avatarUrl*/, /*setAvatarUrl*/] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    async function loadAvatar() {
+      try {
+        if (!userId) { setAvatarUrl(null); return; }
+        const { supabase } = await import('@/lib/supabase/client');
+        const { data } = await supabase.from('profiles').select('avatar_url').eq('id', userId).maybeSingle();
+        if (!alive) return;
+        setAvatarUrl((data as any)?.avatar_url || null);
+      } catch { if (!alive) return; setAvatarUrl(null); }
+    }
+    loadAvatar();
+    return () => { alive = false; };
+  }, [userId]);
 
   return (
     <header className="border-b bg-white/80 backdrop-blur antialiased" role="banner" aria-labelledby="site-title">
@@ -20,10 +34,14 @@ export default function Header() {
       <p id="skip-hint" className="sr-only">키보드 포커스 시 표시됩니다.</p>
       <div className="max-w-3xl mx-auto px-3 py-2 md:py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          {userId && email ? (
-            <div className="w-6 h-6 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center">
-              {email.slice(0,1).toUpperCase()}
-            </div>
+          {userId && (avatarUrl || email) ? (
+            avatarUrl ? (
+              <img src={avatarUrl} alt="프로필" className="w-6 h-6 rounded-full object-cover border" />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center">
+                {email?.slice(0,1).toUpperCase()}
+              </div>
+            )
           ) : (
             <span aria-hidden="true"><Monogram size={24} /></span>
           )}

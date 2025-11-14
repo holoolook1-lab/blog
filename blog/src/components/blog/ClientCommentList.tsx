@@ -50,16 +50,10 @@ export default function ClientCommentList({ postId }: { postId: string }) {
     const json = await res.json();
     const list: Comment[] = json.comments || [];
     setComments(list);
-    // fetch profiles for unique user ids
-    const ids = Array.from(new Set(list.map((c) => c.user_id))).filter(Boolean);
-    if (ids.length) {
-      const { data } = await supabase.from('profiles').select('id, username, avatar_url').in('id', ids);
-      const map: Record<string, Profile> = {};
-      (data || []).forEach((p: any) => { map[p.id] = p as Profile; });
-      setProfiles(map);
-    } else {
-      setProfiles({});
-    }
+    const apiProfiles: Array<Profile> = json.profiles || [];
+    const map: Record<string, Profile> = {};
+    (apiProfiles || []).forEach((p: any) => { map[(p as any).id] = p as Profile; });
+    setProfiles(map);
     setLoading(false);
   };
 
@@ -72,15 +66,18 @@ export default function ClientCommentList({ postId }: { postId: string }) {
   useEffect(() => {
     const channel = supabase
       .channel(`comments:${postId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` },
-        () => {
-          // 최근에 수동 로딩을 트리거했다면 잠시 억제하여 중복 로딩 방지
-          if (Date.now() < suppressRealtimeUntil) return;
-          load();
-        }
-      )
+      .on('postgres_changes', { event: 'insert', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+        if (Date.now() < suppressRealtimeUntil) return;
+        load();
+      })
+      .on('postgres_changes', { event: 'update', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+        if (Date.now() < suppressRealtimeUntil) return;
+        load();
+      })
+      .on('postgres_changes', { event: 'delete', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+        if (Date.now() < suppressRealtimeUntil) return;
+        load();
+      })
       .subscribe();
     const onReload = (e: any) => {
       if (e?.detail?.postId === postId) {

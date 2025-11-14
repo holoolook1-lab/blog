@@ -16,7 +16,17 @@ export async function GET(
     .eq('post_id', postId)
     .order('created_at', { ascending: false });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json({ comments: data || [] });
+    const comments = data || [];
+    const ids = Array.from(new Set(comments.map((c: any) => c.user_id))).filter(Boolean);
+    let profiles: Array<{ id: string; username: string | null; avatar_url: string | null }> = [];
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', ids as any);
+      profiles = profs || [];
+    }
+    return NextResponse.json({ comments, profiles });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server configuration error' }, { status: 500 });
   }

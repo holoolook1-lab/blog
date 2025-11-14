@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Ratelimit } from '@upstash/ratelimit';
 import { kv } from '@vercel/kv';
+import crypto from 'crypto';
 
 // 로컬 개발 환경에서 KV 미설정이어도 서버가 뜨도록 안전가드
 const hasKV = !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN;
@@ -33,6 +34,34 @@ export async function middleware(req: NextRequest) {
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.headers.set('X-Frame-Options', 'SAMEORIGIN');
   res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // CSP nonce 발급(중요 페이지에서 우선 적용하기 위해 쿠키로 전달)
+  try {
+    const nonce = crypto.randomBytes(16).toString('base64');
+    res.cookies.set('cspnonce', nonce, { path: '/', sameSite: 'lax' });
+    // 중요 페이지: 보수적 Enforce 헤더 적용(초기에는 inline 허용 유지, nonce 병행)
+    const p = req.nextUrl.pathname;
+    const isImportantPage = p === '/' || p === '/write' || /^\/posts\/[^/]+$/.test(p);
+    if (isImportantPage) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      let supabaseHost = '';
+      try { supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : ''; } catch {}
+      const cspEnforce = [
+        "default-src 'self'",
+        `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
+        "media-src 'self' https:",
+        // 초기 단계: inline 유지 + nonce 병행(점진 제거 예정)
+        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`,
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' https: data:",
+        `connect-src 'self' https: wss: ${supabaseHost}`,
+        'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ].join('; ');
+      res.headers.set('Content-Security-Policy', cspEnforce);
+    }
+  } catch {}
 
   // Rate limit for API routes
   if (req.nextUrl.pathname.startsWith('/api/comments') && ratelimit) {
@@ -73,25 +102,25 @@ export async function middleware(req: NextRequest) {
     if (!success) return new NextResponse('Too many requests', { status: 429 });
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return req.cookies.getAll();
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabase = projectUrl && anonKey
+    ? createServerClient(projectUrl, anonKey, {
+        cookies: {
+          getAll() {
+            return req.cookies.getAll();
+          },
+          setAll(cookies) {
+            cookies.forEach(({ name, value, options }) => {
+              res.cookies.set(name, value, options);
+            });
+          },
         },
-        setAll(cookies) {
-          cookies.forEach(({ name, value, options }) => {
-            res.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+      })
+    : null as unknown as ReturnType<typeof createServerClient>;
+  const session = supabase
+    ? (await supabase.auth.getSession()).data.session
+    : null;
 
   const isProtected = req.nextUrl.pathname.startsWith('/write') || req.nextUrl.pathname.startsWith('/edit');
   if (!isProtected) return res;
