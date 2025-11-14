@@ -69,11 +69,14 @@ const nextConfig: NextConfig = {
     // 개발 환경에서는 CSP 완화
     const isDevelopment = process.env.NODE_ENV === 'development';
     
+    // Vercel 배포 환경 체크
+    const isVercel = process.env.VERCEL === '1';
+    
     const csp = [
       "default-src 'self'",
       `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      isDevelopment ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
+      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
@@ -87,8 +90,8 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      isDevelopment ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
-      isDevelopment ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
+      (isDevelopment || isVercel) ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+      (isDevelopment || isVercel) ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
       'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',

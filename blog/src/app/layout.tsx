@@ -61,9 +61,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Suspense>
           <span id="main" />
           {children}
+          {/* JSON-LD 스키마 마크업 - CSP를 위한 안전한 인라인 스크립트 */}
           <script
             type="application/ld+json"
-            nonce={nonce}
+            nonce={nonce || undefined}
+            suppressHydrationWarning
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 '@context': 'https://schema.org',
@@ -75,7 +77,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
           <script
             type="application/ld+json"
-            nonce={nonce}
+            nonce={nonce || undefined}
+            suppressHydrationWarning
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 '@context': 'https://schema.org',

@@ -47,52 +47,63 @@ export default async function HomePage() {
   // 서버프리뷰 환경 체크
   const isServerPreview = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
   
-  if (!isServerPreview) {
-    try {
-      // 배포 환경변수가 없을 때도 동작하도록 요청 헤더에서 호스트/프로토콜을 추론
-      // Vercel/프록시 환경에서는 x-forwarded-proto가 제공됨
-      const h = await headers();
-      const host = h.get('host') || '';
-      const proto = h.get('x-forwarded-proto') || 'http';
-      const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '');
-      const res = await fetch(`/api/public/recent`, { next: { revalidate: 60, tags: ['posts:list'] } });
-      if (res.ok) {
-        const json = await res.json();
-        recent = (json?.posts || []).map((p: any) => ({
-          ...p,
-          __authorName: p.authorName,
-          __authorAvatar: p.authorAvatarUrl,
-        }));
-      }
-    } catch {}
+  // 항상 데이터를 시도하고 실패 시 대체 데이터 사용
+  try {
+    // 먼저 API 엔드포인트 시도
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const apiUrl = new URL('/api/public/recent', baseUrl).toString();
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const res = await fetch(apiUrl, { 
+      next: { revalidate: 60, tags: ['posts:list'] },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (res.ok) {
+      const json = await res.json();
+      recent = (json?.posts || []).map((p: any) => ({
+        ...p,
+        __authorName: p.authorName,
+        __authorAvatar: p.authorAvatarUrl,
+      }));
+    }
+  } catch (apiError) {
+    console.log('API 엔드포인트 실패, Supabase 직접 연결 시도:', apiError);
+  }
 
-    if (recent.length === 0) {
-      try {
-        const supabase = createPublicSupabaseClient();
-        const { data: posts } = await supabase
-          .from('posts')
-          .select('id, user_id, title, slug, excerpt, cover_image, created_at')
-          .eq('published', true)
-          .order('created_at', { ascending: false })
-          .limit(6);
-        const list = posts || [];
-        const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
-        let profiles: Record<string, { name: string; avatar: string }> = {};
-        if (userIds.length) {
-          const { data: profs } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .in('id', userIds as any);
-          (profs || []).forEach((pr: any) => {
-            profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
-          });
-        }
-        recent = list.map((p: any) => ({
-          ...p,
-          __authorName: profiles[p.user_id]?.name || p.user_id || '',
-          __authorAvatar: profiles[p.user_id]?.avatar || '',
-        }));
-      } catch {}
+  // API 실패 또는 데이터 없으면 Supabase 직접 연결
+  if (recent.length === 0 && !isServerPreview) {
+    try {
+      const supabase = createPublicSupabaseClient();
+      const { data: posts } = await supabase
+        .from('posts')
+        .select('id, user_id, title, slug, excerpt, cover_image, created_at')
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      const list = posts || [];
+      const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
+      let profiles: Record<string, { name: string; avatar: string }> = {};
+      if (userIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds as any);
+        (profs || []).forEach((pr: any) => {
+          profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+        });
+      }
+      recent = list.map((p: any) => ({
+        ...p,
+        __authorName: profiles[p.user_id]?.name || p.user_id || '',
+        __authorAvatar: profiles[p.user_id]?.avatar || '',
+      }));
+    } catch (supabaseError) {
+      console.log('Supabase 연결도 실패, 테스트 데이터 사용:', supabaseError);
     }
   }
 
@@ -179,10 +190,10 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* 로컬 테스트 데이터 */}
+      {/* 로컬 테스트 데이터 - 항상 표시하여 메인 콘텐츠가 비어있지 않도록 함 */}
       <HomeLocalPosts />
 
-      {/* 서버프리뷰 전용 테스트 데이터 */}
+      {/* 서버프리뷰 전용 테스트 데이터 - 서버프리뷰에서만 추가 표시 */}
       {isServerPreview && <ServerPreviewPosts />}
 
       {/* 퀵 링크 */}
