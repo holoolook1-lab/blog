@@ -9,6 +9,7 @@ import ReportForm from '@/components/blog/ReportForm';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { computeReadingMinutes } from '@/lib/utils/reading';
 import { formatDateKR } from '@/lib/date';
+import { getLocalTestPost } from '@/lib/local-test-data';
 // 커버 이미지를 본문에서 제거하면서 관련 이미지 유틸 import 삭제
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -90,6 +91,12 @@ export default async function PostDetailPage({ params }: Params) {
   let cleanSlug = rawSlug.trim();
   try { cleanSlug = decodeURIComponent(cleanSlug); } catch {}
   let post: any = await getPostBySlugCached(cleanSlug);
+  
+  // 로컬 테스트 데이터로 폴백
+  if (!post) {
+    post = getLocalTestPost(cleanSlug);
+  }
+  
   if (!post) {
     const { data } = await supabase
       .from('posts')
@@ -283,7 +290,19 @@ export default async function PostDetailPage({ params }: Params) {
         {formatDateKR(post.created_at)} · {readingMinutes}분 읽기
       </p>
       <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-3" />
-      <div className="prose mt-4" dangerouslySetInnerHTML={{ __html: safeWithAutoplay }} />
+      {/* 본문 내용 렌더링 */}
+      {safeWithAutoplay && safeWithAutoplay.trim() !== '' ? (
+        <div className="prose mt-4" dangerouslySetInnerHTML={{ __html: safeWithAutoplay }} />
+      ) : (
+        <div className="mt-4 p-8 bg-gray-50 border border-gray-200 rounded-xl text-center">
+          <div className="text-gray-500 text-lg mb-2">📝</div>
+          <p className="text-gray-600 mb-2">이 게시글의 본문 내용이 없습니다.</p>
+          {post.excerpt && (
+            <p className="text-gray-500 text-sm italic">{post.excerpt}</p>
+          )}
+          <p className="text-gray-400 text-xs mt-4">게시글을 작성하거나 편집하여 내용을 추가해보세요.</p>
+        </div>
+      )}
       {post.heading && (
         <div className="pt-4">
           <Link

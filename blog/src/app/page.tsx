@@ -14,6 +14,7 @@ import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { getLocale } from '@/i18n/getLocale';
 import { prefixPath } from '@/lib/i18n/link';
+import HomeLocalPosts from '@/components/blog/HomeLocalPosts';
 // Accordion 섹션 제거
 
 export const revalidate = 60;
@@ -136,6 +137,9 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {/* 로컬 테스트 데이터 */}
+      <HomeLocalPosts />
 
       {/* 퀵 링크 */}
       <section className="border rounded-lg p-5">

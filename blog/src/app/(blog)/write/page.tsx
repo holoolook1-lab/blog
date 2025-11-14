@@ -6,6 +6,7 @@ import { sanitizeHtml } from '@/lib/utils/sanitize';
 import ActionToast from '@/components/ui/ActionToast';
 import { supabase } from '@/lib/supabase/client';
 import { outlineButtonSmall } from '@/lib/styles/ui';
+import { initializeLocalTestData } from '@/lib/local-test-data';
 
 const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
   ssr: false,
@@ -13,6 +14,11 @@ const RichEditor = dynamic(() => import('@/components/editor/RichEditor'), {
 });
 
 export default function WritePage() {
+  // 로컬 테스트 데이터 초기화
+  useEffect(() => {
+    initializeLocalTestData();
+  }, []);
+
   // 로그인 가드: 미로그인 시 로그인 페이지로 이동
   useEffect(() => {
     let alive = true;

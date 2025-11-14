@@ -45,11 +45,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const supabaseHost = hostname || '';
+    
+    // 개발 환경에서는 CSP 완화
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     const csp = [
       "default-src 'self'",
       `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      "script-src 'self'",
+      isDevelopment ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
@@ -63,9 +67,8 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      // inline 금지(위반 탐지 목적)
-      "script-src 'self'",
-      "style-src 'self'",
+      isDevelopment ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
+      isDevelopment ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,
       'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
