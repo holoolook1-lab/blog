@@ -339,7 +339,8 @@ export default function KoreanRichEditor({
           const embed = makeVideoEmbed(text);
           if (embed) {
             event.preventDefault();
-            editor?.chain().focus().insertContent(embed).run();
+            // 일반 텍스트 링크로 삽입 (PostDetailPage에서 변환됨)
+            editor?.chain().focus().insertContent(text).run();
             return true;
           }
           
@@ -505,15 +506,17 @@ export default function KoreanRichEditor({
       return; 
     }
     
-    const embed = makeVideoEmbed(url);
-    if (!embed) {
+    // URL 검증만 하고 실제로는 텍스트 링크로 삽입
+    const isValidVideo = makeVideoEmbed(url);
+    if (!isValidVideo) {
       const supportedPlatforms = Object.values(KOREAN_FEATURES.videoPlatforms).map(p => p.name).join(', ');
       setEditorNotice(`❌ 지원되지 않는 동영상 링크입니다. 지원 플랫폼: ${supportedPlatforms}`);
       setTimeout(() => setEditorNotice(null), 4000);
       return;
     }
     
-    editor?.chain().focus().insertContent(embed).run();
+    // 일반 텍스트 링크로 삽입 (PostDetailPage에서 변환됨)
+    editor?.chain().focus().insertContent(url).run();
     setVideoUrl('');
     setShowVideoInput(false);
   }, [editor, videoUrl, makeVideoEmbed]);

@@ -23,8 +23,6 @@ export default function MyPage() {
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [recentBookmarks, setRecentBookmarks] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [myPosts, setMyPosts] = useState<any[]>([]);
-  const [myPostsLoading, setMyPostsLoading] = useState(true);
 
   // 로그인 가드: 로딩 종료 후 미로그인이면 로그인 페이지로 이동
   useEffect(() => {
@@ -76,25 +74,6 @@ export default function MyPage() {
       setDataLoading(false);
     };
     load();
-  }, [userId]);
-
-  // 내 글 전체 목록 로드(최대 50개)
-  useEffect(() => {
-    const loadMine = async () => {
-      if (!userId) return;
-      setMyPostsLoading(true);
-      try {
-        const { data: posts } = await supabase
-          .from('posts')
-          .select('id, title, slug, created_at, published')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        setMyPosts(posts || []);
-      } catch {}
-      setMyPostsLoading(false);
-    };
-    loadMine();
   }, [userId]);
 
   const validateUsername = (u: string) => {
@@ -233,7 +212,40 @@ export default function MyPage() {
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3">
             {recentPosts.map((p) => (
-              <PostCard key={p.id} post={p} variant="polaroid" />
+              <div key={p.id} className="rounded border p-4 group">
+                <PostCard post={p} variant="polaroid" />
+                <div className="mt-3 flex items-center gap-2">
+                  <Link 
+                    href={`/posts/${encodeURIComponent(p.slug)}`} 
+                    className={`${outlineButtonSmall}`}
+                  >
+                    보기
+                  </Link>
+                  <button
+                    className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`}
+                    onClick={async () => {
+                      if (!userId) { setToast({ type: 'error', message: '로그인이 필요합니다' }); return; }
+                      
+                      // 삭제 확인 다이얼로그
+                      const isConfirmed = window.confirm('정말로 이 글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+                      if (!isConfirmed) return;
+                      
+                      setToast(null);
+                      try {
+                        const res = await fetch(`/api/posts/${p.id}`, { method: 'DELETE' });
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(json.error || '삭제 실패');
+                        setRecentPosts((prev) => prev.filter((x) => x.id !== p.id));
+                        setToast({ type: 'success', message: '삭제했습니다' });
+                      } catch (err: any) {
+                        setToast({ type: 'error', message: err?.message || '삭제 실패' });
+                      }
+                    }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -265,61 +277,7 @@ export default function MyPage() {
         )}
       </section>
 
-      {/* 내 글 관리 */}
-      <section className="rounded border p-4 bg-white">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">내 글 관리</h2>
-          <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="새 글 작성">새 글 작성</ProtectedLink>
-        </div>
-        {myPostsLoading ? (
-          <div className="mt-3 space-y-2" aria-busy="true" aria-live="polite">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between border rounded p-3">
-                <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
-                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
-        ) : myPosts.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600">작성한 글이 없습니다.</p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {myPosts.map((p) => (
-              <li key={p.id} className="flex items-center justify-between border rounded p-3">
-                <div className="min-w-0">
-            <Link href={`/posts/${encodeURIComponent(p.slug)}`} className="text-sm font-medium link-gauge break-words">
-                    {p.title}
-                  </Link>
-                  <p className="text-xs text-gray-500 mt-0.5">{new Date(p.created_at).toLocaleDateString('ko-KR')} · {p.published ? '공개' : '비공개'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-            <Link href={`/posts/${encodeURIComponent(p.slug)}`} className={outlineButtonSmall}>보기</Link>
-                  <button
-                    className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`}
-                    onClick={async () => {
-                      if (!userId) { setToast({ type: 'error', message: '로그인이 필요합니다' }); return; }
-                      setToast(null);
-                      try {
-                        const res = await fetch(`/api/posts/${p.id}`, { method: 'DELETE' });
-                        const json = await res.json().catch(() => ({}));
-                        if (!res.ok) throw new Error(json.error || '삭제 실패');
-                        setMyPosts((prev) => prev.filter((x) => x.id !== p.id));
-                        setRecentPosts((prev) => prev.filter((x) => x.id !== p.id));
-                        setToast({ type: 'success', message: '삭제했습니다' });
-                      } catch (err: any) {
-                        setToast({ type: 'error', message: err?.message || '삭제 실패' });
-                      }
-                    }}
-                  >
-                    삭제
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {toast && <ActionToast toast={{ type: toast.type, message: toast.message }} onClose={() => setToast(null)} />}
-      </section>
+
     </main>
   );
 }

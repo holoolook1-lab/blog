@@ -190,9 +190,6 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* 로컬 테스트 데이터 - 항상 표시하여 메인 콘텐츠가 비어있지 않도록 함 */}
-      <HomeLocalPosts />
-
       {/* 서버프리뷰 전용 테스트 데이터 - 서버프리뷰에서만 추가 표시 */}
       {isServerPreview && <ServerPreviewPosts />}
 
