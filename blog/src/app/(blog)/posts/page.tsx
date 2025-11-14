@@ -23,7 +23,7 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   const sp = (await searchParams) || {};
   const page = Number(sp.page || '1');
   const safePage = Number.isFinite(page) && page > 0 ? page : 1;
-  const pageSize = 20;
+  const pageSize = 12;
   const q = (sp.q || '').trim();
   const heading = (sp.heading || '').trim();
   const locale = await getLocale();

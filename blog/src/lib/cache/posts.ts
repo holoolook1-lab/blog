@@ -11,7 +11,7 @@ export const getPublicPostsCached = unstable_cache(
     const to = from + pageSize - 1;
     let query = supabase
       .from('posts')
-      .select('id, user_id, title, slug, excerpt, cover_image, created_at, content, like_count, dislike_count, heading')
+      .select('id, user_id, title, slug, excerpt, cover_image, created_at, like_count, dislike_count, heading')
       .eq('published', true);
     if (q) {
       const like = `%${q}%`;
@@ -68,30 +68,8 @@ export const getPublicPostsCached = unstable_cache(
       __authorAvatar: (profiles[p.user_id]?.avatar || ''),
     }));
 
-    let countQuery = supabase
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('published', true);
-    if (q) {
-      const like = `%${q}%`;
-      countQuery = countQuery.or(`title.ilike.${like},content.ilike.${like}`);
-    }
-    let totalCount = 0;
-    if (heading) {
-      const { count, error } = await countQuery.eq('heading', heading);
-      if (!error) totalCount = count || 0;
-      else {
-        const { count: c } = await supabase
-          .from('posts')
-          .select('id', { count: 'exact', head: true })
-          .eq('published', true);
-        totalCount = c || 0;
-      }
-    } else {
-      const { count } = await countQuery;
-      totalCount = count || 0;
-    }
-
+    // 목록에서는 총 카운트 계산을 생략해 DB 호출을 줄입니다(상단 표시는 페이지 크기/현재 길이로 대체).
+    const totalCount = (mapped || []).length;
     return { posts: mapped, totalCount };
   },
   ['posts:list'],
