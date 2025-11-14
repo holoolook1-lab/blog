@@ -119,5 +119,15 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/write/:path*', '/edit/:path*', '/api/comments/:path*', '/api/upload/:path*', '/api/votes/:path*', '/api/bookmarks/:path*', '/api/auth/token/:path*'],
+  matcher: [
+    '/(en|ko)',
+    '/(en|ko)/:path*',
+    '/write/:path*',
+    '/edit/:path*',
+    '/api/comments/:path*',
+    '/api/upload/:path*',
+    '/api/votes/:path*',
+    '/api/bookmarks/:path*',
+    '/api/auth/token/:path*',
+  ],
 };
