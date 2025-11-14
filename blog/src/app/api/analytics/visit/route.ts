@@ -23,7 +23,18 @@ export async function POST() {
   let visitorId = c.get('visitor_id')?.value || '';
   let newCookie = false;
   if (!visitorId) {
-    visitorId = crypto.randomUUID();
+    // ES 모듈 호환성: Node.js crypto 모듈 안전하게 사용
+    try {
+      // Node.js 14.17+ 에서 사용 가능
+      const { randomUUID } = await import('node:crypto');
+      visitorId = randomUUID();
+    } catch {
+      // Fallback: crypto가 없으면 대체 방법 사용
+      visitorId = globalThis.crypto?.randomUUID?.() || 
+                Math.random().toString(36).substring(2) + 
+                Date.now().toString(36) + 
+                Math.random().toString(36).substring(2);
+    }
     newCookie = true;
   }
 
