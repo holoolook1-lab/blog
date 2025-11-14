@@ -94,7 +94,12 @@ export default async function PostDetailPage({ params }: Params) {
   
   // 로컬 테스트 데이터로 폴백
   if (!post) {
-    post = getLocalTestPost(cleanSlug);
+    try {
+      post = getLocalTestPost(cleanSlug);
+      console.log('로컬 테스트 데이터 조회:', cleanSlug, post ? '성공' : '실패');
+    } catch (error) {
+      console.log('로컬 테스트 데이터 조회 실패:', error);
+    }
   }
   
   if (!post) {
@@ -113,13 +118,13 @@ export default async function PostDetailPage({ params }: Params) {
     if (!html) return '';
     let out = html;
     out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^"'\s]*v=([A-Za-z0-9_-]{11})/gi, (_m, id) => {
-      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
     out = out.replace(/https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
-      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
     out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
-      return `<iframe src="https://www.youtube.com/embed/${id}" width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
     out = out.replace(/https?:\/\/(?:player\.)?vimeo\.com\/video\/([0-9]+)/gi, (_m, id) => {
       return `<iframe src="https://player.vimeo.com/video/${id}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
@@ -292,7 +297,14 @@ export default async function PostDetailPage({ params }: Params) {
       <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-3" />
       {/* 본문 내용 렌더링 */}
       {safeWithAutoplay && safeWithAutoplay.trim() !== '' ? (
-        <div className="prose mt-4" dangerouslySetInnerHTML={{ __html: safeWithAutoplay }} />
+        <div 
+          className="mt-4 content-renderer" 
+          dangerouslySetInnerHTML={{ __html: safeWithAutoplay }}
+          style={{
+            lineHeight: '1.7',
+            fontSize: '1.125rem'
+          }}
+        />
       ) : (
         <div className="mt-4 p-8 bg-gray-50 border border-gray-200 rounded-xl text-center">
           <div className="text-gray-500 text-lg mb-2">📝</div>
@@ -303,6 +315,9 @@ export default async function PostDetailPage({ params }: Params) {
           <p className="text-gray-400 text-xs mt-4">게시글을 작성하거나 편집하여 내용을 추가해보세요.</p>
         </div>
       )}
+      <div className="pt-6 border-t border-gray-100">
+        <ShareButtons url={`${site}${prefixPath(await getLocale())}/posts/${slug}`} title={post.title} />
+      </div>
       {post.heading && (
         <div className="pt-4">
           <Link
@@ -315,7 +330,6 @@ export default async function PostDetailPage({ params }: Params) {
         </div>
       )}
       <div className="pt-4">
-        <ShareButtons url={`${site}${prefixPath(await getLocale())}/posts/${slug}`} title={post.title} />
         {/* 신고 상세폼: 공유 영역 아래에 접기/펼치기 형태로 배치 */}
         <ReportForm slug={slug} />
       </div>

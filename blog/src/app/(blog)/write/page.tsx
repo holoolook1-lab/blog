@@ -184,7 +184,12 @@ export default function WritePage() {
   return (
     <main id="main" role="main" aria-labelledby="write-title" className="max-w-3xl mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 id="write-title" className="text-2xl font-bold">글 작성</h1>
+        <div className="space-y-1">
+          <h1 id="write-title" className="text-2xl font-bold">글 작성</h1>
+          <p className="text-sm text-gray-600 font-light tracking-wide uppercase letter-spacing-wider">
+            당신의 생각이 반짝이는 곳, 라키라키
+          </p>
+        </div>
         {status && <span className="text-xs text-gray-500" role="status" aria-live="polite">{status}</span>}
       </div>
       {hasDraft && (

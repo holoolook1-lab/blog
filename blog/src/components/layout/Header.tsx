@@ -45,10 +45,15 @@ export default function Header() {
           ) : (
             <span aria-hidden="true"><Monogram size={24} /></span>
           )}
-          <Link id="site-title" href={`/`} className="font-bold text-base md:text-lg tracking-tight truncate" aria-label={(SITE_NAME || '블로그') + ' 홈으로 이동'}>{SITE_NAME || '블로그'}</Link>
+          <div className="flex flex-col">
+            <Link id="site-title" href={`/`} className="font-bold text-base md:text-lg tracking-tight truncate" aria-label={(SITE_NAME || '블로그') + ' 홈으로 이동'}>{SITE_NAME || '블로그'}</Link>
+            <span className="text-xs text-gray-500 font-light hidden sm:block tracking-wider">
+              당신의 생각이 반짝이는 곳
+            </span>
+          </div>
         </div>
         {/* 우측 영역: 햄버거 메뉴/내비게이션 + 로그인 버튼 */}
-        <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base">
+        <div className="flex items-center gap-3 md:gap-4 text-sm md:text-base">
           <NavLinks showWrite={!!userId} />
           {userId ? (
             <></>

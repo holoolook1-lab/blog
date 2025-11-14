@@ -62,9 +62,10 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         aria-hidden="true"
       />
     )}
+      <div className="relative md:static">
       <button
         type="button"
-        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px] absolute right-0 top-1/2 -translate-y-1/2 z-30"
+        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px] z-30"
         aria-label="메뉴 토글"
         aria-expanded={open}
         aria-controls="primary-nav"
@@ -77,7 +78,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         role="navigation"
         aria-label="주요 메뉴"
         className={
-          `text-sm md:text-base text-gray-800 ${open ? 'block' : 'hidden'} md:flex md:flex-row items-start md:items-center gap-2 md:gap-4 pr-12 md:pr-0 z-30`
+          `text-sm md:text-base text-gray-800 ${open ? 'block' : 'hidden'} md:flex md:flex-row items-start md:items-center gap-4 md:gap-6 pr-12 md:pr-0 z-30`
         }
         onKeyDown={(e) => {
           if (e.key === 'Escape') { setOpen(false); return; }
@@ -107,12 +108,12 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
       >
         <div
           ref={panelRef}
-          className="md:contents absolute md:static left-0 right-0 top-full mt-2 w-full max-w-[720px] overflow-auto max-h-[calc(100vh-6rem)] bg-white md:bg-transparent border md:border-0 rounded md:rounded-none shadow-lg md:shadow-none p-3 md:p-0 ring-1 ring-black/10 transition-opacity transition-transform duration-200 ease-out"
+          className="md:contents absolute md:static right-0 top-full mt-2 min-w-[180px] w-auto max-w-[240px] overflow-auto max-h-[calc(100vh-6rem)] bg-white md:bg-transparent border md:border-0 rounded-2xl md:rounded-none shadow-xl md:shadow-none p-4 md:p-0 ring-1 ring-black/5 transition-opacity transition-transform duration-200 ease-out"
           style={{
-            paddingLeft: 'max(0px, env(safe-area-inset-left))',
-            paddingRight: 'max(0px, env(safe-area-inset-right))',
-            paddingTop: 'max(0px, env(safe-area-inset-top))',
-            paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
+            paddingLeft: 'max(16px, env(safe-area-inset-left))',
+            paddingRight: 'max(16px, env(safe-area-inset-right))',
+            paddingTop: 'max(16px, env(safe-area-inset-top))',
+            paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
           }}
           role="dialog"
           aria-modal={open ? 'true' : undefined}
@@ -120,14 +121,14 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         <Link
           ref={firstLinkRef}
           href={`/posts`}
-          className={`px-3 py-2 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
+          className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/posts') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
           aria-current={isActive('/posts') ? 'page' : undefined}
         >
           {t('posts')}
         </Link>
         <ProtectedLink
           href={`/write`}
-          className={`px-3 py-2 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/write') ? 'font-semibold text-black' : ''}`}
+          className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/write') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
           ariaLabel={t('write')}
           ariaCurrent={isActive('/write') ? 'page' : undefined}
         >
@@ -136,7 +137,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         {userId && (
           <Link
             href={`/mypage`}
-            className={`px-3 py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/mypage') ? 'font-semibold text-black' : ''}`}
+            className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/mypage') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
             aria-current={isActive('/mypage') ? 'page' : undefined}
           >
             {t('mypage')}
@@ -151,8 +152,9 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         )}
         </div>
       </nav>
+      </div>
       {userId && (
-        <div className="hidden md:block">
+        <div className="hidden md:block ml-2">
           <nav aria-label={t('accountMenu')}>
             <LogoutButton />
           </nav>

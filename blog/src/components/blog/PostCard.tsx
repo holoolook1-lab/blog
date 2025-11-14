@@ -8,6 +8,11 @@ import { sanitizeHtml } from '@/lib/utils/sanitize';
 import ActionBar from '@/components/blog/ActionBar';
 import AutoPlayEmbed from '@/components/media/AutoPlayEmbed';
 
+// YouTube 이미지인지 확인하는 헬퍼 함수
+const isYouTubeImage = (url: string) => {
+  return url.includes('youtube.com') || url.includes('ytimg.com');
+};
+
 type Post = {
   id: string;
   user_id?: string;
@@ -155,38 +160,56 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
           <Link href={`/posts/${post.slug}`} aria-label={post.title} className="focus:outline-none focus:ring-2 focus:ring-black rounded">
             <div className="p-3">
               <div className="relative w-full aspect-[16/9] bg-white border rounded-lg shadow-sm overflow-hidden">
-                <Image
-                  src={getOptimizedImageUrl(post.cover_image, { width: 768, quality: 80, format: 'webp' })}
-                  alt={post.title}
-                  fill
-                  sizes={defaultSizes.list}
-                  className="object-cover polaroid-photo"
-                  placeholder="blur"
-                  blurDataURL={getShimmerDataURL(16, 9)}
-                  priority={priority}
-                />
+                {isYouTubeImage(post.cover_image) ? (
+                  // YouTube 이미지는 일반 img 태그로 처리 (next/image 설정 문제 방지)
+                  <img
+                    src={post.cover_image}
+                    alt={post.title}
+                    className="object-cover polaroid-photo w-full h-full"
+                  />
+                ) : (
+                  <Image
+                    src={getOptimizedImageUrl(post.cover_image, { width: 768, quality: 80, format: 'webp' })}
+                    alt={post.title}
+                    fill
+                    sizes={defaultSizes.list}
+                    className="object-cover polaroid-photo"
+                    placeholder="blur"
+                    blurDataURL={getShimmerDataURL(16, 9)}
+                    priority={priority}
+                  />
+                )}
               </div>
             </div>
           </Link>
         ) : (
           <Link href={`/posts/${post.slug}`} aria-label={post.title} className="focus:outline-none focus:ring-2 focus:ring-black rounded">
             <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden">
-              <Image
-                src={getOptimizedImageUrl(post.cover_image, { width: 768, quality: 80, format: 'webp' })}
-                alt={post.title}
-                fill
-                sizes={defaultSizes.list}
-                className="object-cover"
-                placeholder="blur"
-                blurDataURL={getShimmerDataURL(16, 9)}
-                priority={priority}
-              />
+              {isYouTubeImage(post.cover_image) ? (
+                // YouTube 이미지는 일반 img 태그로 처리 (next/image 설정 문제 방지)
+                <img
+                  src={post.cover_image}
+                  alt={post.title}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <Image
+                  src={getOptimizedImageUrl(post.cover_image, { width: 768, quality: 80, format: 'webp' })}
+                  alt={post.title}
+                  fill
+                  sizes={defaultSizes.list}
+                  className="object-cover"
+                  placeholder="blur"
+                  blurDataURL={getShimmerDataURL(16, 9)}
+                  priority={priority}
+                />
+              )}
             </div>
           </Link>
         )
       )}
       <div className={isPolaroid ? 'p-4 md:p-5' : 'p-4 md:p-5'}>
-          <Link id={`card-title-${post.id}`} href={`/posts/${post.slug}`} className="text-lg font-semibold clamp-2 break-keep link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded">
+        <Link id={`card-title-${post.id}`} href={`/posts/${post.slug}`} className="text-lg font-semibold clamp-2 break-keep link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded">
           {post.title}
         </Link>
         {isPolaroid ? (

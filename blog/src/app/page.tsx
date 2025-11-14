@@ -5,7 +5,8 @@ import { SITE_NAME, TAGLINE } from '@/lib/brand';
 import { formatDateKR } from '@/lib/date';
 // 대표 글 카드 제거에 따라 이미지 유틸 불필요
 import PostCard from '@/components/blog/PostCard';
-import { Mail, AtSign, Globe } from 'lucide-react';
+import { Mail, AtSign, Globe, Facebook, Twitter, Instagram, Share2, Link2 } from 'lucide-react';
+import ShareButtonsClient from '@/components/common/ShareButtonsClient';
 import VisitorPing from '@/components/analytics/VisitorPing';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import { Suspense } from 'react';
@@ -15,80 +16,112 @@ import { getTranslations } from 'next-intl/server';
 import { getLocale } from '@/i18n/getLocale';
 import { prefixPath } from '@/lib/i18n/link';
 import HomeLocalPosts from '@/components/blog/HomeLocalPosts';
+import ServerPreviewPosts from '@/components/blog/ServerPreviewPosts';
+import { initializeLocalTestData } from '@/lib/local-test-data';
 // Accordion 섹션 제거
 
 export const revalidate = 60;
 
 const SocialLink = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => (
-  <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors">
+  <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-200">
     <span aria-hidden="true">{icon}</span>
     <span className="text-sm font-medium">{label}</span>
   </a>
 );
+
+
 
 export default async function HomePage() {
   const t = await getTranslations('home');
   const locale = await getLocale();
   const prefix = prefixPath(locale);
   let recent: any[] = [];
+  
+  // 로컬 테스트 데이터 초기화
   try {
-    // 배포 환경변수가 없을 때도 동작하도록 요청 헤더에서 호스트/프로토콜을 추론
-    // Vercel/프록시 환경에서는 x-forwarded-proto가 제공됨
-    const h = await headers();
-    const host = h.get('host') || '';
-    const proto = h.get('x-forwarded-proto') || 'http';
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '');
-    const res = await fetch(`/api/public/recent`, { next: { revalidate: 60, tags: ['posts:list'] } });
-    if (res.ok) {
-      const json = await res.json();
-      recent = (json?.posts || []).map((p: any) => ({
-        ...p,
-        __authorName: p.authorName,
-        __authorAvatar: p.authorAvatarUrl,
-      }));
-    }
-  } catch {}
-
-  if (recent.length === 0) {
+    initializeLocalTestData();
+  } catch (error) {
+    console.log('로컬 테스트 데이터 초기화 실패:', error);
+  }
+  
+  // 서버프리뷰 환경 체크
+  const isServerPreview = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
+  
+  if (!isServerPreview) {
     try {
-      const supabase = createPublicSupabaseClient();
-      const { data: posts } = await supabase
-        .from('posts')
-        .select('id, user_id, title, slug, excerpt, cover_image, created_at')
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      const list = posts || [];
-      const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
-      let profiles: Record<string, { name: string; avatar: string }> = {};
-      if (userIds.length) {
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds as any);
-        (profs || []).forEach((pr: any) => {
-          profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
-        });
+      // 배포 환경변수가 없을 때도 동작하도록 요청 헤더에서 호스트/프로토콜을 추론
+      // Vercel/프록시 환경에서는 x-forwarded-proto가 제공됨
+      const h = await headers();
+      const host = h.get('host') || '';
+      const proto = h.get('x-forwarded-proto') || 'http';
+      const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '');
+      const res = await fetch(`/api/public/recent`, { next: { revalidate: 60, tags: ['posts:list'] } });
+      if (res.ok) {
+        const json = await res.json();
+        recent = (json?.posts || []).map((p: any) => ({
+          ...p,
+          __authorName: p.authorName,
+          __authorAvatar: p.authorAvatarUrl,
+        }));
       }
-      recent = list.map((p: any) => ({
-        ...p,
-        __authorName: profiles[p.user_id]?.name || p.user_id || '',
-        __authorAvatar: profiles[p.user_id]?.avatar || '',
-      }));
     } catch {}
+
+    if (recent.length === 0) {
+      try {
+        const supabase = createPublicSupabaseClient();
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('id, user_id, title, slug, excerpt, cover_image, created_at')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .limit(6);
+        const list = posts || [];
+        const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
+        let profiles: Record<string, { name: string; avatar: string }> = {};
+        if (userIds.length) {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds as any);
+          (profs || []).forEach((pr: any) => {
+            profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+          });
+        }
+        recent = list.map((p: any) => ({
+          ...p,
+          __authorName: profiles[p.user_id]?.name || p.user_id || '',
+          __authorAvatar: profiles[p.user_id]?.avatar || '',
+        }));
+      } catch {}
+    }
   }
 
   return (
     <main id="main" role="main" aria-labelledby="home-title" className="max-w-3xl mx-auto p-4 space-y-12">
       {/* 히어로 */}
-      <section className="space-y-3">
-        <h1 id="home-title" className="text-3xl font-bold">{SITE_NAME}</h1>
-        <p className="text-gray-600 text-lg">{TAGLINE}</p>
-        {/* 방문자 통계는 푸터에서만 통합 표시합니다 */}
-        <div className="flex gap-3 pt-2">
-          <Link href={`${prefix}/posts`} className={outlineButtonSmall}>{t('viewRecent')}</Link>
-          <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('write')}>{t('write')}</ProtectedLink>
+      <section className="space-y-6">
+        <div className="space-y-3">
+          <h1 id="home-title" className="text-3xl font-bold">{SITE_NAME}</h1>
+          <p className="text-gray-600 text-lg">{TAGLINE}</p>
+          
+          {/* 라키라키 모토 - 미니멀 럭셔리 디자인 */}
+          <div className="relative mt-4 luxury-hover">
+            <p className="text-sm font-light tracking-wide text-gray-600 uppercase letter-spacing-wide refined-text">
+              당신의 생각이 반짝이는 곳, 라키라키
+            </p>
+            <div className="mt-2 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-32"></div>
+          </div>
+          
+          {/* 방문자 통계는 푸터에서만 통합 표시합니다 */}
+          <div className="flex gap-3 pt-2">
+            <Link href={`${prefix}/posts`} className={outlineButtonSmall}>{t('viewRecent')}</Link>
+            <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('write')}>{t('write')}</ProtectedLink>
+          </div>
         </div>
+        
+        {/* 소셜 공유 아이콘 */}
+        <ShareButtonsClient />
+        
         {/* 방문 핑: 새로고침은 중복 집계되지 않음 */}
         <VisitorPing />
       </section>
@@ -105,10 +138,18 @@ export default async function HomePage() {
         </div>
         {recent.length === 0 ? (
           <div className="border rounded-lg p-8 text-center space-y-3">
-            <p className="text-base text-gray-600">{t('noPosts')}</p>
-            <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('writeFirst')}>
-              {t('writeFirst')}
-            </ProtectedLink>
+            <p className="text-base text-gray-600">
+              {isServerPreview ? '서버프리뷰에서는 실제 데이터를 불러올 수 없습니다. 로컬 테스트 데이터를 확인해주세요.' : t('noPosts')}
+            </p>
+            {isServerPreview ? (
+              <p className="text-sm text-gray-500">
+                아래의 '테스트 글' 또는 '서버프리뷰 테스트 글' 섹션을 확인하세요.
+              </p>
+            ) : (
+              <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('writeFirst')}>
+                {t('writeFirst')}
+              </ProtectedLink>
+            )}
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2">
@@ -140,6 +181,9 @@ export default async function HomePage() {
 
       {/* 로컬 테스트 데이터 */}
       <HomeLocalPosts />
+
+      {/* 서버프리뷰 전용 테스트 데이터 */}
+      {isServerPreview && <ServerPreviewPosts />}
 
       {/* 퀵 링크 */}
       <section className="border rounded-lg p-5">

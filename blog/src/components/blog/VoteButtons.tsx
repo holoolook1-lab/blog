@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import ActionToast from '@/components/ui/ActionToast';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
 export default function VoteButtons({ postId, initialLikes = 0, initialDislikes = 0 }: { postId: string; initialLikes?: number; initialDislikes?: number }) {
-  const { useTranslations } = require('next-intl');
   const t = useTranslations('comments');
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);

@@ -15,10 +15,21 @@ const toAutoplaySrc = (src: string, muted: boolean = true) => {
     const u = new URL(src);
     const host = u.hostname.replace(/^www\./, '');
     const qs = new URLSearchParams(u.search);
+    
     if (host.includes('youtube.com')) {
-      qs.set('autoplay', '1');
-      qs.set('mute', muted ? '1' : '0');
-      qs.set('playsinline', '1');
+      // YouTube URL을 embed 형식으로 변환
+      const videoId = qs.get('v') || u.pathname.split('/').pop();
+      if (videoId) {
+        const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`);
+        const embedQs = new URLSearchParams();
+        embedQs.set('autoplay', '1');
+        embedQs.set('mute', muted ? '1' : '0');
+        embedQs.set('playsinline', '1');
+        embedQs.set('rel', '0'); // 관련 동영상 표시 안 함
+        embedQs.set('modestbranding', '1'); // YouTube 로고 최소화
+        embedUrl.search = embedQs.toString();
+        return embedUrl.toString();
+      }
     } else if (host.includes('vimeo.com')) {
       qs.set('autoplay', '1');
       qs.set('muted', muted ? '1' : '0');
@@ -103,6 +114,8 @@ export default function AutoPlayEmbed({ type, src, className, muted = true, thre
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="absolute inset-0 w-full h-full"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
+          referrerPolicy="strict-origin-when-cross-origin"
         />
       ) : (
         <video ref={videoRef} src={src} controls preload="metadata" playsInline muted={muted} className="absolute inset-0 w-full h-full" />

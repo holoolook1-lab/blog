@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Link, Twitter, Facebook, Linkedin, Share2, Eye, MessageSquare } from 'lucide-react';
+import { Link2, Twitter, Facebook, Linkedin, Share2, Eye, MessageSquare } from 'lucide-react';
 import ActionToast from '@/components/ui/ActionToast';
 import ShareModal from './ShareModal';
 
@@ -109,58 +109,62 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
   };
 
   return (
-    <div className="flex items-center gap-1" role="group" aria-label={t('share')}>
+    <div className="flex items-center gap-3" role="group" aria-label={t('share')}>
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
-      <span className="text-xs font-medium">{t('share')}</span>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label={t('preview')}
-        title={t('preview')}
-        aria-expanded={isModalOpen}
-        aria-controls="share-dialog"
-      >
-        <Eye size={16} aria-hidden="true" focusable="false" />
-      </button>
-      {shareOptions.map((option) => (
-        <a
-          key={option.name}
-          href={option.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-          aria-label={option.name}
-          title={option.name}
-        >
-          {option.icon}
-        </a>
-      ))}
-      {kakaoKey && (
+      <span className="text-sm text-gray-600">공유하기:</span>
+      <div className="flex items-center gap-2">
         <button
-          onClick={shareKakao}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-          aria-label={t('kakao')}
-          title={t('kakao')}
+          onClick={() => setIsModalOpen(true)}
+          className="p-1 transition-colors duration-200 hover:text-black"
+          aria-label={t('preview')}
+          title={t('preview')}
+          aria-expanded={isModalOpen}
+          aria-controls="share-dialog"
         >
-          <MessageSquare size={16} aria-hidden="true" focusable="false" />
+          <Eye size={18} className="text-gray-700" aria-hidden="true" focusable="false" />
         </button>
-      )}
-      <button
-        onClick={nativeShare}
-        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label={t('native')}
-        title={t('native')}
-      >
-        <Share2 size={16} aria-hidden="true" focusable="false" />
-      </button>
-      <button
-        onClick={copyToClipboard}
-        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label={t('copy')}
-        title={t('copy')}
-      >
-        <Link size={16} aria-hidden="true" focusable="false" />
-      </button>
+        {shareOptions.map((option) => (
+          <a
+            key={option.name}
+            href={option.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 transition-colors duration-200 hover:text-black"
+            aria-label={option.name}
+            title={option.name}
+          >
+            <div className="text-gray-700 hover:text-black transition-colors duration-200">
+              {option.icon}
+            </div>
+          </a>
+        ))}
+        {kakaoKey && (
+          <button
+            onClick={shareKakao}
+            className="p-1 transition-colors duration-200 hover:text-black"
+            aria-label={t('kakao')}
+            title={t('kakao')}
+          >
+            <MessageSquare size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+          </button>
+        )}
+        <button
+          onClick={nativeShare}
+          className="p-1 transition-colors duration-200 hover:text-black"
+          aria-label={t('native')}
+          title={t('native')}
+        >
+          <Share2 size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+        </button>
+        <button
+          onClick={copyToClipboard}
+          className="p-1 transition-colors duration-200 hover:text-black"
+          aria-label={t('copy')}
+          title={t('copy')}
+        >
+          <Link2 size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+        </button>
+      </div>
       {isModalOpen && <ShareModal url={url} title={title || ''} onClose={() => setIsModalOpen(false)} />}
     </div>
   );

@@ -258,7 +258,15 @@ export default function IntegratedEditor({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* 상단 도구 모음 */}
-      <Card className="p-4">
+      <Card className="p-6">
+        {/* 라키라키 모토 - 에디터 상단 (미니멀 버전) */}
+        <div className="mb-6 text-center">
+          <p className="text-xs text-gray-500 font-light tracking-wider uppercase">
+            당신의 생각이 반짝이는 곳, 라키라키
+          </p>
+          <div className="mt-3 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-24 mx-auto"></div>
+        </div>
+        
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {enableKoreanFeatures && (

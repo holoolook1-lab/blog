@@ -91,13 +91,14 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
         : 'border';
   const bgClass = level === 'gold' ? 'bg-amber-50' : level === 'platinum' ? 'bg-zinc-50' : 'bg-white';
 
+  // 세련된 배지 디자인 - 명품 느낌 (모바일 최적화)
   const badge = level === 'platinum'
-    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-zinc-100 border"><Diamond size={14} aria-hidden="true" focusable="false" /> 플래티넘</span>
+    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:gap-2 sm:px-3 sm:py-1 text-xs font-light tracking-wider text-gray-700 bg-gray-50 border border-gray-200 rounded-full"><Diamond size={10} className="sm:size-3 text-gray-400" /> <span className="hidden sm:inline">PLATINUM</span></span>
     : level === 'gold'
-      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-100 border"><Crown size={14} aria-hidden="true" focusable="false" /> 골드</span>
+      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:gap-2 sm:px-3 sm:py-1 text-xs font-light tracking-wider text-amber-800 bg-amber-50 border border-amber-200 rounded-full"><Crown size={10} className="sm:size-3 text-amber-600" /> <span className="hidden sm:inline">GOLD</span></span>
       : level === 'silver'
-        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-gray-100 border"><Medal size={14} aria-hidden="true" focusable="false" /> 실버</span>
-        : <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-50 border"><Medal size={14} aria-hidden="true" focusable="false" /> 브론즈</span>;
+        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:gap-2 sm:px-3 sm:py-1 text-xs font-light tracking-wider text-gray-600 bg-gray-50 border border-gray-200 rounded-full"><Medal size={10} className="sm:size-3 text-gray-400" /> <span className="hidden sm:inline">SILVER</span></span>
+        : <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:gap-2 sm:px-3 sm:py-1 text-xs font-light tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-full"><Medal size={10} className="sm:size-3 text-amber-600" /> <span className="hidden sm:inline">BRONZE</span></span>;
 
   const username = (profile.username || '').slice(0, 20);
   const fontFamily = 'var(--font-family, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR)';
@@ -105,45 +106,88 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
 
   return (
     <section
-      className={`${borderClass} ${bgClass} rounded-lg p-4`}
+      className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-8"
       style={{ fontFamily }}
       aria-label="작성자 프로필"
       ref={containerRef}
     >
-      <div className="flex flex-row lg:flex-col items-start gap-4">
-        <div className="relative w-[72px] h-[72px] sm:w-[120px] sm:h-[120px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden border" style={{ borderColor: themeColor }}>
-          {profile.avatar_url ? (
-            <Image
-              src={getOptimizedImageUrl(profile.avatar_url || '', { width: 150, quality: 85, format: 'webp' })}
-              alt={`${(profile.username || '').slice(0, 20) || '사용자'}의 프로필 이미지`}
-              fill
-              sizes="(max-width:640px) 72px, (max-width:1024px) 120px, 150px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">이미지 없음</div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <Link href={`/user/${authorId}`} className="text-lg font-bold link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded" style={{ color: themeColor }}>
-              {username || '사용자'}
-            </Link>
+      <div className="flex flex-col items-center text-center space-y-3 sm:space-y-6">
+        {/* 프로필 이미지 - 고급스러운 원형 */}
+        <div className="relative">
+          <div className="w-16 h-16 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-gray-200 relative">
+            {profile.avatar_url ? (
+              <Image
+                src={getOptimizedImageUrl(profile.avatar_url || '', { width: 150, quality: 85, format: 'webp' })}
+                alt={`${(profile.username || '').slice(0, 20) || '사용자'}의 프로필 이미지`}
+                fill
+                sizes="(max-width:640px) 64px, 128px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-xs sm:text-sm font-light">
+                NO IMAGE
+              </div>
+            )}
+          </div>
+          {/* 배지를 이미지 위로 겹치기 */}
+          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
             {badge}
           </div>
-          <div className="mt-2 text-sm text-gray-600">
-            <span>글 수: <strong className="text-gray-800">{postCount}</strong></span>
-            <span className="ml-4">추천 받은 수: <strong className="text-gray-800">{likeSum}</strong></span>
-            <span className="ml-4">점수: <strong className="text-gray-800">{score}</strong></span>
+        </div>
+
+        {/* 사용자 정보 */}
+        <div className="space-y-2 sm:space-y-4 w-full max-w-xs">
+          {/* 이름과 배지 */}
+          <div className="space-y-1 sm:space-y-2">
+            <Link 
+              href={`/user/${authorId}`} 
+              className="text-lg sm:text-xl font-light text-gray-900 hover:text-gray-700 transition-colors duration-200 block"
+            >
+              {username || '사용자'}
+            </Link>
           </div>
-          <div className="mt-3">
-            <p className="text-sm text-gray-700 whitespace-pre-line break-words">
-              {(profile.bio || '').slice(0, 200) || '자기소개가 없습니다.'}
-            </p>
+
+          {/* 통계 - 미니멀한 수평 레이아웃 */}
+          <div className="flex justify-center items-center space-x-4 sm:space-x-6 text-xs sm:text-sm">
+            <div className="text-center">
+              <div className="text-gray-900 font-light">{postCount}</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">Posts</div>
+            </div>
+            <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
+            <div className="text-center">
+              <div className="text-gray-900 font-light">{likeSum}</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">Likes</div>
+            </div>
+            <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
+            <div className="text-center">
+              <div className="text-gray-900 font-light">{score}</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">Score</div>
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-12 sm:w-16 mx-auto"></div>
+
+          {/* 자기소개 */}
+          <div className="min-h-[2rem] sm:min-h-[3rem]">
+            {profile.bio ? (
+              <p className="text-xs sm:text-sm text-gray-600 font-light leading-relaxed break-words">
+                {(profile.bio || '').slice(0, 150)}
+              </p>
+            ) : (
+              <p className="text-xs sm:text-sm text-gray-400 font-light italic">
+                자기소개가 없습니다
+              </p>
+            )}
           </div>
         </div>
       </div>
-      {loading && <p className="text-xs text-gray-500 mt-2">로딩 중...</p>}
+      
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center rounded-2xl">
+          <div className="text-xs text-gray-500">로딩 중...</div>
+        </div>
+      )}
     </section>
   );
 }

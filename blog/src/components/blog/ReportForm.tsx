@@ -45,7 +45,7 @@ export default function ReportForm({ slug }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center px-2 py-1 text-xs rounded border bg-red-50 text-red-700 hover:bg-red-100"
+        className="text-xs text-pink-500 hover:text-pink-600 transition-colors duration-200"
         aria-expanded={open}
         aria-controls="report-panel"
       >

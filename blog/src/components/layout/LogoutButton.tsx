@@ -8,6 +8,13 @@ export default function LogoutButton() {
     await logout('/');
   };
   return (
-    <button type="button" onClick={onLogout} className="text-gray-700 link-tone" aria-label="로그아웃">로그아웃</button>
+    <button 
+      type="button" 
+      onClick={onLogout} 
+      className="text-gray-700 hover:text-black hover:bg-gray-50 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50" 
+      aria-label="로그아웃"
+    >
+      로그아웃
+    </button>
   );
 }

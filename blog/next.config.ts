@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
     unoptimized: false,
     // 원격 이미지 최적화 허용: Supabase Storage 공개 객체
     remotePatterns: [
+      // localhost (개발 환경)
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      } as const,
       // Supabase Storage 공개 객체 (프로젝트별 호스트)
       ...(hostname
         ? [
@@ -33,6 +40,19 @@ const nextConfig: NextConfig = {
         hostname: 'i.ytimg.com',
         // 예: /vi/<videoId>/maxresdefault.jpg
         pathname: '/vi/**',
+      } as const,
+      // YouTube 대체 이미지 도메인
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        // 예: /vi/<videoId>/hqdefault.jpg
+        pathname: '/vi/**',
+      } as const,
+      // YouTube CDN 도메인
+      {
+        protocol: 'https',
+        hostname: 'ytimg.googleusercontent.com',
+        pathname: '/**',
       } as const,
     ],
   },

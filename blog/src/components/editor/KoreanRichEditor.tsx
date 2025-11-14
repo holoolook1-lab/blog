@@ -277,27 +277,64 @@ export default function KoreanRichEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-xl max-w-none focus:outline-none bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-300 hover:border-gray-300 focus-within:border-blue-500 focus-within:shadow-lg`,
+        class: `prose prose-xl max-w-none focus:outline-none bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-300 hover:border-gray-300 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-opacity-50`,
         style: `min-height: ${minHeight}`,
       },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;
-        if (!items) return false;
+        const text = event.clipboardData?.getData('text/plain') || '';
+        const html = event.clipboardData?.getData('text/html') || '';
         
-        // 이미지 파일 붙여넣기
-        for (const it of items) {
-          if (it.kind === 'file') {
-            const f = it.getAsFile();
-            if (f && /image\/(jpeg|png|webp)/.test(f.type)) {
+        // 1. 이미지 파일 붙여넣기 (파일)
+        if (items) {
+          for (const it of items) {
+            if (it.kind === 'file') {
+              const f = it.getAsFile();
+              if (f && /image\/(jpeg|png|webp|gif)/.test(f.type)) {
+                event.preventDefault();
+                void uploadSelectedImage(f);
+                return true;
+              }
+            }
+          }
+        }
+        
+        // 2. Blob URL 이미지 처리 (HTML에서 img 태그 추출)
+        if (html) {
+          const imgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
+          if (imgMatch && imgMatch[1]) {
+            const imgSrc = imgMatch[1];
+            if (imgSrc.startsWith('blob:')) {
               event.preventDefault();
-              void uploadSelectedImage(f);
+              try {
+                // Blob URL을 fetch하여 File 객체로 변환
+                fetch(imgSrc)
+                  .then(res => res.blob())
+                  .then(blob => {
+                    const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                    void uploadSelectedImage(file);
+                  })
+                  .catch(() => {
+                    // 실패 시 직접 이미지 삽입
+                    editor?.chain().focus().insertContent(`<img src="${imgSrc}" alt="붙여넣기 이미지" />`).run();
+                  });
+              } catch {
+                // fetch 실패 시 직접 이미지 삽입
+                editor?.chain().focus().insertContent(`<img src="${imgSrc}" alt="붙여넣기 이미지" />`).run();
+              }
               return true;
             }
           }
         }
         
-        // 비디오 링크 자동 임베드
-        const text = event.clipboardData?.getData('text/plain') || '';
+        // 3. 텍스트가 이미지 URL인 경우
+        if (text && (text.startsWith('blob:') || text.match(/\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i))) {
+          event.preventDefault();
+          editor?.chain().focus().insertContent(`<img src="${text}" alt="이미지" />`).run();
+          return true;
+        }
+        
+        // 4. 비디오 링크 자동 임베드
         if (text && /^https?:\/\//i.test(text)) {
           const embed = makeVideoEmbed(text);
           if (embed) {

@@ -9,9 +9,15 @@ export function getOptimizedImageUrl(url: string, opts: TransformOptions = {}): 
   try {
     // 일부 입력에서 마크다운/복사 붙여넣기로 인해 끝에 괄호나 공백이 붙는 문제를 정규화합니다.
     const cleaned = url.trim().replace(/[)\]]+$/, '');
+    
+    // YouTube 이미지 URL은 최적화하지 않고 그대로 반환
+    if (cleaned.includes('youtube.com') || cleaned.includes('ytimg.com')) {
+      return cleaned;
+    }
+    
     const u = new URL(cleaned);
     const isSupabasePublic = /\/storage\/v1\/object\/public\//.test(u.pathname);
-    if (!isSupabasePublic) return url;
+    if (!isSupabasePublic) return cleaned;
 
     const { width, quality = 80, format = 'webp' } = opts;
     if (width) u.searchParams.set('width', String(width));

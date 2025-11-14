@@ -89,7 +89,13 @@ export default function LoginPage() {
 
   return (
     <main id="main" className="mx-auto max-w-md px-6 py-12">
-      <h1 className="text-2xl font-bold">{t('login')}</h1>
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold">{t('login')}</h1>
+        <p className="text-xs text-gray-500 font-light tracking-wider uppercase mt-3">
+          당신의 생각이 반짝이는 곳, 라키라키
+        </p>
+        <div className="mt-3 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-24 mx-auto"></div>
+      </div>
       <form className="mt-6 space-y-3" onSubmit={onSubmit} aria-label="로그인 폼">
         <div>
           <label className="text-sm text-gray-700" htmlFor="login-email">{t('email')}</label>
