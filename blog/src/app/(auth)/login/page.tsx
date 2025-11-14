@@ -53,16 +53,10 @@ export default function LoginPage() {
       setMessage(res.message || "로그인 실패");
       return;
     }
-    // 서버 쿠키 세션을 클라이언트 Supabase 세션으로 동기화
+    // 서버 액션에서 수신한 토큰으로 클라이언트 세션 설정
     try {
-      const sres = await fetch('/api/auth/session', { credentials: 'same-origin' });
-      if (sres.ok) {
-        const json = await sres.json();
-        const at = json?.session?.access_token;
-        const rt = json?.session?.refresh_token;
-        if (json?.ok && at && rt) {
-          await supabase.auth.setSession({ access_token: at, refresh_token: rt });
-        }
+      if (res.access_token && res.refresh_token) {
+        await supabase.auth.setSession({ access_token: res.access_token, refresh_token: res.refresh_token });
       }
     } catch {}
     // 이미 클라이언트 세션을 설정했으므로 별도 하이드레이션 신호를 보내지 않습니다.

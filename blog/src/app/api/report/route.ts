@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     const REPORT_EMAIL_TO = process.env.REPORT_EMAIL_TO;
-    const REPORT_EMAIL_FROM = process.env.REPORT_EMAIL_FROM || 'report@no-reply.local';
+    const REPORT_EMAIL_FROM = process.env.REPORT_EMAIL_FROM || 'onboarding@resend.dev';
 
     if (!RESEND_API_KEY || !REPORT_EMAIL_TO) {
       return NextResponse.json({ error: '이메일 발송 설정이 없습니다(RESEND_API_KEY/REPORT_EMAIL_TO).' }, { status: 500 });

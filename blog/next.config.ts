@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' https: data:",
-      `connect-src 'self' https: ${supabaseHost}`,
+      `connect-src 'self' https: wss: ${supabaseHost}`,
       'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
       "object-src 'none'",
       "base-uri 'self'",
