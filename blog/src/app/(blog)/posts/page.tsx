@@ -62,8 +62,8 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   return (
     <main id="main" className="max-w-3xl mx-auto p-4 space-y-4" role="main" aria-labelledby="posts-title">
       <h1 id="posts-title" className="text-2xl font-bold">{t('title')}</h1>
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600" aria-live="polite" role="status">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <p className="text-sm text-gray-600 min-w-0" aria-live="polite" role="status">
           {q ? (
             <>{t('currentSearch', { q })} · {t('results', { count: totalCount })}</>
           ) : heading ? (
@@ -72,7 +72,7 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
             <>{t('all')} · {t('results', { count: totalCount || (posts?.length || 0) })}</>
           )}
         </p>
-        <PostsSearch />
+        <div className="w-full sm:w-auto"><PostsSearch /></div>
       </div>
       <ul className="grid gap-6 sm:grid-cols-2" aria-label="포스트 목록">
         {(posts || []).map((p, i) => (

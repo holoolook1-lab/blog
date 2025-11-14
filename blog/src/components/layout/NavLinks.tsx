@@ -39,7 +39,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         role="navigation"
         aria-label="주요 메뉴"
         className={
-          `items-center text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex gap-3 md:gap-4 pr-12 md:pr-0 z-20`
+          `text-sm md:text-base text-gray-700 ${open ? 'flex' : 'hidden'} md:flex flex-col md:flex-row items-start md:items-center flex-wrap gap-2 md:gap-4 pr-12 md:pr-0 z-20`
         }
       >
         <Link

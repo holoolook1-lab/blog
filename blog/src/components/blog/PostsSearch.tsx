@@ -79,7 +79,7 @@ export default function PostsSearch() {
   }, [q]);
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-2" role="search" aria-busy={isPending} aria-describedby="search-hint search-submit-hint">
+    <form onSubmit={onSubmit} className="w-full sm:w-auto flex flex-wrap items-center gap-2" role="search" aria-busy={isPending} aria-describedby="search-hint search-submit-hint">
       <label htmlFor="search" className="text-sm text-gray-700">검색</label>
       <input
         id="search"
@@ -88,7 +88,7 @@ export default function PostsSearch() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={require('next-intl').useTranslations('posts')('searchPlaceholder')}
-        className="flex-1 border rounded px-3 py-1 text-sm"
+        className="flex-1 min-w-0 border rounded px-3 py-1 text-sm"
         aria-label="포스트 검색"
         aria-describedby="search-hint"
       />

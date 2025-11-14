@@ -25,7 +25,7 @@ export default function BackToTop() {
   return (
     <button
       onClick={goTop}
-      className="fixed bottom-6 right-6 rounded-full bg-primary text-white shadow-lg px-3 py-1.5 text-xs hover:bg-primary/85 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
+      className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 rounded-full bg-black text-white shadow-xl px-3.5 py-2 text-sm hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
       aria-label={t('backToTop')}
       title={t('backToTopTitle')}
     >
