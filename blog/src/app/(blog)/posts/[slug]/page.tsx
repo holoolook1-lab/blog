@@ -72,8 +72,8 @@ export const revalidate = 600;
 type Params = { params: Promise<{ slug: string }> };
 
 export default async function PostDetailPage({ params }: Params) {
-  // 서버 쿠키 기반 Supabase: 작성자는 비공개 글도 조회 가능
-  const supabase = (await getServerSupabase()) || createPublicSupabaseClient();
+  // 서버 사이드에서 인증 세션을 사용하지 않고 공개 클라이언트만 사용
+  const supabase = createPublicSupabaseClient();
   if (!supabase) {
     return (
       <main id="main" role="main" aria-labelledby="post-title" className="max-w-3xl mx-auto p-4 space-y-4">

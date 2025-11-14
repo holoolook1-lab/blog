@@ -45,7 +45,7 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
     },
     {
       name: 'Facebook',
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`,
       icon: <Facebook size={20} aria-hidden="true" focusable="false" />,
     },
     {

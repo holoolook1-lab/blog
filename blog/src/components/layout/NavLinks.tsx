@@ -18,6 +18,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
   const [lastFocusable, setLastFocusable] = useState<HTMLElement | null>(null);
+  const previousPathnameRef = useRef<string | null>(null);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -45,14 +46,24 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
     }
   }, [open]);
 
+  // 경로 변경 감지 및 메뉴 닫기 - Next.js 라우터 이벤트 활용
   useEffect(() => {
-    // 경로 변경 시 패널 닫기 및 스크롤 잠금 해제 (단, 메뉴가 열려있을 때만)
-    if (open) {
+    // 메뉴가 열려있을 때만 처리
+    if (!open) return;
+    
+    // 경로 변경 시 메뉴 닫기
+    const handleRouteChange = () => {
       setOpen(false);
       document.body.style.overflow = '';
+    };
+    
+    // 현재 경로와 다르면 즉시 닫기
+    if (previousPathnameRef.current !== null && previousPathnameRef.current !== pathname) {
+      handleRouteChange();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]); // 'open' 의존성 제거 - 무한 루프 방지
+    
+    previousPathnameRef.current = pathname;
+  }, [pathname]); // open 의존성 제거
 
   // 메뉴 항목 클릭 시 메뉴 닫기
   const handleMenuClick = () => {
