@@ -298,3 +298,220 @@ button:focus {
 .content-renderer em {
   font-style: italic;
 }
+
+/* 인용구 스타일 개선 */
+.content-renderer blockquote {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #475569;
+  position: relative;
+}
+
+.content-renderer blockquote::before {
+  content: '"';
+  font-size: 3rem;
+  color: #3b82f6;
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  opacity: 0.3;
+}
+
+.content-renderer blockquote p {
+  margin: 0;
+  line-height: 1.8;
+}
+
+/* 리스트 스타일 개선 */
+.content-renderer ul {
+  list-style-type: none;
+  padding-left: 2rem;
+  margin: 1rem 0;
+}
+
+.content-renderer ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.content-renderer ul li::before {
+  content: '•';
+  color: #3b82f6;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.content-renderer ol {
+  list-style-type: none;
+  counter-reset: list-counter;
+  padding-left: 2rem;
+  margin: 1rem 0;
+}
+
+.content-renderer ol li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+  counter-increment: list-counter;
+}
+
+.content-renderer ol li::before {
+  content: counter(list-counter);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+/* 제목 스타일 개선 */
+.content-renderer h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 2rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  line-height: 1.3;
+}
+
+.content-renderer h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 1.5rem 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.content-renderer h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 1.25rem 0 0.5rem 0;
+  line-height: 1.5;
+}
+
+/* 에디터 내부 스타일 개선 */
+.ProseMirror blockquote {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #475569;
+  position: relative;
+}
+
+.ProseMirror blockquote::before {
+  content: '"';
+  font-size: 3rem;
+  color: #3b82f6;
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  opacity: 0.3;
+}
+
+.ProseMirror ul {
+  list-style-type: none;
+  padding-left: 2rem;
+  margin: 1rem 0;
+}
+
+.ProseMirror ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.ProseMirror ul li::before {
+  content: '•';
+  color: #3b82f6;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.ProseMirror ol {
+  list-style-type: none;
+  counter-reset: list-counter;
+  padding-left: 2rem;
+  margin: 1rem 0;
+}
+
+.ProseMirror ol li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+  counter-increment: list-counter;
+}
+
+.ProseMirror ol li::before {
+  content: counter(list-counter);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+/* 툴바 버튼 스타일 개선 */
+.editor-toolbar-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.editor-toolbar-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.editor-toolbar-button:hover::before {
+  left: 100%;
+}
+
+.editor-toolbar-button.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.editor-toolbar-button.active:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}

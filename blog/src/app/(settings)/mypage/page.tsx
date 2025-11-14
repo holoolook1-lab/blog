@@ -23,6 +23,7 @@ export default function MyPage() {
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [recentBookmarks, setRecentBookmarks] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [showAllPosts, setShowAllPosts] = useState(false);
 
   // 로그인 가드: 로딩 종료 후 미로그인이면 로그인 페이지로 이동
   useEffect(() => {
@@ -50,14 +51,14 @@ export default function MyPage() {
         setBio((prof as any)?.bio ?? '');
       } catch {}
 
-      // 최근 작성(본인 글)
+      // 최근 작성(본인 글) - 처음에 20개까지 로드
       try {
         const { data: posts } = await supabase
           .from('posts')
           .select('id, title, slug, cover_image, excerpt, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .range(0, 4);
+          .range(0, 19);
         setRecentPosts(posts || []);
       } catch {}
 
@@ -194,12 +195,20 @@ export default function MyPage() {
       {/* 최근 작성 */}
       <section className="rounded border p-4 bg-white">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">최근 작성</h2>
-        <Link href="/posts" className="text-sm text-gray-600 link-gauge">전체 보기</Link>
+          <h2 className="text-lg font-semibold">내 글 관리</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAllPosts(!showAllPosts)}
+              className="text-sm text-gray-600 hover:text-gray-800 link-gauge"
+            >
+              {showAllPosts ? '간략히 보기' : '전체 보기'}
+            </button>
+            <Link href="/posts" className="text-sm text-gray-600 link-gauge">모든 글 보기</Link>
+          </div>
         </div>
         {dataLoading ? (
           <div className="mt-3 grid grid-cols-1 gap-3" aria-busy="true" aria-live="polite">
-            {[...Array(4)].map((_, i) => (
+            {[...Array(showAllPosts ? 10 : 4)].map((_, i) => (
               <div key={i} className="rounded border p-4">
                 <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse" />
                 <div className="mt-2 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
@@ -211,7 +220,7 @@ export default function MyPage() {
           <p className="mt-2 text-sm text-gray-600">아직 작성한 글이 없습니다. 첫 글을 작성해보세요.</p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3">
-            {recentPosts.map((p) => (
+            {(showAllPosts ? recentPosts : recentPosts.slice(0, 4)).map((p) => (
               <div key={p.id} className="rounded border p-4 group">
                 <PostCard post={p} variant="polaroid" />
                 <div className="mt-3 flex items-center gap-2">
@@ -247,6 +256,16 @@ export default function MyPage() {
                 </div>
               </div>
             ))}
+            {!showAllPosts && recentPosts.length > 4 && (
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAllPosts(true)}
+                  className="text-sm text-gray-600 hover:text-gray-800 link-gauge"
+                >
+                  더보기 ({recentPosts.length - 4}개 더 있음)
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -117,15 +117,28 @@ export default async function PostDetailPage({ params }: Params) {
   const convertPlainLinksToEmbeds = (html: string) => {
     if (!html) return '';
     let out = html;
-    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^"'\s]*v=([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+    
+    // YouTube URL 패턴들 - 더 정교한 매칭
+    // 1. 일반 YouTube URL: https://www.youtube.com/watch?v=VIDEO_ID
+    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^"'\s]*v=([A-Za-z0-9_-]{11})(?:[^"'\s\w-]|$)/gi, (_m, id) => {
       return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
-    out = out.replace(/https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+    
+    // 2. 짧은 YouTube URL: https://youtu.be/VIDEO_ID
+    out = out.replace(/https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})(?:[^"'\s\w-]|$)/gi, (_m, id) => {
       return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
-    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/gi, (_m, id) => {
+    
+    // 3. YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
+    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/shorts\/([A-Za-z0-9_-]{11})(?:[^"'\s\w-]|$)/gi, (_m, id) => {
       return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
     });
+    
+    // 4. YouTube 공유 링크: https://www.youtube.com/embed/VIDEO_ID
+    out = out.replace(/https?:\/\/(?:www\.)?youtube\.com\/embed\/([A-Za-z0-9_-]{11})(?:[^"'\s\w-]|$)/gi, (_m, id) => {
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
+    });
+    
     out = out.replace(/https?:\/\/(?:player\.)?vimeo\.com\/video\/([0-9]+)/gi, (_m, id) => {
       return `<iframe src="https://player.vimeo.com/video/${id}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
     });

@@ -13,11 +13,16 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { compressToWebp } from '@/lib/utils/imageClient';
+import { Node } from '@tiptap/core';
+import YouTube from '@tiptap/extension-youtube';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Image as ImageIcon, 
   Video, List, ListOrdered, Heading, Quote, Code, Undo, Redo, X, Plus, 
-  Table as TableIcon, AlignLeft, AlignCenter, AlignRight, Strikethrough, Highlighter
+  Table as TableIcon, AlignLeft, AlignCenter, AlignRight, Strikethrough, Highlighter,
+  Share2, Globe
 } from 'lucide-react';
+import { processSocialLink, type ProcessedLink } from '@/lib/social-media/processor';
+import { detectSocialPlatform } from '@/lib/social-media/platforms';
 
 type Props = {
   value: string;
@@ -77,6 +82,8 @@ export default function KoreanRichEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
+  const [showSocialInput, setShowSocialInput] = useState(false);
+  const [socialUrl, setSocialUrl] = useState('');
   const [editorNotice, setEditorNotice] = useState<string | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -228,6 +235,12 @@ export default function KoreanRichEditor({
           class: 'text-blue-600 hover:underline font-medium transition-colors',
         },
       }),
+      YouTube.configure({
+        width: 840,
+        height: 472.5,
+        modestBranding: true,
+        rel: 0,
+      }),
       Image.configure({ 
         HTMLAttributes: { 
           class: 'max-w-full h-auto rounded-2xl shadow-xl my-8 border border-gray-100 transition-transform hover:scale-105' 
@@ -281,6 +294,9 @@ export default function KoreanRichEditor({
       attributes: {
         class: `prose prose-xl max-w-none focus:outline-none bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-300 hover:border-gray-300 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-opacity-50`,
         style: `min-height: ${minHeight}`,
+      },
+      parseOptions: {
+        preserveWhitespace: 'full',
       },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;
@@ -338,10 +354,18 @@ export default function KoreanRichEditor({
         
         // 4. 비디오 링크 자동 임베드
         if (text && /^https?:\/\//i.test(text)) {
+          // YouTube URL은 텍스트로만 삽입 (PostDetailPage에서 자동 변환됨)
+          const isYouTube = text.includes('youtube.com') || text.includes('youtu.be');
+          if (isYouTube) {
+            event.preventDefault();
+            editor?.chain().focus().insertContent(text).run();
+            return true;
+          }
+          
+          // 기타 비디오 플랫폼은 iframe HTML로 삽입
           const embed = makeVideoEmbed(text);
           if (embed) {
             event.preventDefault();
-            // 비디오는 iframe HTML로 삽입
             editor?.chain().focus().insertContent(embed).run();
             return true;
           }
@@ -508,20 +532,213 @@ export default function KoreanRichEditor({
       return; 
     }
     
-    // URL 검증 및 iframe HTML 생성
-    const videoEmbed = makeVideoEmbed(url);
-    if (!videoEmbed) {
-      const supportedPlatforms = Object.values(KOREAN_FEATURES.videoPlatforms).map(p => p.name).join(', ');
-      setEditorNotice(`❌ 지원되지 않는 동영상 링크입니다. 지원 플랫폼: ${supportedPlatforms}`);
-      setTimeout(() => setEditorNotice(null), 4000);
-      return;
+    // YouTube URL인지 확인
+    const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+    
+    if (isYouTube) {
+      // YouTube URL은 텍스트로만 삽입 (PostDetailPage에서 자동 변환됨)
+      editor?.chain().focus().insertContent(url).run();
+    } else {
+      // 기타 비디오 플랫폼은 기존 방법 사용
+      const videoEmbed = makeVideoEmbed(url);
+      if (!videoEmbed) {
+        const supportedPlatforms = Object.values(KOREAN_FEATURES.videoPlatforms).map(p => p.name).join(', ');
+        setEditorNotice(`❌ 지원되지 않는 동영상 링크입니다. 지원 플랫폼: ${supportedPlatforms}`);
+        setTimeout(() => setEditorNotice(null), 4000);
+        return;
+      }
+      
+      try {
+        editor?.commands.insertContent(videoEmbed);
+      } catch (error) {
+        console.error('비디오 삽입 오류:', error);
+        editor?.chain().focus().insertContent(url).run();
+      }
     }
     
-    // iframe HTML로 삽입
-    editor?.chain().focus().insertContent(videoEmbed).run();
     setVideoUrl('');
     setShowVideoInput(false);
   }, [editor, videoUrl, makeVideoEmbed]);
+
+  const handleSocialInsert = useCallback(async () => {
+    const url = socialUrl.trim();
+    if (!url) { 
+      setShowSocialInput(false); 
+      return; 
+    }
+    
+    setEditorNotice('소셜 미디어 링크 처리 중...');
+    
+    try {
+      const result = await processSocialLink(url, {
+        expandShortUrls: true,
+        fetchOEmbed: true,
+        generateEmbed: true,
+        timeout: 8000
+      });
+      
+      if (result.status === 'success' && result.embedHtml) {
+        // 소셜 미디어 임베드 삽입
+        editor?.chain().focus().insertContent(result.embedHtml).run();
+        setEditorNotice('✅ 소셜 미디어가 삽입되었습니다');
+      } else if (result.status === 'partial') {
+        // 부분 성공 시 기본 링크로 삽입
+        editor?.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${result.title || url}</a>`).run();
+        setEditorNotice('⚠️ 기본 링크로 삽입되었습니다');
+      } else {
+        // 실패 시 기본 링크로 삽입
+        editor?.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`).run();
+        setEditorNotice('❌ 지원하지 않는 링크입니다. 기본 링크로 삽입되었습니다');
+      }
+      
+      setSocialUrl('');
+      setShowSocialInput(false);
+      
+    } catch (error) {
+      console.error('소셜 링크 처리 오류:', error);
+      // 에러 시 기본 링크로 삽입
+      editor?.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`).run();
+      setEditorNotice('❌ 링크 처리 중 오류가 발생했습니다. 기본 링크로 삽입되었습니다');
+    }
+    
+    setTimeout(() => setEditorNotice(null), 4000);
+  }, [editor, socialUrl]);
+
+  // 선택된 텍스트 블록 변환 함수들 (개선된 버전)
+  const toggleHeading = useCallback((level: 1 | 2 | 3 | 4 | 5 | 6) => {
+    if (!editor) return;
+    
+    try {
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (!selectedText.trim()) {
+        // 선택된 텍스트가 없으면 현재 커서 위치에서 토글
+        editor.chain().focus().toggleHeading({ level }).run();
+        return;
+      }
+      
+      // 선택된 텍스트가 있으면 해당 범위를 제목으로 변환
+      editor.chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .setHeading({ level })
+        .run();
+        
+    } catch (error) {
+      console.error('제목 변환 오류:', error);
+      // 오류 발생 시 기본 토글 시도
+      try {
+        editor.chain().focus().toggleHeading({ level }).run();
+      } catch (fallbackError) {
+        console.error('제목 변환 재시도 오류:', fallbackError);
+      }
+    }
+  }, [editor]);
+
+  const toggleList = useCallback((type: 'bullet' | 'ordered') => {
+    if (!editor) return;
+    
+    try {
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (!selectedText.trim()) {
+        // 선택된 텍스트가 없으면 현재 블록을 리스트로 변환
+        if (type === 'bullet') {
+          editor.chain().focus().toggleBulletList().run();
+        } else {
+          editor.chain().focus().toggleOrderedList().run();
+        }
+        return;
+      }
+      
+      // 선택된 텍스트가 있으면 해당 범위를 리스트로 변환
+      const lines = selectedText.split('\n').filter(line => line.trim());
+      if (lines.length > 0) {
+        // 각 줄을 리스트 아이템으로 변환
+        const listItems = lines.map(line => 
+          type === 'bullet' 
+            ? `<li>${line}</li>`
+            : `<li>${line}</li>`
+        ).join('');
+        
+        const listHtml = type === 'bullet' 
+          ? `<ul>${listItems}</ul>`
+          : `<ol>${listItems}</ol>`;
+        
+        editor.chain()
+          .focus()
+          .deleteRange({ from, to })
+          .insertContent(listHtml)
+          .run();
+      }
+      
+    } catch (error) {
+      console.error('리스트 변환 오류:', error);
+      // 오류 발생 시 기본 토글 시도
+      try {
+        if (type === 'bullet') {
+          editor.chain().focus().toggleBulletList().run();
+        } else {
+          editor.chain().focus().toggleOrderedList().run();
+        }
+      } catch (fallbackError) {
+        console.error('리스트 변환 재시도 오류:', fallbackError);
+      }
+    }
+  }, [editor]);
+
+  const toggleBlockquote = useCallback(() => {
+    if (!editor) return;
+    
+    try {
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (!selectedText.trim()) {
+        // 선택된 텍스트가 없으면 현재 블록을 인용구로 변환
+        editor.chain().focus().toggleBlockquote().run();
+        return;
+      }
+      
+      // 선택된 텍스트가 있으면 해당 범위를 인용구로 변환
+      editor.chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .setBlockquote()
+        .run();
+        
+    } catch (error) {
+      console.error('인용구 변환 오류:', error);
+      // 오류 발생 시 기본 토글 시도
+      try {
+        editor.chain().focus().toggleBlockquote().run();
+      } catch (fallbackError) {
+        console.error('인용구 변환 재시도 오류:', fallbackError);
+      }
+    }
+  }, [editor]);
+
+  // 현재 선택된 블록의 타입을 확인하는 함수
+  const getCurrentBlockType = useCallback(() => {
+    if (!editor) return 'paragraph';
+    
+    const { $anchor } = editor.state.selection;
+    const parent = $anchor.parent;
+    
+    // 다양한 블록 타입 확인
+    if (parent.type.name === 'heading') {
+      const level = parent.attrs.level;
+      return `heading-${level}`;
+    }
+    if (parent.type.name === 'bulletList') return 'bulletList';
+    if (parent.type.name === 'orderedList') return 'orderedList';
+    if (parent.type.name === 'blockquote') return 'blockquote';
+    if (parent.type.name === 'codeBlock') return 'codeBlock';
+    
+    return 'paragraph';
+  }, [editor]);
 
   const toolbarButtons = useMemo((): ToolbarButton[] => [
     {
@@ -547,22 +764,41 @@ export default function KoreanRichEditor({
     },
     { type: 'separator' },
     {
-      name: '제목',
+      name: '제목1',
       icon: Heading,
-      action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(),
+      action: () => toggleHeading(2),
       active: editor?.isActive('heading', { level: 2 })
     },
     {
+      name: '제목2', 
+      icon: Heading,
+      action: () => toggleHeading(3),
+      active: editor?.isActive('heading', { level: 3 })
+    },
+    {
+      name: '제목3',
+      icon: Heading,
+      action: () => toggleHeading(4),
+      active: editor?.isActive('heading', { level: 4 })
+    },
+    { type: 'separator' },
+    {
       name: '글머리목록',
       icon: List,
-      action: () => editor?.chain().focus().toggleBulletList().run(),
+      action: () => toggleList('bullet'),
       active: editor?.isActive('bulletList')
     },
     {
       name: '번호목록',
       icon: ListOrdered,
-      action: () => editor?.chain().focus().toggleOrderedList().run(),
+      action: () => toggleList('ordered'),
       active: editor?.isActive('orderedList')
+    },
+    {
+      name: '인용구',
+      icon: Quote,
+      action: toggleBlockquote,
+      active: editor?.isActive('blockquote')
     },
     { type: 'separator' },
     {
@@ -584,6 +820,12 @@ export default function KoreanRichEditor({
       action: () => setShowVideoInput(!showVideoInput),
       active: showVideoInput
     },
+    {
+      name: '소셜미디어',
+      icon: Share2,
+      action: () => setShowSocialInput(!showSocialInput),
+      active: showSocialInput
+    },
     ...(enableKoreanFeatures ? [{
       name: '표',
       icon: TableIcon,
@@ -596,12 +838,6 @@ export default function KoreanRichEditor({
       icon: Code,
       action: () => editor?.chain().focus().toggleCodeBlock().run(),
       active: editor?.isActive('codeBlock')
-    },
-    {
-      name: '인용',
-      icon: Quote,
-      action: () => editor?.chain().focus().toggleBlockquote().run(),
-      active: editor?.isActive('blockquote')
     },
     { type: 'separator' },
     {
@@ -618,12 +854,44 @@ export default function KoreanRichEditor({
       disabled: !editor?.can().redo(),
       shortcut: 'Ctrl+Y'
     }
-  ], [editor, showLinkInput, showVideoInput, uploading, enableKoreanFeatures]);
+  ], [editor, showLinkInput, showVideoInput, uploading, enableKoreanFeatures, toggleHeading, toggleList, toggleBlockquote]);
 
   if (!editor) return null;
 
+  // 현재 블록 타입에 따른 한국어 표시
+  const getBlockTypeDisplay = () => {
+    const blockType = getCurrentBlockType();
+    const blockTypeMap = {
+      'paragraph': '본문',
+      'heading-1': '제목1',
+      'heading-2': '대제목', 
+      'heading-3': '중제목',
+      'heading-4': '소제목',
+      'heading-5': '소제목2',
+      'heading-6': '소제목3',
+      'bulletList': '글머리목록',
+      'orderedList': '번호목록',
+      'blockquote': '인용구',
+      'codeBlock': '코드블록'
+    };
+    return blockTypeMap[blockType as keyof typeof blockTypeMap] || '본문';
+  };
+
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* 현재 블록 타입 표시 */}
+      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium text-blue-700">
+            현재 블록: <span className="font-bold">{getBlockTypeDisplay()}</span>
+          </span>
+        </div>
+        <div className="text-xs text-gray-500">
+          텍스트를 선택하고 원하는 형식을 적용하세요
+        </div>
+      </div>
+
       {/* 현대적인 툴바 */}
       <div className="flex flex-wrap items-center gap-1 p-4 bg-gradient-to-r from-gray-50 via-blue-50 to-purple-50 border border-gray-200 rounded-2xl shadow-lg backdrop-blur-sm">
         {toolbarButtons.map((btn, index) => {
@@ -644,13 +912,17 @@ export default function KoreanRichEditor({
               key={index}
               type="button"
               className={`
-                relative p-3 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                relative px-3 py-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2 min-w-[40px]
                 ${btn.active 
                   ? 'bg-blue-100 text-blue-600 shadow-inner transform scale-95' 
                   : 'hover:bg-white hover:shadow-xl text-gray-700 hover:text-gray-900 hover:scale-105'
                 }
                 ${btn.disabled || btn.loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
                 group
+                ${btn.name?.startsWith('제목') ? 'border border-gray-200' : ''}
+                ${btn.name === '제목1' ? 'bg-gradient-to-r from-red-50 to-red-100 text-red-700' : ''}
+                ${btn.name === '제목2' ? 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700' : ''}
+                ${btn.name === '제목3' ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700' : ''}
               `}
               onClick={btn.action}
               disabled={btn.disabled || btn.loading}
@@ -661,7 +933,12 @@ export default function KoreanRichEditor({
               {btn.loading ? (
                 <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
               ) : (
-                Icon && <Icon className="w-4 h-4" />
+                <>
+                  <Icon className="w-4 h-4" />
+                  {btn.name?.startsWith('제목') && (
+                    <span className="text-xs font-bold">{btn.name.replace('제목', '')}</span>
+                  )}
+                </>
               )}
               {btn.shortcut && (
                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -786,6 +1063,63 @@ export default function KoreanRichEditor({
           </div>
           {editorNotice && (
             <p className="text-sm text-red-600 mt-4 font-medium">{editorNotice}</p>
+          )}
+        </div>
+      )}
+
+      {/* 소셜 미디어 입력 */}
+      {showSocialInput && (
+        <div className="border border-purple-200 rounded-xl p-6 bg-gradient-to-br from-purple-50 to-pink-50 mb-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <Share2 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">소셜 미디어 링크</h3>
+              <p className="text-sm text-gray-600">YouTube, Instagram, Facebook, Twitter, TikTok, 네이버TV 지원</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                SNS 링크 입력
+              </label>
+              <input
+                type="url"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
+                placeholder="예: https://www.youtube.com/watch?v=VIDEO_ID, https://www.instagram.com/p/POST_ID"
+                value={socialUrl}
+                onChange={(e) => setSocialUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSocialInsert();
+                  } else if (e.key === 'Escape') {
+                    setShowSocialInput(false);
+                    setSocialUrl('');
+                  }
+                }}
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 font-medium shadow-lg"
+                onClick={handleSocialInsert}
+              >
+                소셜 미디어 삽입
+              </button>
+              <button
+                type="button"
+                className="p-3 text-gray-500 hover:text-gray-700 transition-colors rounded-xl hover:bg-gray-100"
+                onClick={() => { setShowSocialInput(false); setSocialUrl(''); }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          {editorNotice && (
+            <p className="text-sm text-purple-600 mt-4 font-medium">{editorNotice}</p>
           )}
         </div>
       )}
