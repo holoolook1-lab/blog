@@ -51,7 +51,12 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
       setOpen(false);
       document.body.style.overflow = '';
     }
-  }, [pathname]);
+  }, [pathname, open]);
+
+  // 메뉴 항목 클릭 시 메뉴 닫기
+  const handleMenuClick = () => {
+    setOpen(false);
+  };
 
   return (
     <div ref={rootRef} className="relative flex items-center gap-2 md:gap-3">
@@ -142,7 +147,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
                     : 'text-gray-600 hover:text-black'
                   }`}
                 aria-current={isActive('/posts') ? 'page' : undefined}
-                onClick={() => setOpen(false)}
+                onClick={handleMenuClick}
               >
                 {t('posts')}
               </Link>
@@ -157,7 +162,6 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
                     }`}
                   ariaLabel={t('write')}
                   ariaCurrent={isActive('/write') ? 'page' : undefined}
-                  onClick={() => setOpen(false)}
                 >
                   {t('write')}
                 </ProtectedLink>
@@ -172,7 +176,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
                       : 'text-gray-600 hover:text-black'
                     }`}
                   aria-current={isActive('/mypage') ? 'page' : undefined}
-                  onClick={() => setOpen(false)}
+                  onClick={handleMenuClick}
                 >
                   {t('mypage')}
                 </Link>
