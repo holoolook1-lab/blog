@@ -114,7 +114,7 @@ export default function AutoPlayEmbed({ type, src, className, muted = true, thre
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="absolute inset-0 w-full h-full"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
           referrerPolicy="strict-origin-when-cross-origin"
         />
       ) : (

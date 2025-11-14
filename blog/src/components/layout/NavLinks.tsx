@@ -46,12 +46,13 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
   }, [open]);
 
   useEffect(() => {
-    // 경로 변경 시 패널 닫기 및 스크롤 잠금 해제
+    // 경로 변경 시 패널 닫기 및 스크롤 잠금 해제 (단, 메뉴가 열려있을 때만)
     if (open) {
       setOpen(false);
       document.body.style.overflow = '';
     }
-  }, [pathname, open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]); // 'open' 의존성 제거 - 무한 루프 방지
 
   // 메뉴 항목 클릭 시 메뉴 닫기
   const handleMenuClick = () => {
