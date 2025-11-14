@@ -3,6 +3,8 @@ import { getServerSupabase } from '@/lib/supabase/server';
 import CommentSection from '@/components/blog/CommentSection';
 import CommentList from '@/components/blog/CommentList';
 import ShareButtons from '@/components/blog/ShareButtons';
+import { getLocale } from '@/i18n/getLocale';
+import { prefixPath } from '@/lib/i18n/link';
 import ReportForm from '@/components/blog/ReportForm';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { computeReadingMinutes } from '@/lib/utils/reading';
@@ -17,6 +19,7 @@ import BackToTop from '@/components/ui/BackToTop';
 import ActionBar from '@/components/blog/ActionBar';
 import EditLinkClient from '@/components/blog/EditLinkClient';
 import ProfileCard from '@/components/profile/ProfileCard';
+import { getPostBySlugCached } from '@/lib/cache/posts';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -36,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    alternates: { canonical: buildPostUrl(site, cleanSlug) },
+    alternates: { canonical: buildPostUrl(site, cleanSlug), languages: { en: `/en/posts/${cleanSlug}`, ko: `/posts/${cleanSlug}` } },
     openGraph: {
       type: 'article',
       title,
@@ -86,29 +89,12 @@ export default async function PostDetailPage({ params }: Params) {
   const rawSlug = (slug || '').toString();
   let cleanSlug = rawSlug.trim();
   try { cleanSlug = decodeURIComponent(cleanSlug); } catch {}
-  // 원본/디코드/소문자 폴백 순서로 조회
-  let post: any = null;
-  {
+  let post: any = await getPostBySlugCached(cleanSlug);
+  if (!post) {
     const { data } = await supabase
       .from('posts')
       .select('*')
       .eq('slug', cleanSlug)
-      .maybeSingle();
-    post = data || null;
-  }
-  if (!post) {
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('slug', rawSlug)
-      .maybeSingle();
-    post = data || null;
-  }
-  if (!post) {
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('slug', cleanSlug.toLowerCase())
       .maybeSingle();
     post = data || null;
   }
@@ -228,12 +214,19 @@ export default async function PostDetailPage({ params }: Params) {
             datePublished: post.created_at,
             dateModified: post.updated_at,
             image: post.cover_image ? [post.cover_image] : undefined,
+            author: post.user_id ? { '@type': 'Person', name: post.user_id } : undefined,
             mainEntityOfPage: {
               '@type': 'WebPage',
               '@id': buildPostUrl(site, cleanSlug),
             },
             publisher: {
               '@type': 'Organization',
+              name: siteName,
+              logo: { '@type': 'ImageObject', url: `${site}/opengraph-image` },
+            },
+            isPartOf: {
+              '@type': 'WebSite',
+              url: site,
               name: siteName,
             },
           }),
@@ -277,7 +270,7 @@ export default async function PostDetailPage({ params }: Params) {
         </div>
       )}
       <div className="pt-4">
-        <ShareButtons url={`${site}/posts/${slug}`} title={post.title} />
+        <ShareButtons url={`${site}${prefixPath(await getLocale())}/posts/${slug}`} title={post.title} />
         {/* 신고 상세폼: 공유 영역 아래에 접기/펼치기 형태로 배치 */}
         <ReportForm slug={slug} />
       </div>

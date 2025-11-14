@@ -7,8 +7,12 @@ import { Menu } from 'lucide-react';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import LogoutButton from './LogoutButton';
 import ProtectedLink from '@/components/common/ProtectedLink';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function NavLinks({ showWrite }: { showWrite: boolean }) {
+  const t = useTranslations('nav');
+  const locale = useLocale();
+  const prefix = locale === 'en' ? '/en' : '';
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { userId } = useAuthUser();
@@ -39,33 +43,32 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
         }
       >
         <Link
-          href="/posts"
+          href={`${prefix}/posts`}
           className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/posts') ? 'font-semibold text-black' : ''}`}
           aria-current={isActive('/posts') ? 'page' : undefined}
         >
-          포스트
+          {t('posts')}
         </Link>
         <ProtectedLink
-          href="/write"
+          href={`${prefix}/write`}
           className={`px-2 py-1 md:px-0 md:py-0 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/write') ? 'font-semibold text-black' : ''}`}
-          ariaLabel="글 작성"
+          ariaLabel={t('write')}
           ariaCurrent={isActive('/write') ? 'page' : undefined}
         >
-          작성
+          {t('write')}
         </ProtectedLink>
         {userId && (
           <Link
-            href="/mypage"
+            href={`${prefix}/mypage`}
             className={`px-2 py-1 link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded ${isActive('/mypage') ? 'font-semibold text-black' : ''}`}
             aria-current={isActive('/mypage') ? 'page' : undefined}
           >
-            내 계정
+            {t('mypage')}
           </Link>
         )}
         {userId && (
           <span className="md:hidden">
-            {/* 모바일에서는 같은 내비 내에 표시되지만 라벨을 분리해 보조 메뉴를 명확화 */}
-            <nav aria-label="계정 메뉴">
+            <nav aria-label={t('accountMenu')}>
               <LogoutButton />
             </nav>
           </span>
@@ -73,8 +76,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
       </nav>
       {userId && (
         <div className="hidden md:block">
-          {/* 데스크탑에서는 주요 메뉴와 분리된 보조 내비로 표시 */}
-          <nav aria-label="계정 메뉴">
+          <nav aria-label={t('accountMenu')}>
             <LogoutButton />
           </nav>
         </div>

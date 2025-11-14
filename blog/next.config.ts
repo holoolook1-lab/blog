@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 // 환경변수가 비어 있어도 이미지 최적화가 동작하도록 기본값 설정
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hyueqldwgertapmhmmni.supabase.co';
@@ -43,6 +44,35 @@ const nextConfig: NextConfig = {
     // 프로젝트 디렉터리의 상위(리포지토리 루트)를 사용합니다.
     root: path.resolve(__dirname, '..'),
   },
+  async headers() {
+    const supabaseHost = hostname || '';
+    const csp = [
+      "default-src 'self'",
+      `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
+      "media-src 'self' https:",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' https: data:",
+      `connect-src 'self' https: ${supabaseHost}`,
+      'frame-src https://www.youtube.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://tv.naver.com https://www.instagram.com https://www.tiktok.com https://www.facebook.com',
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ');
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);

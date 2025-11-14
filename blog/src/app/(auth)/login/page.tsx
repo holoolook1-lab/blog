@@ -10,6 +10,8 @@ import { outlineButtonSmall } from "@/lib/styles/ui";
 // 회원가입은 별도 라우트(`/signup`)에서 처리합니다
 
 export default function LoginPage() {
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('auth');
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
@@ -87,10 +89,10 @@ export default function LoginPage() {
 
   return (
     <main id="main" className="mx-auto max-w-md px-6 py-12">
-      <h1 className="text-2xl font-bold">로그인</h1>
+      <h1 className="text-2xl font-bold">{t('login')}</h1>
       <form className="mt-6 space-y-3" onSubmit={onSubmit} aria-label="로그인 폼">
         <div>
-          <label className="text-sm text-gray-700" htmlFor="login-email">이메일</label>
+          <label className="text-sm text-gray-700" htmlFor="login-email">{t('email')}</label>
           <input
             type="email"
             id="login-email"
@@ -106,7 +108,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="text-sm text-gray-700" htmlFor="login-password">비밀번호</label>
+          <label className="text-sm text-gray-700" htmlFor="login-password">{t('password')}</label>
           <input
             type="password"
             id="login-password"
@@ -121,33 +123,31 @@ export default function LoginPage() {
             aria-describedby={message ? "login-error" : undefined}
           />
           <div className="mt-2 text-right">
-            <Link href="/reset" className="text-sm link-gauge">
-              비밀번호를 잊으셨나요?
-            </Link>
+            <Link href="/reset" className="text-sm link-gauge">{t('forgot')}</Link>
           </div>
         </div>
         <button
           type="submit"
           disabled={loading}
           className={`${outlineButtonSmall} w-full disabled:opacity-50`}
-          aria-label="로그인"
+          aria-label={t('loginNow')}
           aria-busy={loading}
           aria-describedby="login-submit-hint"
         >
-          {loading ? "로그인 중..." : "로그인"}
+          {loading ? t('loggingIn') : t('loginNow')}
         </button>
         <p id="login-submit-hint" className="sr-only">이메일과 비밀번호 입력 후 로그인 버튼을 누르세요. 로딩 중에는 버튼이 비활성화됩니다.</p>
         <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} />
             <span>
-              <Link href="/privacy" className="link-gauge">개인정보 처리 방침</Link>에 동의
+              <Link href="/privacy" className="link-gauge">{t('consentPrivacy')}</Link>{t('agree')}
             </span>
           </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} />
             <span>
-              <Link href="/terms" className="link-gauge">이용 약관</Link>에 동의
+              <Link href="/terms" className="link-gauge">{t('consentTerms')}</Link>{t('agree')}
             </span>
           </label>
         </div>
@@ -158,7 +158,7 @@ export default function LoginPage() {
             className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2 disabled:opacity-50`}
             disabled={oauthLoading}
             aria-busy={oauthLoading}
-            aria-label="구글로 계속하기"
+            aria-label={t('googleContinue')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.4 31.9 29.1 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
@@ -166,12 +166,12 @@ export default function LoginPage() {
               <path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5l-6.1-5c-2 1.5-4.6 2.5-6.9 2.5-5.1 0-9.4-3.1-11.1-7.5l-6.6 5.1C8.6 39.4 15.8 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.3-4.3 7-11.3 7-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4c-11.1 0-20 8.9-20 20s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
             </svg>
-            <span>{oauthLoading ? 'Google 준비 중...' : 'Google로 계속하기'}</span>
+            <span>{oauthLoading ? 'Google...' : t('googleContinue')}</span>
           </button>
           <p id="login-oauth-hint" className="sr-only">구글 계정으로 로그인합니다. 새 창 또는 리다이렉트가 발생할 수 있습니다.</p>
         </div>
         <p className="mt-3 text-sm text-gray-800">
-          아직 회원이 아니신가요?{' '}
+          {t('signup')}?{' '}
           <Link
             href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
             className="link-gauge"

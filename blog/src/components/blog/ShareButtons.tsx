@@ -6,6 +6,8 @@ import ActionToast from '@/components/ui/ActionToast';
 import ShareModal from './ShareModal';
 
 export default function ShareButtons({ url, title }: { url: string; title?: string }) {
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('share');
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title || '');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -107,14 +109,14 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
   };
 
   return (
-    <div className="flex items-center gap-1" role="group" aria-label="공유 옵션">
+    <div className="flex items-center gap-1" role="group" aria-label={t('share')}>
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
-      <span className="text-xs font-medium">공유하기:</span>
+      <span className="text-xs font-medium">{t('share')}</span>
       <button
         onClick={() => setIsModalOpen(true)}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label="소셜 공유 미리보기"
-        title="소셜 공유 미리보기"
+        aria-label={t('preview')}
+        title={t('preview')}
         aria-expanded={isModalOpen}
         aria-controls="share-dialog"
       >
@@ -127,8 +129,8 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
           target="_blank"
           rel="noopener noreferrer"
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-          aria-label={`${option.name}에 공유`}
-          title={`${option.name}에 공유`}
+          aria-label={option.name}
+          title={option.name}
         >
           {option.icon}
         </a>
@@ -137,8 +139,8 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
         <button
           onClick={shareKakao}
           className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-          aria-label="카카오톡 공유"
-          title="카카오톡 공유"
+          aria-label={t('kakao')}
+          title={t('kakao')}
         >
           <MessageSquare size={16} aria-hidden="true" focusable="false" />
         </button>
@@ -146,16 +148,16 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
       <button
         onClick={nativeShare}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label="네이티브 공유"
-        title="네이티브 공유"
+        aria-label={t('native')}
+        title={t('native')}
       >
         <Share2 size={16} aria-hidden="true" focusable="false" />
       </button>
       <button
         onClick={copyToClipboard}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-        aria-label="URL 복사"
-        title="URL 복사"
+        aria-label={t('copy')}
+        title={t('copy')}
       >
         <Link size={16} aria-hidden="true" focusable="false" />
       </button>

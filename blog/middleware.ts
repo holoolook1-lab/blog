@@ -9,13 +9,44 @@ const hasKV = !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN;
 const ratelimit = hasKV
   ? new Ratelimit({
       redis: kv,
-      limiter: Ratelimit.slidingWindow(10, '60 s'), // 10 requests per 60 seconds
+      limiter: Ratelimit.slidingWindow(10, '60 s'), // comments
       analytics: true,
     })
   : null;
+const uploadLimit = hasKV
+  ? new Ratelimit({ redis: kv, limiter: Ratelimit.slidingWindow(5, '60 s'), analytics: true })
+  : null;
+const voteLimit = hasKV
+  ? new Ratelimit({ redis: kv, limiter: Ratelimit.slidingWindow(10, '60 s'), analytics: true })
+  : null;
+const bookmarkLimit = hasKV
+  ? new Ratelimit({ redis: kv, limiter: Ratelimit.slidingWindow(10, '60 s'), analytics: true })
+  : null;
+const authTokenLimit = hasKV
+  ? new Ratelimit({ redis: kv, limiter: Ratelimit.slidingWindow(20, '60 s'), analytics: true })
+  : null;
 
 export async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  const localeMatch = path.match(/^\/(en|ko)(\/(.*))?$/);
+  if (localeMatch) {
+    const locale = localeMatch[1];
+    const rest = localeMatch[2] ? `/${localeMatch[2].replace(/^\//, '')}` : '';
+    const target = new URL(rest || '/', req.nextUrl.origin);
+    const res = NextResponse.rewrite(target);
+    res.cookies.set('locale', locale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.headers.set('X-Frame-Options', 'SAMEORIGIN');
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    return res;
+  }
   const res = NextResponse.next();
+
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
   // Rate limit for API routes
   if (req.nextUrl.pathname.startsWith('/api/comments') && ratelimit) {
@@ -24,6 +55,35 @@ export async function middleware(req: NextRequest) {
     const realIp = req.headers.get('x-real-ip');
     const ip = (forwarded?.split(',')[0]?.trim() || realIp || '127.0.0.1');
     const { success } = await ratelimit.limit(ip);
+    if (!success) return new NextResponse('Too many requests', { status: 429 });
+  }
+
+  if (req.nextUrl.pathname.startsWith('/api/upload') && uploadLimit) {
+    const forwarded = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const ip = (forwarded?.split(',')[0]?.trim() || realIp || '127.0.0.1');
+    const { success } = await uploadLimit.limit(ip);
+    if (!success) return new NextResponse('Too many requests', { status: 429 });
+  }
+  if (req.nextUrl.pathname.startsWith('/api/votes') && voteLimit) {
+    const forwarded = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const ip = (forwarded?.split(',')[0]?.trim() || realIp || '127.0.0.1');
+    const { success } = await voteLimit.limit(ip);
+    if (!success) return new NextResponse('Too many requests', { status: 429 });
+  }
+  if (req.nextUrl.pathname.startsWith('/api/bookmarks') && bookmarkLimit) {
+    const forwarded = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const ip = (forwarded?.split(',')[0]?.trim() || realIp || '127.0.0.1');
+    const { success } = await bookmarkLimit.limit(ip);
+    if (!success) return new NextResponse('Too many requests', { status: 429 });
+  }
+  if (req.nextUrl.pathname.startsWith('/api/auth/token') && authTokenLimit) {
+    const forwarded = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const ip = (forwarded?.split(',')[0]?.trim() || realIp || '127.0.0.1');
+    const { success } = await authTokenLimit.limit(ip);
     if (!success) return new NextResponse('Too many requests', { status: 429 });
   }
 
@@ -59,5 +119,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/write/:path*', '/edit/:path*', '/api/comments/:path*'],
+  matcher: ['/write/:path*', '/edit/:path*', '/api/comments/:path*', '/api/upload/:path*', '/api/votes/:path*', '/api/bookmarks/:path*', '/api/auth/token/:path*'],
 };

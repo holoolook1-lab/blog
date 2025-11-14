@@ -28,6 +28,8 @@ export default function CommentForm({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const confirmBtnRef = useRef<HTMLButtonElement | null>(null);
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('comments');
 
 
   const showToast = (toast: Toast) => {
@@ -39,7 +41,7 @@ export default function CommentForm({
     const text = e.target.value;
     if (text.length > MAX_LEN) {
       setContent(text.slice(0, MAX_LEN));
-      showToast({ type: 'error', message: `댓글은 ${MAX_LEN}자를 넘을 수 없습니다.` });
+      showToast({ type: 'error', message: `MAX ${MAX_LEN}` });
     } else {
       setContent(text);
     }
@@ -55,7 +57,7 @@ export default function CommentForm({
 
     const now = Date.now();
     if (now - lastSubmitTime < 8000) {
-      showToast({ type: 'error', message: '너무 빠르게 반복 제출하고 있어요. 잠시 후 다시 시도하세요' });
+      showToast({ type: 'error', message: 'Too fast.' });
       return;
     }
 
@@ -71,15 +73,15 @@ export default function CommentForm({
 
       if (res.ok) {
         setContent('');
-        showToast({ type: 'success', message: '댓글이 성공적으로 등록되었습니다.' });
+        showToast({ type: 'success', message: t('submit') });
         onSubmitted?.();
       } else {
         const { error } = await res.json();
-        const message = error === 'profanity' ? '댓글에 부적절한 단어가 포함되어 있습니다.' : '댓글 등록에 실패했습니다.';
+        const message = error === 'profanity' ? 'Profanity' : 'Failed.';
         showToast({ type: 'error', message });
       }
     } catch (err) {
-      showToast({ type: 'error', message: '네트워크 오류가 발생했습니다.' });
+      showToast({ type: 'error', message: 'Network error.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +115,7 @@ export default function CommentForm({
         name="content"
         rows={3}
         className="w-full rounded-md border bg-transparent px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-        placeholder={'댓글을 입력하세요...'}
+        placeholder={t('placeholder')}
         value={content}
         onChange={handleContentChange}
         onKeyDown={handleKeyDown}
@@ -138,10 +140,10 @@ export default function CommentForm({
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
             </svg>
           )}
-          {isSubmitting ? '등록 중...' : '댓글 등록'}
+          {isSubmitting ? t('submitting') : t('submit')}
         </button>
       </div>
-      <p id="comment-hint" className="text-xs text-gray-500">Ctrl+Enter로 빠르게 댓글을 등록할 수 있습니다.</p>
+      <p id="comment-hint" className="text-xs text-gray-500">{t('hint')}</p>
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -152,8 +154,8 @@ export default function CommentForm({
             aria-labelledby="login-confirm-title"
             className="relative z-10 w-[92%] max-w-sm rounded border bg-white p-4 shadow-lg"
           >
-            <h3 id="login-confirm-title" className="text-sm font-semibold">로그인 페이지로 이동합니다</h3>
-            <p className="mt-2 text-sm text-gray-700">댓글 등록을 위해 로그인이 필요합니다. 계속하시겠습니까?</p>
+            <h3 id="login-confirm-title" className="text-sm font-semibold">{t('loginRequiredTitle')}</h3>
+            <p className="mt-2 text-sm text-gray-700">{t('loginRequiredDesc')}</p>
             <div className="mt-3 flex items-center gap-2">
               <button
                 ref={confirmBtnRef}
@@ -164,14 +166,14 @@ export default function CommentForm({
                   requireAuth();
                 }}
               >
-                확인
+                {t('confirm')}
               </button>
               <button
                 ref={cancelBtnRef}
                 className={`${outlineButtonSmall}`}
                 onClick={(e) => { e.preventDefault(); setConfirmOpen(false); }}
               >
-                취소
+                {t('cancel')}
               </button>
             </div>
           </div>

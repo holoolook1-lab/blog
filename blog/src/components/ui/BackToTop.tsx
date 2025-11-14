@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('common');
 
   useEffect(() => {
     const onScroll = () => {
@@ -24,10 +26,10 @@ export default function BackToTop() {
     <button
       onClick={goTop}
       className="fixed bottom-6 right-6 rounded-full bg-primary text-white shadow-lg px-3 py-1.5 text-xs hover:bg-primary/85 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
-      aria-label="맨 위로 이동"
-      title="맨 위로 이동"
+      aria-label={t('backToTop')}
+      title={t('backToTopTitle')}
     >
-      ↑ 맨 위로
+      ↑ {t('backToTop')}
     </button>
   );
 }

@@ -10,6 +10,8 @@ export const sanitizeHtml = (html: string) => {
     .replace(/ on[a-z]+="[^"]*"/gi, '')
     .replace(/ on[a-z]+=\'[^\']*\'/gi, '')
     .replace(/ on[a-z]+=\w+/gi, '')
+    .replace(/ srcdoc="[^"]*"/gi, '')
+    .replace(/ srcdoc=\'[^\']*\'/gi, '')
     // javascript: 프로토콜 제거
     .replace(/javascript:/gi, '');
 };

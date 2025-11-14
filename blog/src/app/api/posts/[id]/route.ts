@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { normalizeSlug, isValidSlug } from '@/lib/slug';
 import { unauthorized, forbidden, notFound, badRequest } from '@/lib/api';
  
@@ -69,6 +69,11 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
+    revalidateTag('posts:list');
+    revalidateTag(`post:${s}`);
+    revalidateTag('feed:rss');
+    revalidateTag('feed:atom');
+    revalidateTag('feed:sitemap');
   } catch {}
   return NextResponse.json({ ok: true });
 }
@@ -96,6 +101,11 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
+    revalidateTag('posts:list');
+    if (toDelete?.slug) revalidateTag(`post:${toDelete.slug}`);
+    revalidateTag('feed:rss');
+    revalidateTag('feed:atom');
+    revalidateTag('feed:sitemap');
   } catch {}
   return NextResponse.json({ ok: true });
 }

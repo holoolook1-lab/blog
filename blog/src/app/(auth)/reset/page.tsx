@@ -5,6 +5,8 @@ import { requestPasswordReset } from "./actions";
 import { outlineButtonSmall } from "@/lib/styles/ui";
 
 export default function ResetRequestPage() {
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('auth');
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -32,8 +34,8 @@ export default function ResetRequestPage() {
 
   return (
     <main className="max-w-md mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">비밀번호 재설정</h1>
-      <p className="text-sm text-gray-600">가입한 이메일로 재설정 링크를 보내드립니다.</p>
+      <h1 className="text-2xl font-bold">{t('resetTitle')}</h1>
+      <p className="text-sm text-gray-600">{t('resetDesc')}</p>
       {params.get("auth_error") && (
         <div className="rounded border border-red-200 bg-red-50 p-2 text-red-700 text-sm">
           인증 오류: {params.get("auth_error")}
@@ -43,7 +45,7 @@ export default function ResetRequestPage() {
       {error && <div className="rounded border border-red-200 bg-red-50 p-2 text-red-700 text-sm">{error}</div>}
       <form onSubmit={onSubmit} className="space-y-3">
         <label className="block">
-          <span className="text-sm">이메일</span>
+          <span className="text-sm">{t('email')}</span>
           <input
             type="email"
             placeholder="you@example.com"
@@ -58,7 +60,7 @@ export default function ResetRequestPage() {
           disabled={pending}
           className={`${outlineButtonSmall} w-full disabled:opacity-60`}
         >
-          {pending ? "전송 중..." : "재설정 이메일 보내기"}
+          {pending ? t('sending') : t('sendReset')}
         </button>
       </form>
     </main>

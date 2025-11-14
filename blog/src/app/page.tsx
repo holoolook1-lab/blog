@@ -10,6 +10,10 @@ import VisitorPing from '@/components/analytics/VisitorPing';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import { Suspense } from 'react';
 import { outlineButtonSmall } from '@/lib/styles/ui';
+import { headers } from 'next/headers';
+import { getTranslations } from 'next-intl/server';
+import { getLocale } from '@/i18n/getLocale';
+import { prefixPath } from '@/lib/i18n/link';
 // Accordion 섹션 제거
 
 export const revalidate = 60;
@@ -22,10 +26,18 @@ const SocialLink = ({ href, icon, label }: { href: string; icon: React.ReactNode
 );
 
 export default async function HomePage() {
+  const t = await getTranslations('home');
+  const locale = await getLocale();
+  const prefix = prefixPath(locale);
   let recent: any[] = [];
   try {
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const res = await fetch(`${origin}/api/public/recent`, { next: { revalidate: 60 } });
+    // 배포 환경변수가 없을 때도 동작하도록 요청 헤더에서 호스트/프로토콜을 추론
+    // Vercel/프록시 환경에서는 x-forwarded-proto가 제공됨
+    const h = await headers();
+    const host = h.get('host') || '';
+    const proto = h.get('x-forwarded-proto') || 'http';
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : '');
+    const res = await fetch(`/api/public/recent`, { next: { revalidate: 60, tags: ['posts:list'] } });
     if (res.ok) {
       const json = await res.json();
       recent = (json?.posts || []).map((p: any) => ({
@@ -36,6 +48,35 @@ export default async function HomePage() {
     }
   } catch {}
 
+  if (recent.length === 0) {
+    try {
+      const supabase = createPublicSupabaseClient();
+      const { data: posts } = await supabase
+        .from('posts')
+        .select('id, user_id, title, slug, excerpt, cover_image, created_at')
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      const list = posts || [];
+      const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
+      let profiles: Record<string, { name: string; avatar: string }> = {};
+      if (userIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds as any);
+        (profs || []).forEach((pr: any) => {
+          profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+        });
+      }
+      recent = list.map((p: any) => ({
+        ...p,
+        __authorName: profiles[p.user_id]?.name || p.user_id || '',
+        __authorAvatar: profiles[p.user_id]?.avatar || '',
+      }));
+    } catch {}
+  }
+
   return (
     <main id="main" role="main" aria-labelledby="home-title" className="max-w-3xl mx-auto p-4 space-y-12">
       {/* 히어로 */}
@@ -44,12 +85,8 @@ export default async function HomePage() {
         <p className="text-gray-600 text-lg">{TAGLINE}</p>
         {/* 방문자 통계는 푸터에서만 통합 표시합니다 */}
         <div className="flex gap-3 pt-2">
-          <Link href="/posts" className={outlineButtonSmall}>
-            최근 글 보기
-          </Link>
-          <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="글 작성">
-            글 작성
-          </ProtectedLink>
+          <Link href={`${prefix}/posts`} className={outlineButtonSmall}>{t('viewRecent')}</Link>
+          <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('write')}>{t('write')}</ProtectedLink>
         </div>
         {/* 방문 핑: 새로고침은 중복 집계되지 않음 */}
         <VisitorPing />
@@ -62,14 +99,14 @@ export default async function HomePage() {
       {/* 최신 글 */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">최신 글</h2>
-          <Link href="/posts" className="text-sm font-medium text-gray-600 hover:text-black focus:outline-none focus:ring-2 focus:ring-black rounded">전체 보기</Link>
+          <h2 className="text-2xl font-bold">{t('latest')}</h2>
+          <Link href={`${prefix}/posts`} className="text-sm font-medium text-gray-600 hover:text-black focus:outline-none focus:ring-2 focus:ring-black rounded">{(await getTranslations('common'))('viewAll')}</Link>
         </div>
         {recent.length === 0 ? (
           <div className="border rounded-lg p-8 text-center space-y-3">
-            <p className="text-base text-gray-600">아직 공개된 포스트가 없습니다.</p>
-            <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="첫 글 쓰기">
-              첫 글 쓰기
+            <p className="text-base text-gray-600">{t('noPosts')}</p>
+            <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('writeFirst')}>
+              {t('writeFirst')}
             </ProtectedLink>
           </div>
         ) : (
@@ -102,18 +139,18 @@ export default async function HomePage() {
 
       {/* 퀵 링크 */}
       <section className="border rounded-lg p-5">
-        <h2 className="text-lg font-bold mb-3">빠른 이동</h2>
+        <h2 className="text-lg font-bold mb-3">{t('quick')}</h2>
         <div className="flex flex-wrap gap-3">
-          <Link href="/posts" className={outlineButtonSmall}>포스트</Link>
-          <ProtectedLink href="/write" className={outlineButtonSmall} ariaLabel="글 작성">글 작성</ProtectedLink>
-          <Link href="/rss.xml" className={outlineButtonSmall}>RSS</Link>
-          <Link href="/atom.xml" className={outlineButtonSmall}>Atom</Link>
+          <Link href={`${prefix}/posts`} className={outlineButtonSmall}>{t('posts')}</Link>
+          <ProtectedLink href={`${prefix}/write`} className={outlineButtonSmall} ariaLabel={t('write')}>{t('write')}</ProtectedLink>
+          <Link href="/rss.xml" className={outlineButtonSmall}>{t('rss')}</Link>
+          <Link href="/atom.xml" className={outlineButtonSmall}>{t('atom')}</Link>
         </div>
       </section>
 
       {/* 소개 박스 */}
       <section className="border rounded-lg p-5">
-        <h2 className="text-lg font-bold mb-4">소개</h2>
+        <h2 className="text-lg font-bold mb-4">{t('intro')}</h2>
         <div className="flex items-start gap-4">
           <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
             <Image

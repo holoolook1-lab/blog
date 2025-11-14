@@ -87,7 +87,7 @@ export default function PostsSearch() {
         type="text"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="제목이나 본문에서 검색"
+        placeholder={require('next-intl').useTranslations('posts')('searchPlaceholder')}
         className="flex-1 border rounded px-3 py-1 text-sm"
         aria-label="포스트 검색"
         aria-describedby="search-hint"

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { normalizeSlug, slugifyKorean, isValidSlug } from '@/lib/slug';
 import { badRequest, unauthorized } from '@/lib/api';
 
@@ -71,6 +71,11 @@ export async function POST(req: Request) {
     revalidatePath('/atom.xml');
     revalidatePath('/sitemap.xml');
     revalidatePath('/feed.xml');
+    revalidateTag('posts:list');
+    revalidateTag(`post:${s}`);
+    revalidateTag('feed:rss');
+    revalidateTag('feed:atom');
+    revalidateTag('feed:sitemap');
   } catch {}
   if (!data) return badRequest('insert_failed');
   return NextResponse.json({ id: data.id, slug: s });

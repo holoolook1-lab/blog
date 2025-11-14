@@ -1,0 +1,91 @@
+{
+  "common": {
+    "viewAll": "전체 보기",
+    "login": "로그인",
+    "rss": "RSS",
+    "atom": "Atom",
+    "jsonFeed": "JSON 피드",
+    "privacy": "개인정보 처리 방침",
+    "terms": "이용 약관",
+    "backToTop": "맨 위로 이동",
+    "backToTopTitle": "맨 위로 이동"
+  },
+  "home": {
+    "latest": "최신 글",
+    "viewRecent": "최근 글 보기",
+    "write": "글 작성",
+    "noPosts": "아직 공개된 포스트가 없습니다.",
+    "writeFirst": "첫 글 쓰기",
+    "quick": "빠른 이동",
+    "posts": "포스트",
+    "rss": "RSS",
+    "atom": "Atom",
+    "intro": "소개"
+  },
+  "posts": {
+    "title": "포스트",
+    "currentSearch": "현재 검색어: {q}",
+    "category": "카테고리: {heading}",
+    "all": "전체 글",
+    "results": "결과: {count}건",
+    "prev": "이전",
+    "more": "더 보기",
+    "last": "마지막 페이지",
+    "searchNone": "검색 결과가 없습니다.",
+    "initialNone": "아직 공개된 포스트가 없습니다.",
+    "write": "글 작성하기",
+    "resetSearch": "검색 초기화",
+    "searchPlaceholder": "제목이나 본문에서 검색"
+  },
+  "nav": {
+    "posts": "포스트",
+    "write": "작성",
+    "mypage": "내 계정",
+    "menuToggle": "메뉴 토글",
+    "accountMenu": "계정 메뉴"
+  },
+  "share": {
+    "share": "공유하기:",
+    "preview": "소셜 공유 미리보기",
+    "copy": "URL 복사",
+    "native": "네이티브 공유",
+    "kakao": "카카오톡 공유"
+  },
+  "auth": {
+    "login": "로그인",
+    "email": "이메일",
+    "password": "비밀번호",
+    "forgot": "비밀번호를 잊으셨나요?",
+    "loginNow": "로그인",
+    "loggingIn": "로그인 중...",
+    "signup": "회원가입",
+    "confirm": "비밀번호 확인",
+    "signingUp": "가입 중...",
+    "signupNow": "가입하기",
+    "googleContinue": "Google로 계속하기",
+    "googleSignup": "Google로 가입",
+    "resetTitle": "비밀번호 재설정",
+    "resetDesc": "가입한 이메일로 재설정 링크를 보내드립니다.",
+    "sendReset": "재설정 이메일 보내기",
+    "sending": "전송 중...",
+    "consentPrivacy": "개인정보 처리 방침",
+    "consentTerms": "이용 약관",
+    "agree": "에 동의",
+    "required": "(필수)"
+  },
+  "comments": {
+    "title": "댓글",
+    "placeholder": "댓글을 입력하세요...",
+    "submit": "댓글 등록",
+    "submitting": "등록 중...",
+    "hint": "Ctrl+Enter로 빠르게 댓글을 등록할 수 있습니다.",
+    "loginRequiredTitle": "로그인 페이지로 이동합니다",
+    "loginRequiredDesc": "댓글 등록을 위해 로그인이 필요합니다. 계속하시겠습니까?",
+    "confirm": "확인",
+    "cancel": "취소",
+    "actionGroup": "글 액션",
+    "voteGroup": "투표 버튼",
+    "like": "좋아요",
+    "dislike": "비추천"
+  }
+}

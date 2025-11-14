@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import { getPublicSiteMeta } from '@/lib/site';
 import { buildPostUrl } from '@/lib/site';
+import { getAtomEntriesCached } from '@/lib/cache/feeds';
 
 export const revalidate = 3600;
 
@@ -9,13 +10,7 @@ export async function GET() {
   const { url: site, name } = getPublicSiteMeta();
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   try {
-    const supabase = createPublicSupabaseClient();
-    const { data: posts } = await supabase
-      .from('posts')
-      .select('title, slug, excerpt, updated_at, heading')
-      .eq('published', true)
-      .order('updated_at', { ascending: false })
-      .limit(20);
+    const posts = await getAtomEntriesCached();
     const entries = (posts || [])
       .map((p: any) => {
         const url = buildPostUrl(site, p.slug || '');

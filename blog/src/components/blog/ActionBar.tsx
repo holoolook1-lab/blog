@@ -12,8 +12,10 @@ export default function ActionBar({
   initialDislikes?: number;
   className?: string;
 }) {
+  const { useTranslations } = require('next-intl');
+  const t = useTranslations('comments');
   return (
-    <div className={`flex items-center gap-3 ${className}`} role="group" aria-label="글 액션">
+    <div className={`flex items-center gap-3 ${className}`} role="group" aria-label={t('actionGroup')}>
       <VoteButtons postId={postId} initialLikes={initialLikes} initialDislikes={initialDislikes} />
       <BookmarkButton postId={postId} />
     </div>

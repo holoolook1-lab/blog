@@ -2,19 +2,14 @@ import { NextResponse } from 'next/server';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 import { getPublicSiteMeta } from '@/lib/site';
 import { buildPostUrl } from '@/lib/site';
+import { getRssItemsCached } from '@/lib/cache/feeds';
 
 export const revalidate = 3600;
 
 export async function GET() {
   const { url: site, name, description } = getPublicSiteMeta();
   try {
-    const supabase = createPublicSupabaseClient();
-    const { data: posts } = await supabase
-      .from('posts')
-      .select('title, slug, excerpt, updated_at, heading')
-      .eq('published', true)
-      .order('updated_at', { ascending: false })
-      .limit(20);
+    const posts = await getRssItemsCached();
     const items = (posts || [])
       .map((p: any) => {
         const url = buildPostUrl(site, p.slug || '');
