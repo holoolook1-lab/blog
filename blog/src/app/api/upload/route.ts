@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase/server';
-import sharp from 'sharp';
 
 export const runtime = 'nodejs';
 
@@ -21,24 +20,26 @@ export async function POST(req: Request) {
 
   if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'file_too_large' }, { status: 413 });
 
-  // 이미지 최적화: WebP 변환 + 최대폭 제한(과대 해상도 방지)
   const input = Buffer.from(await file.arrayBuffer());
-  const webp = await sharp(input)
-    .rotate() // EXIF 방향 교정
-    .resize({ width: 2048, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
-
-  const targetMime = 'image/webp';
-  const filePath = `${user.id}/${Date.now()}.webp`;
-  // Node 런타임의 타입 호환을 위해 Buffer를 Uint8Array로 감싸 BlobPart로 전달
-  const webpBlob = new Blob([new Uint8Array(webp)], { type: targetMime });
-  const { data, error } = await supabase.storage.from('blog-images').upload(filePath, webpBlob, {
-    contentType: targetMime,
+  let outMime = mime;
+  let outPath = `${user.id}/${Date.now()}.${mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg'}`;
+  let outBlob: Blob | null = null;
+  try {
+    const mod = await import('sharp');
+    const sharp: any = (mod as any).default || (mod as any);
+    const buf: Buffer = await sharp(input).rotate().resize({ width: 2048, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
+    outMime = 'image/webp';
+    outPath = `${user.id}/${Date.now()}.webp`;
+    outBlob = new Blob([new Uint8Array(buf)], { type: outMime });
+  } catch {
+    outBlob = new Blob([new Uint8Array(input)], { type: outMime });
+  }
+  const { data, error } = await supabase.storage.from('blog-images').upload(outPath, outBlob!, {
+    contentType: outMime,
     upsert: false,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const { data: pub } = supabase.storage.from('blog-images').getPublicUrl(filePath);
-  return NextResponse.json({ path: filePath, publicUrl: pub.publicUrl });
+  const { data: pub } = supabase.storage.from('blog-images').getPublicUrl(outPath);
+  return NextResponse.json({ path: outPath, publicUrl: pub.publicUrl });
 }
