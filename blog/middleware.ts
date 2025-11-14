@@ -3,7 +3,18 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Ratelimit } from '@upstash/ratelimit';
 import { kv } from '@vercel/kv';
-import crypto from 'crypto';
+const genNonce = () => {
+  try {
+    // Prefer Web Crypto
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    const arr = new Uint8Array(16);
+    if (globalThis.crypto?.getRandomValues) {
+      globalThis.crypto.getRandomValues(arr);
+      return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch {}
+  return Math.random().toString(36).slice(2);
+};
 
 // 로컬 개발 환경에서 KV 미설정이어도 서버가 뜨도록 안전가드
 const hasKV = !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN;
@@ -36,7 +47,7 @@ export async function middleware(req: NextRequest) {
   res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   // CSP nonce 발급(중요 페이지에서 우선 적용하기 위해 쿠키로 전달)
   try {
-    const nonce = crypto.randomBytes(16).toString('base64');
+    const nonce = genNonce();
     res.cookies.set('cspnonce', nonce, { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     // 중요 페이지: 보수적 Enforce 헤더 적용(초기에는 inline 허용 유지, nonce 병행)
     const p = req.nextUrl.pathname;
