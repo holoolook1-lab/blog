@@ -11,7 +11,7 @@ export default function LogoutButton() {
     <button 
       type="button" 
       onClick={onLogout} 
-      className="text-gray-700 hover:text-black hover:bg-gray-50 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50" 
+      className="text-2xl md:text-base font-light md:font-normal text-gray-600 hover:text-black transition-all duration-300 w-full md:w-auto text-left menu-item-luxury menu-typography menu-hover-effect" 
       aria-label="로그아웃"
     >
       로그아웃

@@ -57,101 +57,138 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
     <div ref={rootRef} className="relative flex items-center gap-2 md:gap-3">
       {open && (
         <div
-          className="fixed inset-0 z-20 bg-black/30 backdrop-blur-sm md:hidden"
-        onClick={() => setOpen(false)}
-        aria-hidden="true"
-      />
-    )}
+          className="fixed inset-0 z-40 bg-black/50 md:hidden menu-overlay"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
       <div className="relative md:static">
-      <button
-        type="button"
-        className="p-2 rounded md:hidden hover:bg-gray-100 min-w-[44px] min-h-[44px] z-30"
-        aria-label="메뉴 토글"
-        aria-expanded={open}
-        aria-controls="primary-nav"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span aria-hidden="true"><Menu size={20} /></span>
-      </button>
-      <nav
-        id="primary-nav"
-        role="navigation"
-        aria-label="주요 메뉴"
-        className={
-          `text-sm md:text-base text-gray-800 ${open ? 'block' : 'hidden'} md:flex md:flex-row items-start md:items-center gap-4 md:gap-6 pr-12 md:pr-0 z-30`
-        }
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') { setOpen(false); return; }
-          if (!open) return;
-          if (e.key === 'Tab') {
-            const nodes = panelRef.current?.querySelectorAll<HTMLElement>(
-              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            );
-            if (!nodes || nodes.length === 0) return;
-            const first = nodes[0];
-            const last = nodes[nodes.length - 1];
-            setLastFocusable(last);
-            const active = document.activeElement as HTMLElement | null;
-            if (e.shiftKey) {
-              if (active === first) {
-                e.preventDefault();
-                last.focus();
-              }
-            } else {
-              if (active === last) {
-                e.preventDefault();
-                first.focus();
+        <button
+          type="button"
+          className="p-3 rounded-lg md:hidden hover:bg-gray-100 transition-colors duration-200 min-w-[48px] min-h-[48px] z-50 relative hamburger-icon"
+          aria-label="메뉴 토글"
+          aria-expanded={open}
+          aria-controls="primary-nav"
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span aria-hidden="true"><Menu size={24} /></span>
+        </button>
+        <nav
+          id="primary-nav"
+          role="navigation"
+          aria-label="주요 메뉴"
+          className={
+            `${open ? 'mobile-menu-enter' : 'mobile-menu-exit'} 
+            md:translate-x-0 md:opacity-100 md:flex md:flex-row md:items-center md:gap-6 
+            fixed md:relative top-0 right-0 h-screen md:h-auto w-80 md:w-auto 
+            luxury-menu-bg md:bg-transparent 
+            transition-all duration-300 ease-in-out z-50 md:z-auto`
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') { setOpen(false); return; }
+            if (!open) return;
+            if (e.key === 'Tab') {
+              const nodes = panelRef.current?.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+              );
+              if (!nodes || nodes.length === 0) return;
+              const first = nodes[0];
+              const last = nodes[nodes.length - 1];
+              setLastFocusable(last);
+              const active = document.activeElement as HTMLElement | null;
+              if (e.shiftKey) {
+                if (active === first) {
+                  e.preventDefault();
+                  last.focus();
+                }
+              } else {
+                if (active === last) {
+                  e.preventDefault();
+                  first.focus();
+                }
               }
             }
-          }
-        }}
-      >
-        <div
-          ref={panelRef}
-          className="md:contents absolute md:static right-0 top-full mt-2 min-w-[180px] w-auto max-w-[240px] overflow-auto max-h-[calc(100vh-6rem)] bg-white md:bg-transparent border md:border-0 rounded-2xl md:rounded-none shadow-xl md:shadow-none p-4 md:p-0 ring-1 ring-black/5 transition-opacity transition-transform duration-200 ease-out"
-          style={{
-            paddingLeft: 'max(16px, env(safe-area-inset-left))',
-            paddingRight: 'max(16px, env(safe-area-inset-right))',
-            paddingTop: 'max(16px, env(safe-area-inset-top))',
-            paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
           }}
-          role="dialog"
-          aria-modal={open ? 'true' : undefined}
         >
-        <Link
-          ref={firstLinkRef}
-          href={`/posts`}
-          className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/posts') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-          aria-current={isActive('/posts') ? 'page' : undefined}
-        >
-          {t('posts')}
-        </Link>
-        <ProtectedLink
-          href={`/write`}
-          className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/write') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-          ariaLabel={t('write')}
-          ariaCurrent={isActive('/write') ? 'page' : undefined}
-        >
-          {t('write')}
-        </ProtectedLink>
-        {userId && (
-          <Link
-            href={`/mypage`}
-            className={`px-4 py-3 md:px-4 md:py-2 link-gauge focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 rounded-lg transition-colors whitespace-nowrap break-keep ${isActive('/mypage') ? 'font-semibold text-black' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-            aria-current={isActive('/mypage') ? 'page' : undefined}
+          <div
+            ref={panelRef}
+            className="flex flex-col h-full md:h-auto md:flex-row md:items-center md:gap-6 p-8 md:p-0"
+            role="dialog"
+            aria-modal={open ? 'true' : undefined}
           >
-            {t('mypage')}
-          </Link>
-        )}
-        {userId && (
-          <span className="md:hidden block pt-3 border-t mt-3">
-            <nav aria-label={t('accountMenu')}>
-              <LogoutButton />
-            </nav>
-          </span>
-        )}
-        </div>
-      </nav>
+            {/* 모바일 헤더 - 닫기 버튼 */}
+            <div className="flex md:hidden justify-between items-center mb-12">
+              <div className="text-xl font-light text-gray-400">라키라키</div>
+              <button
+                type="button"
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="메뉴 닫기"
+                onClick={() => setOpen(false)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 메뉴 항목들 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-6">
+              <Link
+                ref={firstLinkRef}
+                href={`/posts`}
+                className={`text-2xl md:text-base font-light md:font-normal menu-item-luxury menu-typography menu-hover-effect
+                  ${isActive('/posts') 
+                    ? 'text-black font-medium' 
+                    : 'text-gray-600 hover:text-black'
+                  }`}
+                aria-current={isActive('/posts') ? 'page' : undefined}
+                onClick={() => setOpen(false)}
+              >
+                {t('posts')}
+              </Link>
+              
+              {showWrite && (
+                <ProtectedLink
+                  href={`/write`}
+                  className={`text-2xl md:text-base font-light md:font-normal menu-item-luxury menu-typography menu-hover-effect
+                    ${isActive('/write') 
+                      ? 'text-black font-medium' 
+                      : 'text-gray-600 hover:text-black'
+                    }`}
+                  ariaLabel={t('write')}
+                  ariaCurrent={isActive('/write') ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  {t('write')}
+                </ProtectedLink>
+              )}
+              
+              {userId && (
+                <Link
+                  href={`/mypage`}
+                  className={`text-2xl md:text-base font-light md:font-normal menu-item-luxury menu-typography menu-hover-effect
+                    ${isActive('/mypage') 
+                      ? 'text-black font-medium' 
+                      : 'text-gray-600 hover:text-black'
+                    }`}
+                  aria-current={isActive('/mypage') ? 'page' : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  {t('mypage')}
+                </Link>
+              )}
+            </div>
+
+            {/* 모바일 푸터 - 계정 메뉴 */}
+            {userId && (
+              <div className="flex md:hidden mt-auto pt-8 border-t border-gray-100">
+                <nav aria-label={t('accountMenu')} className="w-full">
+                  <LogoutButton />
+                </nav>
+              </div>
+            )}
+          </div>
+        </nav>
       </div>
       {userId && (
         <div className="hidden md:block ml-2">
