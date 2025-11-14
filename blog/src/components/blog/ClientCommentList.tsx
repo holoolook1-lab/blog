@@ -66,17 +66,31 @@ export default function ClientCommentList({ postId }: { postId: string }) {
   useEffect(() => {
     const channel = supabase
       .channel(`comments:${postId}`)
-      .on('postgres_changes', { event: 'insert', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+      .on('postgres_changes', { event: 'insert', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
-        load();
+        const row = payload?.new as Comment;
+        if (!row) { load(); return; }
+        setComments((prev) => [row, ...prev]);
+        const uid = row.user_id;
+        if (uid && !profiles[uid]) {
+          supabase.from('profiles').select('id, username, avatar_url').eq('id', uid).maybeSingle().then((res: any) => {
+            const data = res?.data as any;
+            if (data) setProfiles((p) => ({ ...p, [(data as any).id]: data as any }));
+          });
+        }
       })
-      .on('postgres_changes', { event: 'update', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+      .on('postgres_changes', { event: 'update', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
-        load();
+        const row = payload?.new as Comment;
+        if (!row) { load(); return; }
+        setComments((prev) => prev.map((c) => (c.id === row.id ? row : c)));
       })
-      .on('postgres_changes', { event: 'delete', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, () => {
+      .on('postgres_changes', { event: 'delete', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
-        load();
+        const oldRow = payload?.old as Comment;
+        const delId = oldRow?.id;
+        if (!delId) { load(); return; }
+        setComments((prev) => prev.filter((c) => c.id !== delId && c.parent_id !== delId));
       })
       .subscribe();
     const onReload = (e: any) => {

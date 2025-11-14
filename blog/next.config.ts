@@ -14,8 +14,7 @@ const hostname = (() => {
 
 const nextConfig: NextConfig = {
   images: {
-    // 원격 이미지 최적화를 비활성화하여 도메인 허용 문제로 인한 썸네일 깨짐을 방지
-    unoptimized: true,
+    unoptimized: false,
     // 원격 이미지 최적화 허용: Supabase Storage 공개 객체
     remotePatterns: [
       // Supabase Storage 공개 객체 (프로젝트별 호스트)
@@ -50,7 +49,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
       "media-src 'self' https:",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self'",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' https: data:",
       `connect-src 'self' https: wss: ${supabaseHost}`,

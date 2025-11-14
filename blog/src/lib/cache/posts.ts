@@ -1,10 +1,10 @@
 import { unstable_cache } from 'next/cache';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
 
-type ListParams = { page: number; pageSize: number; q?: string; heading?: string };
+type ListParams = { page: number; pageSize: number; q?: string; heading?: string; qTitleOnly?: boolean };
 
 export const getPublicPostsCached = unstable_cache(
-  async ({ page, pageSize, q = '', heading = '' }: ListParams) => {
+  async ({ page, pageSize, q = '', heading = '', qTitleOnly = false }: ListParams) => {
     const supabase = createPublicSupabaseClient();
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const from = (safePage - 1) * pageSize;
@@ -15,7 +15,7 @@ export const getPublicPostsCached = unstable_cache(
       .eq('published', true);
     if (q) {
       const like = `%${q}%`;
-      query = query.or(`title.ilike.${like},content.ilike.${like}`);
+      query = qTitleOnly ? query.ilike('title', like) : query.or(`title.ilike.${like},content.ilike.${like}`);
     }
     let data: any[] | null = null;
     let err: any = null;

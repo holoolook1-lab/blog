@@ -37,10 +37,16 @@ export async function middleware(req: NextRequest) {
   // CSP nonce 발급(중요 페이지에서 우선 적용하기 위해 쿠키로 전달)
   try {
     const nonce = crypto.randomBytes(16).toString('base64');
-    res.cookies.set('cspnonce', nonce, { path: '/', sameSite: 'lax' });
+    res.cookies.set('cspnonce', nonce, { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     // 중요 페이지: 보수적 Enforce 헤더 적용(초기에는 inline 허용 유지, nonce 병행)
     const p = req.nextUrl.pathname;
-    const isImportantPage = p === '/' || p === '/write' || /^\/posts\/[^/]+$/.test(p);
+    const isImportantPage =
+      p === '/' ||
+      p === '/write' ||
+      /^\/posts(\/.*)?$/.test(p) ||
+      /^\/mypage(\/.*)?$/.test(p) ||
+      /^\/privacy(\/.*)?$/.test(p) ||
+      /^\/terms(\/.*)?$/.test(p);
     if (isImportantPage) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
       let supabaseHost = '';
@@ -49,8 +55,7 @@ export async function middleware(req: NextRequest) {
         "default-src 'self'",
         `img-src 'self' https: data: ${supabaseHost} i.ytimg.com`,
         "media-src 'self' https:",
-        // 초기 단계: inline 유지 + nonce 병행(점진 제거 예정)
-        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`,
+        `script-src 'self' 'nonce-${nonce}'`,
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self' https: data:",
         `connect-src 'self' https: wss: ${supabaseHost}`,

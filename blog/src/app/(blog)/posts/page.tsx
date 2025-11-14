@@ -13,7 +13,7 @@ import { getTranslations } from 'next-intl/server';
 import { getLocale } from '@/i18n/getLocale';
 import { prefixPath } from '@/lib/i18n/link';
 
-export const revalidate = 60;
+export const revalidate = 90;
 
 export default async function PostsPage({ searchParams }: { searchParams?: Promise<{ page?: string; q?: string; heading?: string }> }) {
   const t = await getTranslations('posts');
@@ -26,10 +26,11 @@ export default async function PostsPage({ searchParams }: { searchParams?: Promi
   const pageSize = 12;
   const q = (sp.q || '').trim();
   const heading = (sp.heading || '').trim();
+  const qt = ((sp as any).qt || '').trim() === '1';
   const locale = await getLocale();
   const prefix = prefixPath(locale);
   if (supabase) {
-    const { posts: cached, totalCount: tc } = await getPublicPostsCached({ page: safePage, pageSize, q, heading });
+    const { posts: cached, totalCount: tc } = await getPublicPostsCached({ page: safePage, pageSize, q, heading, qTitleOnly: qt });
     posts = cached;
     totalCount = tc;
   } else {
