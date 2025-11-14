@@ -82,8 +82,16 @@ export default function ClientCommentList({ postId }: { postId: string }) {
         }
       )
       .subscribe();
+    const onReload = (e: any) => {
+      if (e?.detail?.postId === postId) {
+        setSuppressRealtimeUntil(Date.now() + 800);
+        load();
+      }
+    };
+    try { window.addEventListener('comments:reload', onReload as any); } catch {}
     return () => {
       supabase.removeChannel(channel);
+      try { window.removeEventListener('comments:reload', onReload as any); } catch {}
     };
   }, [postId]);
 
