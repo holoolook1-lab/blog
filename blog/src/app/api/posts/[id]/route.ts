@@ -3,7 +3,7 @@ import { getServerSupabase } from '@/lib/supabase/server';
 import { sanitizeHtml } from '@/lib/utils/sanitize';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { normalizeSlug, isValidSlug } from '@/lib/slug';
-import { unauthorized, forbidden, notFound, badRequest } from '@/lib/api';
+import { unauthorized, forbidden, notFound, badRequest, serverError } from '@/lib/api';
  
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -79,34 +79,83 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 }
  
 export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  console.log('DELETE API 호출 시작');
   const { id } = await context.params;
-  const supabase = await getServerSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return unauthorized();
-  const { data: owned } = await supabase.from('posts').select('id, user_id').eq('id', id).single();
-  if (!owned) return notFound();
-  if (owned.user_id !== user.id) return forbidden();
-
-  // 삭제 전에 slug를 조회해서 상세 경로도 재검증할 수 있도록 함
-  const { data: toDelete } = await supabase.from('posts').select('slug').eq('id', id).single();
-  const { error } = await supabase.from('posts').delete().eq('id', id);
-  if (error) return badRequest(error.message);
+  console.log('삭제할 포스트 ID:', id);
+  
   try {
-    revalidatePath('/');
-    revalidatePath('/posts');
-    if (toDelete?.slug) revalidatePath(`/posts/${toDelete.slug}`);
-    revalidatePath('/rss.xml');
-    revalidatePath('/atom.xml');
-    revalidatePath('/sitemap.xml');
-    revalidatePath('/feed.xml');
-    revalidateTag('posts:list', 'auto');
-    if (toDelete?.slug) revalidateTag(`post:${toDelete.slug}`, 'auto');
-    revalidateTag('feed:rss', 'auto');
-    revalidateTag('feed:atom', 'auto');
-    revalidateTag('feed:sitemap', 'auto');
-  } catch {}
-  return NextResponse.json({ ok: true });
+    const supabase = await getServerSupabase();
+    if (!supabase) {
+      console.log('Supabase 클라이언트 생성 실패');
+      return serverError('supabase_client_failed');
+    }
+    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log('인증된 사용자:', user?.id);
+    
+    if (!user) {
+      console.log('인증되지 않은 사용자');
+      return unauthorized();
+    }
+    
+    // 포스트 소유권 확인
+    const { data: owned, error: ownershipError } = await supabase
+      .from('posts')
+      .select('id, user_id')
+      .eq('id', id)
+      .single();
+      
+    console.log('포스트 소유권 확인:', owned, '에러:', ownershipError);
+    
+    if (ownershipError || !owned) {
+      console.log('포스트를 찾을 수 없음');
+      return notFound();
+    }
+    
+    if (owned.user_id !== user.id) {
+      console.log('권한 없음 - 사용자:', user.id, '포스트 소유자:', owned.user_id);
+      return forbidden();
+    }
+
+    // 삭제 전에 slug를 조회해서 상세 경로도 재검증할 수 있도록 함
+    const { data: toDelete } = await supabase.from('posts').select('slug').eq('id', id).single();
+    console.log('삭제할 포스트 slug:', toDelete?.slug);
+    
+    const { error } = await supabase.from('posts').delete().eq('id', id);
+    console.log('삭제 결과:', error);
+    
+    if (error) {
+      console.log('삭제 중 오류 발생:', error);
+      return badRequest(error.message);
+    }
+    
+    console.log('포스트 삭제 성공, 캐시 재검증 시작');
+    
+    try {
+      revalidatePath('/');
+      revalidatePath('/posts');
+      if (toDelete?.slug) revalidatePath(`/posts/${toDelete.slug}`);
+      revalidatePath('/rss.xml');
+      revalidatePath('/atom.xml');
+      revalidatePath('/sitemap.xml');
+      revalidatePath('/feed.xml');
+      revalidateTag('posts:list', 'auto');
+      if (toDelete?.slug) revalidateTag(`post:${toDelete.slug}`, 'auto');
+      revalidateTag('feed:rss', 'auto');
+      revalidateTag('feed:atom', 'auto');
+      revalidateTag('feed:sitemap', 'auto');
+      console.log('캐시 재검증 완료');
+    } catch (revalidateError) {
+      console.log('캐시 재검증 중 오류:', revalidateError);
+    }
+    
+    console.log('DELETE API 완료');
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.log('DELETE API 전체 오류:', error);
+    return serverError('internal_error');
+  }
 }
  

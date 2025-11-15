@@ -3,515 +3,397 @@
 @tailwind utilities;
 
 :root {
-  /* 시스템 다크모드 무시하고 브라우저 UI도 라이트로 강제 */
-  color-scheme: light;
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
 }
 
-/* 다크모드 비활성화: 항상 라이트 모드 변수만 사용 */
+* {
+  border-color: hsl(var(--border));
+}
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
 }
 
-/* 이미지 공통 둥근 모서리 적용 */
-img { border-radius: 0.5rem; }
-
-/* 전체 이미지에 은은한 모노톤 적용 (너무 강하지 않게) */
-img {
-  filter: grayscale(0.15) saturate(0.85);
-}
-
-/* 폴로라이드 카드 내 사진은 한 단계 더 담백하게 */
-.polaroid-photo {
-  filter: grayscale(0.35) saturate(0.8);
-}
-
-/* 본문(prose) 내 임베드 미디어 반응형/라운드 처리 */
-.prose iframe,
-.prose video {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  border-radius: 0.5rem;
-}
-
-/* 접근성: 스킵 링크 스타일 */
-.skip-link {
-  position: absolute;
-  left: 8px;
-  top: -40px;
-  background: #111827; /* gray-900 */
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  transition: top 0.15s ease;
-  z-index: 50;
-}
-.skip-link:focus {
-  top: 8px;
-  outline: 2px solid #111827;
-  outline-offset: 2px;
-}
-
-/* 클릭 시 검은색 테두리 완전 제거 */
-*:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* 라키라키 세련된 반짝임 효과 */
-@keyframes subtle-glow {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes gentle-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
-}
-
-@keyframes refined-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-/* 세련된 텍스트 반짝임 효과 */
-.refined-text {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: refined-shimmer 3s infinite;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-/* 미니멀한 호버 효과 */
-.luxury-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.luxury-hover:hover {
-  transform: translateY(-1px);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 필요한 요소에만 부드러운 파란색 테두리 적용 */
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
-a:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
-}
-
-/* 에디터 특별 처리 */
-.ProseMirror-focused {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* 네비게이션 링크 focus 스타일 */
-nav a:focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  border-radius: 0.375rem !important;
-}
-
-/* 글로벌 포커스 가시성 개선 */
-.focus-visible {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-}
-
-/* 링크 focus 시 검은색 테두리 완전 제거 */
-a:focus,
-button:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* 특정 클래스에 대한 focus 스타일 제거 */
-.no-focus:focus,
-.no-focus *:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* prose 클래스 내 focus 스타일 제거 */
-.prose *:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* 고급스러운 햄버거 메뉴 애니메이션 */
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-/* 메뉴 항목 호버 효과 */
-.menu-item-luxury {
+/* YouTube 동영상 컨테이너 스타일 */
+.youtube-container {
   position: relative;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.menu-item-luxury::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #000, transparent);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.menu-item-luxury:hover::after {
   width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 비율 */
+  margin: 1rem 0;
 }
 
-/* 세련된 메뉴 배경 */
-.luxury-menu-bg {
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
+.youtube-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
-/* 모바일 메뉴 전용 스타일 */
+/* 반응형 YouTube 동영상 */
 @media (max-width: 768px) {
-  .mobile-menu-enter {
-    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  .youtube-container {
+    padding-bottom: 56.25%; /* 모바일에서도 16:9 유지 */
+  }
+}
+
+/* 소셜 미디어 임베드 스타일 */
+.social-embed {
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 게임화 시스템 스타일 */
+.achievement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.attendance-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.attendance-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.attendance-day.checked {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* 에디터 스타일 */
+.ProseMirror {
+  outline: none;
+  min-height: 200px;
+  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background-color: hsl(var(--background));
+}
+
+.ProseMirror:focus {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3 {
+  margin: 1rem 0 0.5rem 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.ProseMirror pre {
+  background-color: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+
+/* 한국어 특화 스타일 */
+.korean-text {
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 로딩 애니메이션 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 토스트 스타일 */
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 350px;
+  word-wrap: break-word;
+}
+
+.toast.success {
+  background-color: hsl(142 76% 36%);
+  color: white;
+}
+
+.toast.error {
+  background-color: hsl(0 84% 60%);
+  color: white;
+}
+
+.toast.info {
+  background-color: hsl(221 83% 53%);
+  color: white;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
-  .mobile-menu-exit {
-    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  .toast {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
   }
 }
 
-/* 햄버거 메뉴 아이콘 애니메이션 */
+/* PWA 애니메이션 */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* PWA 설치 프롬프트 스타일 */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  left: 1rem;
+  z-index: 50;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .pwa-install-prompt {
+    left: auto;
+    margin: 0;
+  }
+}
+
+/* 오프라인 상태 표시기 */
+.offline-indicator {
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  animation: slide-up 0.3s ease-out;
+}
+
+/* PWA 배지 */
+.pwa-badge {
+  position: fixed;
+  bottom: 5rem;
+  right: 1rem;
+  z-index: 40;
+  animation: slide-up 0.3s ease-out;
+}
+
+/* 모바일 메뉴 애니메이션 - 화면 밖으로 나가지 않도록 개선 */
+.mobile-menu-enter {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.mobile-menu-exit {
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s ease-in, opacity 0.2s ease-in;
+}
+
+/* 모바일 메뉴 위치 조정 */
+@media (max-width: 767px) {
+  #primary-nav {
+    top: calc(100% + 4px);
+    right: 0;
+  }
+  
+  /* 햄버거 메뉴와 로그인 버튼 간격 조정 */
+  .mobile-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .login-button-wrapper {
+    margin-left: 0.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-enter,
+  .mobile-menu-exit {
+    transform: none;
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* 햄버거 메뉴 아이콘 */
 .hamburger-icon {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease-in-out;
 }
 
 .hamburger-icon:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
-/* 메뉴 오버레이 페이드 인/아웃 */
+/* 메뉴 오버레이 */
 .menu-overlay {
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(2px);
 }
 
-/* 세련된 메뉴 항목 타이포그래피 */
+/* 모바일 메뉴 배경 */
+.luxury-menu-bg {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  .luxury-menu-bg {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  }
+}
+
+/* 메뉴 항목 호버 효과 - 깔끔한 배경색 변화 */
+.menu-item-luxury {
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.menu-item-luxury:hover {
+  background-color: rgba(156, 163, 175, 0.1);
+  transform: translateY(-1px);
+}
+
+.menu-item-luxury.active {
+  background-color: rgba(168, 85, 247, 0.1);
+  color: #7c3aed;
+}
+
 .menu-typography {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-/* 호버 시 부드러운 색상 전환 */
-.menu-hover-effect {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.05em;
 }
 
 .menu-hover-effect:hover {
+  color: #8b5cf6;
   transform: translateX(4px);
-}
-
-/* 본문 렌더러 스타일 */
-.content-renderer h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 1.5rem 0 1rem 0;
-  line-height: 1.3;
-}
-
-.content-renderer h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 1.25rem 0 0.75rem 0;
-  line-height: 1.4;
-}
-
-.content-renderer ul {
-  list-style-type: disc;
-  padding-left: 2rem;
-  margin: 1rem 0;
-}
-
-.content-renderer li {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
-}
-
-.content-renderer p {
-  margin: 1rem 0;
-  line-height: 1.7;
-}
-
-.content-renderer a {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-.content-renderer strong {
-  font-weight: bold;
-}
-
-.content-renderer em {
-  font-style: italic;
-}
-
-/* 인용구 스타일 개선 */
-.content-renderer blockquote {
-  border-left: 4px solid #3b82f6;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  padding: 1.5rem;
-  margin: 1.5rem 0;
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
-  color: #475569;
-  position: relative;
-}
-
-.content-renderer blockquote::before {
-  content: '"';
-  font-size: 3rem;
-  color: #3b82f6;
-  position: absolute;
-  top: -0.5rem;
-  left: 1rem;
-  opacity: 0.3;
-}
-
-.content-renderer blockquote p {
-  margin: 0;
-  line-height: 1.8;
-}
-
-/* 리스트 스타일 개선 */
-.content-renderer ul {
-  list-style-type: none;
-  padding-left: 2rem;
-  margin: 1rem 0;
-}
-
-.content-renderer ul li {
-  position: relative;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.7;
-}
-
-.content-renderer ul li::before {
-  content: '•';
-  color: #3b82f6;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-.content-renderer ol {
-  list-style-type: none;
-  counter-reset: list-counter;
-  padding-left: 2rem;
-  margin: 1rem 0;
-}
-
-.content-renderer ol li {
-  position: relative;
-  padding-left: 2rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.7;
-  counter-increment: list-counter;
-}
-
-.content-renderer ol li::before {
-  content: counter(list-counter);
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 0.2rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-}
-
-/* 제목 스타일 개선 */
-.content-renderer h2 {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 2rem 0 1rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
-  line-height: 1.3;
-}
-
-.content-renderer h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #334155;
-  margin: 1.5rem 0 0.75rem 0;
-  line-height: 1.4;
-}
-
-.content-renderer h4 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #475569;
-  margin: 1.25rem 0 0.5rem 0;
-  line-height: 1.5;
-}
-
-/* 에디터 내부 스타일 개선 */
-.ProseMirror blockquote {
-  border-left: 4px solid #3b82f6;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  padding: 1.5rem;
-  margin: 1.5rem 0;
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
-  color: #475569;
-  position: relative;
-}
-
-.ProseMirror blockquote::before {
-  content: '"';
-  font-size: 3rem;
-  color: #3b82f6;
-  position: absolute;
-  top: -0.5rem;
-  left: 1rem;
-  opacity: 0.3;
-}
-
-.ProseMirror ul {
-  list-style-type: none;
-  padding-left: 2rem;
-  margin: 1rem 0;
-}
-
-.ProseMirror ul li {
-  position: relative;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.7;
-}
-
-.ProseMirror ul li::before {
-  content: '•';
-  color: #3b82f6;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-.ProseMirror ol {
-  list-style-type: none;
-  counter-reset: list-counter;
-  padding-left: 2rem;
-  margin: 1rem 0;
-}
-
-.ProseMirror ol li {
-  position: relative;
-  padding-left: 2rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.7;
-  counter-increment: list-counter;
-}
-
-.ProseMirror ol li::before {
-  content: counter(list-counter);
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 0.2rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-}
-
-/* 툴바 버튼 스타일 개선 */
-.editor-toolbar-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.editor-toolbar-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s;
-}
-
-.editor-toolbar-button:hover::before {
-  left: 100%;
-}
-
-.editor-toolbar-button.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.editor-toolbar-button.active:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
 }

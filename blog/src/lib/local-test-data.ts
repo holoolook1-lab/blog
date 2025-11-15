@@ -91,7 +91,7 @@ export function getLocalTestPost(slug: string) {
     const posts = JSON.parse(data);
     return posts.find((post: any) => post.slug === slug) || null;
   } catch (error) {
-    console.log('로컬 테스트 데이터 조회 오류:', error);
+    console.warn('로컬 테스트 데이터 조회 오류:', error);
     // 오류 발생 시 기본 데이터 반환
     return TEST_POSTS.find((post: any) => post.slug === slug) || null;
   }

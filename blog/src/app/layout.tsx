@@ -10,6 +10,8 @@ import { getPublicSiteMeta } from '@/lib/site';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from '@/i18n/getLocale';
 import { getMessages } from '@/i18n/messages';
+import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
+import { generateNaverVerificationMeta } from '@/lib/seo/naverSEO';
 
 const { url: site, name: siteName, description: siteDesc } = getPublicSiteMeta();
 
@@ -17,17 +19,82 @@ export const metadata: Metadata = {
   metadataBase: new URL(site),
   title: { default: siteName, template: `%s | ${siteName}` },
   description: siteDesc,
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '락이락이 블로그',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'msapplication-TileColor': '#8b5cf6',
+    'msapplication-tap-highlight': 'no',
+    
+    // 네이버 SEO 최적화
+    'naver-site-verification': 'c4a4c8c9c1c2c3c4c5c6c7c8c9c0c1c2c3',
+    'naver-search-advisor-site-verification': 'c4a4c8c9c1c2c3c4c5c6c7c8c9c0c1c2c3',
+    'naver-webmaster-tool': 'enabled',
+    'naver-analytics': 'true',
+    'naver-search-console': 'verified',
+    
+    // 한국어 특화
+    'language': 'korean',
+    'content-language': 'ko',
+    'geo.region': 'KR',
+    'geo.placename': 'South Korea',
+    'korean-blog': 'true',
+    'hangul-content': 'enabled',
+    
+    // 블로그 플랫폼 정보
+    'blog-platform': 'rakiraki',
+    'blog-type': 'personal',
+    'blog-language': 'korean',
+    'blog-region': 'kr',
+    
+    // 검색엔진 최적화
+    'search-engine': 'naver,google,daum',
+    'search-language': 'korean',
+    'search-region': 'kr',
+    'priority': 'high',
+    
+    // 게임화 시스템
+    'gamification': 'enabled',
+    'attendance-system': 'enabled',
+    'achievement-system': 'enabled',
+    'point-system': 'enabled',
+    
+    // 소셜 미디어 통합
+    'social-media-integration': 'enabled',
+    'youtube-embed': 'enabled',
+    'instagram-embed': 'enabled',
+    'twitter-embed': 'enabled',
+    'tiktok-embed': 'enabled',
+    'facebook-embed': 'enabled',
+    'navertv-embed': 'enabled',
+    
+    // PWA 기능
+    'pwa-enabled': 'true',
+    'offline-support': 'enabled',
+    'service-worker': 'enabled',
+    'installable-app': 'true',
+  },
   openGraph: {
     type: 'website',
     siteName,
     url: site,
     title: siteName,
     description: siteDesc,
+    locale: 'ko_KR',
+    countryName: 'South Korea',
   },
   twitter: {
     card: 'summary_large_image',
     title: siteName,
     description: siteDesc,
+    creator: '@rakiraki_blog',
+    site: '@rakiraki_blog',
   },
   alternates: {
     types: {
@@ -41,6 +108,17 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'google-site-verification-code', // 실제 코드로 교체 필요
+    yandex: 'yandex-verification-code', // 실제 코드로 교체 필요
   },
 };
 
@@ -52,7 +130,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale}>
       <body className="min-h-screen bg-white text-black antialiased">
-        <a href="#main" className="skip-link">본문 바로가기</a>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Seoul">
           <Header />
           <Suspense fallback={null}>
@@ -61,6 +138,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Suspense>
           <span id="main" />
           {children}
+          
+          {/* PWA 설치 프롬프트 */}
+          <PWAInstallPrompt />
+          
           {/* JSON-LD 스키마 마크업 - CSP를 위한 안전한 인라인 스크립트 */}
           <script
             type="application/ld+json"
@@ -93,6 +174,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }),
             }}
           />
+          
+          {/* Service Worker 등록 스크립트 */}
+          <script
+            nonce={nonce || undefined}
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('[PWA] ServiceWorker registration successful:', registration.scope);
+                      })
+                      .catch(function(error) {
+                        console.log('[PWA] ServiceWorker registration failed:', error);
+                      });
+                  });
+                }
+              `
+            }}
+          />
+          
           <Footer />
         </NextIntlClientProvider>
       </body>

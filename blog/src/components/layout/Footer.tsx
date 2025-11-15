@@ -28,7 +28,9 @@ export default async function Footer() {
           
           <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-full"></div>
           
-          <VisitorStats />
+          <div className="flex justify-center">
+            <VisitorStats />
+          </div>
           
           <div className="flex flex-wrap gap-4 pt-2">
             <Link href="/rss.xml" className="text-gray-500 hover:text-gray-800 transition-colors duration-200" aria-label={t('rss')}>{t('rss')}</Link>

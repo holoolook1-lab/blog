@@ -2,23 +2,19 @@ import Link from 'next/link';
 import ProtectedLink from '@/components/common/ProtectedLink';
 import Image from 'next/image';
 import { SITE_NAME, TAGLINE } from '@/lib/brand';
-import { formatDateKR } from '@/lib/date';
-// 대표 글 카드 제거에 따라 이미지 유틸 불필요
 import PostCard from '@/components/blog/PostCard';
-import { Mail, AtSign, Globe, Facebook, Twitter, Instagram, Share2, Link2 } from 'lucide-react';
+import { Mail, AtSign, Globe } from 'lucide-react';
 import ShareButtonsClient from '@/components/common/ShareButtonsClient';
 import VisitorPing from '@/components/analytics/VisitorPing';
 import { createPublicSupabaseClient } from '@/lib/supabase/env';
-import { Suspense } from 'react';
 import { outlineButtonSmall } from '@/lib/styles/ui';
-import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { getLocale } from '@/i18n/getLocale';
 import { prefixPath } from '@/lib/i18n/link';
 import HomeLocalPosts from '@/components/blog/HomeLocalPosts';
 import ServerPreviewPosts from '@/components/blog/ServerPreviewPosts';
 import { initializeLocalTestData } from '@/lib/local-test-data';
-// Accordion 섹션 제거
+import { isBuildTime, isSupabaseStub } from '@/lib/build-utils';
 
 export const revalidate = 60;
 
@@ -41,70 +37,104 @@ export default async function HomePage() {
   try {
     initializeLocalTestData();
   } catch (error) {
-    console.log('로컬 테스트 데이터 초기화 실패:', error);
+    console.warn('로컬 테스트 데이터 초기화 실패:', error);
   }
   
   // 서버프리뷰 환경 체크
-  const isServerPreview = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost');
+  const isServerPreview = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+    process.env.NEXT_PUBLIC_SUPABASE_URL.includes('localhost') ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://hyueqldwgertapmhmmni.supabase.co';
   
-  // 항상 데이터를 시도하고 실패 시 대체 데이터 사용
   try {
-    // 먼저 API 엔드포인트 시도
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const apiUrl = new URL('/api/public/recent', baseUrl).toString();
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
-    const res = await fetch(apiUrl, { 
-      next: { revalidate: 60, tags: ['posts:list'] },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (res.ok) {
-      const json = await res.json();
-      recent = (json?.posts || []).map((p: any) => ({
-        ...p,
-        __authorName: p.authorName,
-        __authorAvatar: p.authorAvatarUrl,
-      }));
-    }
-  } catch (apiError) {
-    console.log('API 엔드포인트 실패, Supabase 직접 연결 시도:', apiError);
-  }
-
-  // API 실패 또는 데이터 없으면 Supabase 직접 연결
-  if (recent.length === 0 && !isServerPreview) {
-    try {
+    // 빌드 중에는 직접 Supabase 연결, 런타임에는 API 엔드포인트 사용
+    if (isBuildTime()) {
+      console.warn('빌드 중: 직접 Supabase 연결 시도');
       const supabase = createPublicSupabaseClient();
-      const { data: posts } = await supabase
-        .from('posts')
-        .select('id, user_id, title, slug, excerpt, cover_image, created_at')
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-      const list = posts || [];
-      const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
-      let profiles: Record<string, { name: string; avatar: string }> = {};
-      if (userIds.length) {
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds as any);
-        (profs || []).forEach((pr: any) => {
-          profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
-        });
+      
+      if (isSupabaseStub(supabase)) {
+        console.warn('Supabase 클라이언트가 스텁입니다. 테스트 데이터를 사용합니다.');
+      } else {
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('id, user_id, title, slug, excerpt, cover_image, created_at')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .limit(6);
+        const list = posts || [];
+        const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
+        let profiles: Record<string, { name: string; avatar: string }> = {};
+        if (userIds.length) {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds as any);
+          (profs || []).forEach((pr: any) => {
+            profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+          });
+        }
+        recent = list.map((p: any) => ({
+          ...p,
+          __authorName: profiles[p.user_id]?.name || p.user_id || '',
+          __authorAvatar: profiles[p.user_id]?.avatar || '',
+        }));
       }
-      recent = list.map((p: any) => ({
-        ...p,
-        __authorName: profiles[p.user_id]?.name || p.user_id || '',
-        __authorAvatar: profiles[p.user_id]?.avatar || '',
-      }));
-    } catch (supabaseError) {
-      console.log('Supabase 연결도 실패, 테스트 데이터 사용:', supabaseError);
+    } else {
+      // 런타임: API 엔드포인트 시도
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        const apiUrl = new URL('/api/public/recent', baseUrl).toString();
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const res = await fetch(apiUrl, { 
+          next: { revalidate: 60, tags: ['posts:list'] },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (res.ok) {
+          const json = await res.json();
+          recent = (json?.posts || []).map((p: any) => ({
+            ...p,
+            __authorName: p.authorName,
+            __authorAvatar: p.authorAvatarUrl,
+          }));
+        }
+      } catch (apiError) {
+        console.warn('API 엔드포인트 실패, Supabase 직접 연결 시도:', apiError);
+        // API 실패 시 Supabase 직접 연결 시도
+        const supabase = createPublicSupabaseClient();
+        if (!isSupabaseStub(supabase)) {
+          const { data: posts } = await supabase
+            .from('posts')
+            .select('id, user_id, title, slug, excerpt, cover_image, created_at')
+            .eq('published', true)
+            .order('created_at', { ascending: false })
+            .limit(6);
+          const list = posts || [];
+          const userIds = Array.from(new Set(list.map((p: any) => p.user_id).filter(Boolean)));
+          let profiles: Record<string, { name: string; avatar: string }> = {};
+          if (userIds.length) {
+            const { data: profs } = await supabase
+              .from('profiles')
+              .select('id, username, avatar_url')
+              .in('id', userIds as any);
+            (profs || []).forEach((pr: any) => {
+              profiles[pr.id] = { name: pr.username || '', avatar: pr.avatar_url || '' };
+            });
+          }
+          recent = list.map((p: any) => ({
+            ...p,
+            __authorName: profiles[p.user_id]?.name || p.user_id || '',
+            __authorAvatar: profiles[p.user_id]?.avatar || '',
+          }));
+        }
+      }
     }
+  } catch (error) {
+    console.warn('데이터 가져오기 실패:', error);
   }
 
   return (

@@ -21,6 +21,8 @@ import ActionBar from '@/components/blog/ActionBar';
 import EditLinkClient from '@/components/blog/EditLinkClient';
 import ProfileCard from '@/components/profile/ProfileCard';
 import { getPostBySlugCached } from '@/lib/cache/posts';
+import { generateNaverBlogPostMeta } from '@/lib/seo/naverSEO';
+import { Badge } from '@/components/ui/index';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -30,40 +32,69 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const supabase = createPublicSupabaseClient();
   const { data: post } = await supabase
     .from('posts')
-    .select('title, excerpt, cover_image, created_at, updated_at')
+    .select('title, excerpt, cover_image, created_at, updated_at, content, author_id')
     .eq('slug', cleanSlug)
     .maybeSingle();
+  
   const { url: site, name: siteName } = getPublicSiteMeta();
   const title = post?.title || '포스트';
   const description = post?.excerpt || '';
   const images = post?.cover_image ? [`${post.cover_image}`] : undefined;
-  return {
+  const postUrl = buildPostUrl(site, cleanSlug);
+  
+  // 네이버 SEO 메타데이터 생성
+  const naverMeta = generateNaverBlogPostMeta({
     title,
     description,
-    alternates: { canonical: buildPostUrl(site, cleanSlug), languages: { ko: `/posts/${cleanSlug}` } },
+    content: post?.content || '',
+    author: '락이락이 블로그',
+    publishDate: post?.created_at || new Date().toISOString(),
+    modifyDate: post?.updated_at || undefined,
+    tags: [], // 태그 시스템이 구현되면 추가
+    category: '블로그 포스트',
+    readingTime: post?.content ? computeReadingMinutes(post.content) : undefined,
+    wordCount: post?.content ? post.content.split(/\s+/).length : undefined,
+  });
+  
+  return {
+    ...naverMeta,
+    title,
+    description,
+    alternates: { 
+      canonical: postUrl, 
+      languages: { ko: `/posts/${cleanSlug}` } 
+    },
     openGraph: {
+      ...naverMeta.openGraph,
       type: 'article',
       title,
       description,
-      url: buildPostUrl(site, cleanSlug),
+      url: postUrl,
       images,
       siteName: siteName || '블로그',
       locale: 'ko_KR',
+      countryName: 'South Korea',
       publishedTime: post?.created_at || undefined,
       modifiedTime: post?.updated_at || undefined,
+      section: '블로그',
+      authors: ['락이락이 블로그'],
     },
-    twitter: post?.cover_image
-      ? {
-          card: 'summary_large_image',
-          title,
-          description,
-          images,
-        }
-      : {
-          card: 'summary_large_image',
-          title,
-          description,
-        },
+    twitter: {
+      ...naverMeta.twitter,
+      card: 'summary_large_image',
+      title,
+      description,
+      images,
+      creator: '@rakiraki_blog',
+      site: '@rakiraki_blog',
+    },
+    keywords: [
+      '블로그', '한국블로그', '글쓰기', '커뮤니티',
+      '게임화시스템', '출석체크', '업적시스템',
+      '소셜미디어', '유튜브', '인스타그램',
+      'PWA', '프로그레시브웹앱', '오프라인',
+      ...(typeof naverMeta.keywords === 'string' ? naverMeta.keywords.split(', ') : naverMeta.keywords || [])
+    ].join(', '),
   };
 }
 
@@ -96,9 +127,9 @@ export default async function PostDetailPage({ params }: Params) {
   if (!post) {
     try {
       post = getLocalTestPost(cleanSlug);
-      console.log('로컬 테스트 데이터 조회:', cleanSlug, post ? '성공' : '실패');
+      console.warn('로컬 테스트 데이터 조회:', cleanSlug, post ? '성공' : '실패');
     } catch (error) {
-      console.log('로컬 테스트 데이터 조회 실패:', error);
+      console.warn('로컬 테스트 데이터 조회 실패:', error);
     }
   }
   
@@ -293,64 +324,99 @@ export default async function PostDetailPage({ params }: Params) {
         <aside className="hidden lg:block">
           <ProfileCard authorId={post.user_id} />
         </aside>
-        <div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 id="post-title" className="text-3xl font-bold">{post.title}</h1>
-          <span className={`text-xs px-2 py-0.5 rounded border ${post.published ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
-            {post.published ? '공개' : '비공개'}
-          </span>
+        <div className="space-y-6">
+          {/* 포스트 헤더 */}
+          <header className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-3">
+                {/* 카테고리 배지 */}
+                {post.heading && (
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/posts?heading=${encodeURIComponent(post.heading)}`}
+                      aria-label={`카테고리 ${post.heading} 글 보기`}
+                      className="text-black font-bold text-base hover:underline"
+                    >
+                      #{post.heading}
+                    </Link>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
+                      post.published 
+                        ? 'bg-white text-gray-700 border-gray-300' 
+                        : 'bg-neutral-100 text-neutral-800 border-neutral-200'
+                    }`}>
+                      {post.published ? '공개' : '비공개'}
+                    </span>
+                  </div>
+                )}
+                
+                {/* 제목 */}
+                <h1 id="post-title" className="text-4xl font-bold text-neutral-900 leading-tight">
+                  {post.title}
+                </h1>
+                
+                {/* 메타 정보 */}
+                <div className="flex items-center gap-4 text-sm text-neutral-600">
+                  <time dateTime={post.created_at}>
+                    {formatDateKR(post.created_at)}
+                  </time>
+                  <span>·</span>
+                  <span>{readingMinutes}분 읽기</span>
+                </div>
+              </div>
+              
+              {/* 편집 버튼 */}
+              <EditLinkClient authorId={post.user_id} slug={slug} />
+            </div>
+            
+            {/* 액션 바 */}
+            <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-4" />
+          </header>
+
+          {/* 본문 내용 */}
+          <article className="prose prose-lg max-w-none">
+            {safeWithAutoplay && safeWithAutoplay.trim() !== '' ? (
+              <div 
+                className="content-renderer" 
+                dangerouslySetInnerHTML={{ __html: safeWithAutoplay }}
+                style={{
+                  lineHeight: '1.8',
+                  fontSize: '1.125rem'
+                }}
+              />
+            ) : (
+              <div className="p-8 bg-neutral-50 rounded-xl border border-neutral-200 text-center">
+                <div className="text-neutral-500 text-2xl mb-4">📝</div>
+                <h3 className="text-lg font-semibold text-neutral-700 mb-2">콘텐츠가 준비되지 않았습니다</h3>
+                <p className="text-neutral-600 mb-4">이 게시글의 본문 내용이 없습니다.</p>
+                {post.excerpt && (
+                  <blockquote className="text-neutral-500 italic border-l-4 border-neutral-300 pl-4 my-4">
+                    {post.excerpt}
+                  </blockquote>
+                )}
+                <p className="text-neutral-500 text-sm">게시글을 작성하거나 편집하여 내용을 추가해보세요.</p>
+              </div>
+            )}
+          </article>
+
+          {/* 상호작용 섹션 */}
+          <footer className="space-y-6 pt-8 border-t border-neutral-200">
+            {/* 공유하기 */}
+            <div className="bg-neutral-50 rounded-xl p-6">
+              <ShareButtons 
+                url={`${site}${prefixPath(await getLocale())}/posts/${slug}`} 
+                title={post.title} 
+              />
+            </div>
+
+            {/* 신고하기 */}
+            <div className="bg-neutral-50 rounded-xl p-6">
+              <ReportForm slug={slug} />
+            </div>
+          </footer>
         </div>
-        {/* 작성자에게만 편집 링크 노출: 클라이언트에서 인증 확인 */}
-        <EditLinkClient authorId={post.user_id} slug={slug} />
-      </div>
-      <p className="text-sm text-gray-600">
-        {formatDateKR(post.created_at)} · {readingMinutes}분 읽기
-      </p>
-      <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-3" />
-      {/* 본문 내용 렌더링 */}
-      {safeWithAutoplay && safeWithAutoplay.trim() !== '' ? (
-        <div 
-          className="mt-4 content-renderer" 
-          dangerouslySetInnerHTML={{ __html: safeWithAutoplay }}
-          style={{
-            lineHeight: '1.7',
-            fontSize: '1.125rem'
-          }}
-        />
-      ) : (
-        <div className="mt-4 p-8 bg-gray-50 border border-gray-200 rounded-xl text-center">
-          <div className="text-gray-500 text-lg mb-2">📝</div>
-          <p className="text-gray-600 mb-2">이 게시글의 본문 내용이 없습니다.</p>
-          {post.excerpt && (
-            <p className="text-gray-500 text-sm italic">{post.excerpt}</p>
-          )}
-          <p className="text-gray-400 text-xs mt-4">게시글을 작성하거나 편집하여 내용을 추가해보세요.</p>
-        </div>
-      )}
-      <div className="pt-6 border-t border-gray-100">
-        <ShareButtons url={`${site}${prefixPath(await getLocale())}/posts/${slug}`} title={post.title} />
-      </div>
-      {post.heading && (
-        <div className="pt-4">
-          <Link
-            href={`/posts?heading=${encodeURIComponent(post.heading)}`}
-            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black"
-            aria-label={`카테고리 ${post.heading} 글 보기`}
-          >
-            #{post.heading}
-          </Link>
-        </div>
-      )}
-      <div className="pt-4">
-        {/* 신고 상세폼: 공유 영역 아래에 접기/펼치기 형태로 배치 */}
-        <ReportForm slug={slug} />
-      </div>
-      </div>{/* /content column */}
       </div>{/* /grid */}
       {/* 이전/다음 내비게이션 제거: 초기 로딩 성능 최적화 */}
-      <section className="mt-8">
-        <h2 className="font-semibold">댓글</h2>
+      <section className="mt-12">
         <CommentSection postId={post.id} />
       </section>
       <BackToTop />

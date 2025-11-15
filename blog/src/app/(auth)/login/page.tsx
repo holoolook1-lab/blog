@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { markConsentInClient } from "@/lib/policies";
-import { outlineButtonSmall } from "@/lib/styles/ui";
+import { outlineButtonLogin } from "@/lib/styles/ui";
 // 회원가입은 별도 라우트(`/signup`)에서 처리합니다
 
 export default function LoginPage() {
@@ -135,7 +135,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className={`${outlineButtonSmall} w-full disabled:opacity-50`}
+          className={`${outlineButtonLogin} disabled:opacity-50`}
           aria-label={t('loginNow')}
           aria-busy={loading}
           aria-describedby="login-submit-hint"
@@ -161,28 +161,28 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={onGoogleLogin}
-            className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2 disabled:opacity-50`}
+            className={`${outlineButtonLogin} inline-flex items-center justify-center gap-2 disabled:opacity-50`}
             disabled={oauthLoading}
             aria-busy={oauthLoading}
             aria-label={t('googleContinue')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" className="flex-shrink-0">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.4 31.9 29.1 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
               <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14 16.2 18.6 13 24 13c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4 15.9 4 8.7 8.6 6.3 14.7z"/>
               <path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5l-6.1-5c-2 1.5-4.6 2.5-6.9 2.5-5.1 0-9.4-3.1-11.1-7.5l-6.6 5.1C8.6 39.4 15.8 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.3-4.3 7-11.3 7-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.4 1.1 7.4 2.8l5.7-5.7C34.6 6.1 29.6 4 24 4c-11.1 0-20 8.9-20 20s8.9 20 20 20c10.7 0 19.5-8.3 19.5-19.1 0-1.3-.1-2.1-.3-3.4z"/>
             </svg>
-            <span>{oauthLoading ? 'Google...' : t('googleContinue')}</span>
+            <span className="flex-1">{oauthLoading ? 'Google...' : t('googleContinue')}</span>
           </button>
           <p id="login-oauth-hint" className="sr-only">구글 계정으로 로그인합니다. 새 창 또는 리다이렉트가 발생할 수 있습니다.</p>
         </div>
         <p className="mt-3 text-sm text-gray-800">
-          {t('signup')}?{' '}
+          계정이 없으신가요?{' '}
           <Link
             href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
             className="link-gauge"
           >
-            가입하기
+            회원가입
           </Link>
         </p>
       </form>

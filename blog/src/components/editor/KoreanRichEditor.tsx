@@ -295,9 +295,6 @@ export default function KoreanRichEditor({
         class: `prose prose-xl max-w-none focus:outline-none bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-300 hover:border-gray-300 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-300 focus-within:ring-opacity-50`,
         style: `min-height: ${minHeight}`,
       },
-      parseOptions: {
-        preserveWhitespace: 'full',
-      },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;
         const text = event.clipboardData?.getData('text/plain') || '';

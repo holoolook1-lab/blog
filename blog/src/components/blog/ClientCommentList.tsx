@@ -60,7 +60,7 @@ export default function ClientCommentList({ postId }: { postId: string }) {
   useEffect(() => {
     load();
     supabase.auth.getUser().then(({ data }: { data: { user: { id?: string } | null } }) => setUserId(data.user?.id || null));
-  }, [postId]);
+  }, []); // postId 의존성 제거 - 초기 마운트 시 한 번만 로드
 
   // Supabase Realtime: comments 테이블 실시간 반영
   useEffect(() => {
@@ -69,8 +69,13 @@ export default function ClientCommentList({ postId }: { postId: string }) {
       .on('postgres_changes', { event: 'insert', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
         const row = payload?.new as Comment;
-        if (!row) { load(); return; }
-        setComments((prev) => [row, ...prev]);
+        if (!row) return;
+        // 중복 방지: 이미 존재하는 댓글은 추가하지 않음
+        setComments((prev) => {
+          const exists = prev.some(c => c.id === row.id);
+          if (exists) return prev;
+          return [row, ...prev];
+        });
         const uid = row.user_id;
         if (uid && !profiles[uid]) {
           supabase.from('profiles').select('id, username, avatar_url').eq('id', uid).maybeSingle().then((res: any) => {
@@ -82,20 +87,20 @@ export default function ClientCommentList({ postId }: { postId: string }) {
       .on('postgres_changes', { event: 'update', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
         const row = payload?.new as Comment;
-        if (!row) { load(); return; }
+        if (!row) return;
         setComments((prev) => prev.map((c) => (c.id === row.id ? row : c)));
       })
       .on('postgres_changes', { event: 'delete', schema: 'public', table: 'comments', filter: `post_id=eq.${postId}` }, (payload: any) => {
         if (Date.now() < suppressRealtimeUntil) return;
         const oldRow = payload?.old as Comment;
         const delId = oldRow?.id;
-        if (!delId) { load(); return; }
+        if (!delId) return;
         setComments((prev) => prev.filter((c) => c.id !== delId && c.parent_id !== delId));
       })
       .subscribe();
     const onReload = (e: any) => {
       if (e?.detail?.postId === postId) {
-        setSuppressRealtimeUntil(Date.now() + 800);
+        setSuppressRealtimeUntil(Date.now() + 1200);
         load();
       }
     };

@@ -1,4 +1,4 @@
-import SocialMediaTest from '@/components/social-media/SocialMediaTest';
+import { SocialMediaTest } from '@/components/social-media/SocialMediaTest';
 
 export default function SocialMediaTestPage() {
   return (

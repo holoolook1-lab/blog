@@ -1,1 +1,7 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+  "rootDirectory": "blog",
+  "buildCommand": "cd blog && npm run build",
+  "installCommand": "cd blog && npm install",
+  "framework": "nextjs",
+  "outputDirectory": "blog/.next"
+}

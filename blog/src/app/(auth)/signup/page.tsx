@@ -125,12 +125,12 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className={`${outlineButtonSmall} w-full disabled:opacity-50`}
+          className={`${outlineButtonSmall} w-full disabled:opacity-50 min-h-[44px]`}
           aria-busy={loading}
           aria-describedby="signup-submit-hint"
         >
           {loading ? t('signingUp') : t('signupNow')}
-        </button>
+          </button>
         <p id="signup-submit-hint" className="sr-only">이메일과 비밀번호를 입력해 가입하세요. 로딩 중에는 버튼이 비활성화됩니다.</p>
         <div className="mt-4 flex flex-col gap-2 text-xs text-gray-600">
           <label className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export default function SignupPage() {
                 setMessage(e?.message || '구글 로그인 시작 실패');
               }
             }}
-            className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2`}
+            className={`${outlineButtonSmall} w-full inline-flex items-center justify-center gap-2 min-h-[44px]`}
             aria-label={t('googleSignup')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">

@@ -1,0 +1,127 @@
+{
+  "name": "락이락이 블로그",
+  "short_name": "락이락이",
+  "description": "한국어 블로그 플랫폼 with 게임화 시스템",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["blog", "social", "productivity"],
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "홈페이지 데스크톱 뷰"
+    },
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "홈페이지 모바일 뷰"
+    },
+    {
+      "src": "/screenshots/desktop-editor.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "에디터 데스크톱 뷰"
+    },
+    {
+      "src": "/screenshots/mobile-editor.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "에디터 모바일 뷰"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "새 글 작성",
+      "short_name": "글쓰기",
+      "description": "새로운 블로그 글 작성하기",
+      "url": "/write",
+      "icons": [{ "src": "/icons/write-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "마이페이지",
+      "short_name": "마이페이지",
+      "description": "내 프로필과 글 관리",
+      "url": "/mypage",
+      "icons": [{ "src": "/icons/profile-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "게임화 시스템",
+      "short_name": "업적",
+      "description": "출석 체크와 업적 확인",
+      "url": "/mypage?tab=achievements",
+      "icons": [{ "src": "/icons/trophy-icon.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/write",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

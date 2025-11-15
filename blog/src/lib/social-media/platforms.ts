@@ -289,4 +289,5 @@ export function isShortUrl(url: string): boolean {
  * 모든 지원 플랫폼 이름 반환
  */
 export function getSupportedPlatforms(): string[] {
-  return Object.values(SOCIAL_PLATFORMS).map(p =>
+  return Object.values(SOCIAL_PLATFORMS).map(p => p.name);
+}

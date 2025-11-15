@@ -1,6 +1,6 @@
 "use client";
 import { sanitizeHtml } from '@/lib/utils/sanitize';
-import { useRef, useState, useCallback, useMemo } from 'react';
+import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { Bold, Italic, Link, Eye, EyeOff, Copy, Check, Download } from 'lucide-react';
 
 export default function ContentEditor({ 
@@ -89,9 +89,21 @@ export default function ContentEditor({
 
   const copyToClipboard = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback for older browsers or server-side
+        const textArea = document.createElement('textarea');
+        textArea.value = value;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch (err) {
       console.error('클립보드 복사 실패:', err);
     }
@@ -110,53 +122,44 @@ export default function ContentEditor({
   }, [value]);
 
   // 초기 텍스트 분석
-  useMemo(() => {
+  useEffect(() => {
     analyzeText(value);
   }, [value, analyzeText]);
 
-  const toolbarButtons = useMemo(() => [
-    {
-      name: '굵게',
-      icon: Bold,
-      action: () => wrap('**'),
-      shortcut: 'Ctrl+B',
-      color: 'text-red-600'
-    },
-    {
-      name: '기울임',
-      icon: Italic,
-      action: () => wrap('*'),
-      shortcut: 'Ctrl+I',
-      color: 'text-blue-600'
-    },
-    {
-      name: '링크',
-      icon: Link,
-      action: () => setShowLinkInput(!showLinkInput),
-      shortcut: 'Ctrl+K',
-      color: 'text-green-600'
-    }
-  ], [wrap, showLinkInput]);
+  const handleBoldClick = useCallback(() => wrap('**'), [wrap]);
+  const handleItalicClick = useCallback(() => wrap('*'), [wrap]);
+  const handleLinkClick = useCallback(() => setShowLinkInput(prev => !prev), []);
 
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 향상된 툴바 */}
       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl shadow-lg">
         <div className="flex items-center gap-2">
-          {toolbarButtons.map((btn, index) => {
-            const Icon = btn.icon;
-            return (
-              <button
-                key={index}
-                type="button"
-                className="p-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
-                onClick={btn.action}
-                title={`${btn.name} (${btn.shortcut})`}
-              >
-                <Icon className={`w-5 h-5 ${btn.color}`} />
-              </button>
-            );
-          })}
+          { }
+          <button
+            type="button"
+            className="p-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+            onClick={handleBoldClick}
+            title="굵게 (Ctrl+B)"
+          >
+            <Bold className="w-5 h-5 text-red-600" />
+          </button>
+          <button
+            type="button"
+            className="p-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+            onClick={handleItalicClick}
+            title="기울임 (Ctrl+I)"
+          >
+            <Italic className="w-5 h-5 text-blue-600" />
+          </button>
+          <button
+            type="button"
+            className="p-3 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+            onClick={handleLinkClick}
+            title="링크 (Ctrl+K)"
+          >
+            <Link className="w-5 h-5 text-green-600" />
+          </button>
         </div>
         
         <div className="flex items-center gap-3">

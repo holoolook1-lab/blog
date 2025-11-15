@@ -7,6 +7,7 @@ import { SITE_NAME } from '@/lib/brand';
 import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import { outlineButtonSmall } from '@/lib/styles/ui';
 import { useTranslations } from 'next-intl';
+import { PWAStatusIndicator } from '@/components/pwa/PWAStatus';
 
 export default function Header() {
   const t = useTranslations('common');
@@ -28,7 +29,7 @@ export default function Header() {
   }, [userId]);
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur antialiased" role="banner" aria-labelledby="site-title">
+    <header className="border-b bg-white/80 backdrop-blur antialiased relative z-40" role="banner" aria-labelledby="site-title">
       {/* 스킵 링크: 키보드 포커스 시에만 표시 */}
       <a href="#main" className="sr-only focus:not-sr-only fixed top-2 left-2 z-50 bg-white border rounded px-3 py-1 text-xs shadow-sm" aria-label="메인 콘텐츠로 건너뛰기" aria-describedby="skip-hint">메인으로 건너뛰기</a>
       <p id="skip-hint" className="sr-only">키보드 포커스 시 표시됩니다.</p>
@@ -52,20 +53,9 @@ export default function Header() {
             </span>
           </div>
         </div>
-        {/* 우측 영역: 햄버거 메뉴/내비게이션 + 로그인 버튼 */}
-        <div className="flex items-center gap-3 md:gap-4 text-sm md:text-base">
+        {/* 우측 영역: 햄버거 메뉴/내비게이션 */}
+        <div className="flex items-center gap-2 md:gap-4 text-sm md:text-base">
           <NavLinks showWrite={!!userId} />
-          {userId ? (
-            <></>
-          ) : (
-            <Link
-              href="/login"
-              className={`${outlineButtonSmall} min-h-[40px]`}
-              aria-label={t('login')}
-            >
-              {t('login')}
-            </Link>
-          )}
         </div>
       </div>
     </header>

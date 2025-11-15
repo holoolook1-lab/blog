@@ -37,12 +37,14 @@ export default function StatsBarClient({ className = '' }: { className?: string 
   }, []);
 
   return (
-    <div className={`text-sm text-gray-600 flex items-center gap-3 ${className}`}>
-      <span>
-        오늘 방문자: <span className="font-medium text-gray-800">{today ?? '—'}</span>
+    <div className={`text-sm text-gray-600 flex items-center gap-6 pointer-events-none ${className}`}>
+      <span className="flex items-center gap-2">
+        <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+        오늘 방문자: <span className="font-semibold text-gray-800">{today ?? '—'}</span>
       </span>
-      <span>
-        누적 방문자: <span className="font-medium text-gray-800">{total ?? '—'}</span>
+      <span className="flex items-center gap-2">
+        <span className="w-2 h-2 bg-gray-600 rounded-full"></span>
+        누적 방문자: <span className="font-semibold text-gray-800">{total ?? '—'}</span>
       </span>
     </div>
   );

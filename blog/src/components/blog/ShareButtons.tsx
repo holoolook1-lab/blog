@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link2, Twitter, Facebook, Linkedin, Share2, Eye, MessageSquare } from 'lucide-react';
 import ActionToast from '@/components/ui/ActionToast';
 import ShareModal from './ShareModal';
@@ -109,62 +109,85 @@ export default function ShareButtons({ url, title }: { url: string; title?: stri
   };
 
   return (
-    <div className="flex items-center gap-3" role="group" aria-label={t('share')}>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200" role="group" aria-label={t('share')}>
       {toast && <ActionToast toast={toast} onClose={() => setToast(null)} />}
-      <span className="text-sm text-gray-600">공유하기:</span>
+      
+      {/* 공유하기 라벨 */}
       <div className="flex items-center gap-2">
+        <Share2 size={16} className="text-neutral-600" aria-hidden="true" />
+        <span className="text-sm font-semibold text-neutral-700">공유하기</span>
+      </div>
+
+      {/* 공유 버튼 그룹 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* 미리보기 버튼 */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="p-1 transition-colors duration-200 hover:text-black"
+          className="group relative flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-neutral-300 text-neutral-600 hover:text-neutral-900 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
           aria-label={t('preview')}
           title={t('preview')}
           aria-expanded={isModalOpen}
           aria-controls="share-dialog"
         >
-          <Eye size={18} className="text-gray-700" aria-hidden="true" focusable="false" />
+          <Eye size={16} className="text-current" aria-hidden="true" focusable="false" />
+          <span className="text-sm font-medium hidden sm:inline">미리보기</span>
         </button>
+
+        {/* 소셜 미디어 공유 버튼들 */}
         {shareOptions.map((option) => (
           <a
             key={option.name}
             href={option.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1 transition-colors duration-200 hover:text-black"
+            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-neutral-300 text-neutral-600 hover:text-neutral-900 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
             aria-label={option.name}
             title={option.name}
           >
-            <div className="text-gray-700 hover:text-black transition-colors duration-200">
-              {option.icon}
+            <div className="text-current">
+              {React.cloneElement(option.icon, { size: 16 })}
             </div>
+            <span className="text-sm font-medium hidden sm:inline">{option.name}</span>
           </a>
         ))}
+
+        {/* 카카오톡 공유 */}
         {kakaoKey && (
           <button
             onClick={shareKakao}
-            className="p-1 transition-colors duration-200 hover:text-black"
+            className="group relative flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEE500] border border-[#FEE500] text-[#3C1E1E] hover:bg-[#FDD800] hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FEE500] focus:ring-offset-1 shadow-sm"
             aria-label={t('kakao')}
             title={t('kakao')}
           >
-            <MessageSquare size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+            <MessageSquare size={16} className="text-current" aria-hidden="true" focusable="false" />
+            <span className="text-sm font-medium hidden sm:inline">카카오톡</span>
           </button>
         )}
+
+        {/* 네이티브 공유 (모바일) */}
         <button
           onClick={nativeShare}
-          className="p-1 transition-colors duration-200 hover:text-black"
+          className="group relative flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-800 text-white hover:bg-neutral-900 hover:border-neutral-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-1 md:hidden"
           aria-label={t('native')}
           title={t('native')}
         >
-          <Share2 size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+          <Share2 size={16} className="text-current" aria-hidden="true" focusable="false" />
+          <span className="text-sm font-medium">공유</span>
         </button>
+
+        {/* URL 복사 */}
         <button
           onClick={copyToClipboard}
-          className="p-1 transition-colors duration-200 hover:text-black"
+          className="group relative flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-neutral-300 text-neutral-600 hover:text-neutral-900 hover:border-neutral-400 hover:shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
           aria-label={t('copy')}
           title={t('copy')}
         >
-          <Link2 size={18} className="text-gray-700 hover:text-black transition-colors duration-200" aria-hidden="true" focusable="false" />
+          <Link2 size={16} className="text-current" aria-hidden="true" focusable="false" />
+          <span className="text-sm font-medium hidden sm:inline">복사</span>
         </button>
       </div>
+
+      {/* 공유 모달 */}
       {isModalOpen && <ShareModal url={url} title={title || ''} onClose={() => setIsModalOpen(false)} />}
     </div>
   );
