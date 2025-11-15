@@ -5,6 +5,7 @@ import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import ActionToast from '@/components/ui/ActionToast';
 import { Button, Input } from '@/components/ui/index';
+import { AlertCircle } from 'lucide-react';
 type Toast = { type: 'success' | 'error'; message: string };
 
 const MAX_LEN = 2000;
@@ -158,7 +159,7 @@ export default function CommentForm({
         <Button
           type="submit"
           variant="primary"
-          size="default"
+          size="md"
           disabled={isSubmitting || !content.trim()}
           loading={isSubmitting}
           className="px-6 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
@@ -200,7 +201,7 @@ export default function CommentForm({
               <div className="flex gap-3 justify-center">
                 <Button
                   variant="primary"
-                  size="default"
+                  size="md"
                   onClick={(e) => {
                     e.preventDefault();
                     setConfirmOpen(false);
@@ -212,7 +213,7 @@ export default function CommentForm({
                 </Button>
                 <Button
                   variant="outline"
-                  size="default"
+                  size="md"
                   onClick={(e) => { 
                     e.preventDefault(); 
                     setConfirmOpen(false); 

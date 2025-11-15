@@ -9,6 +9,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: blog
     steps:
     - uses: actions/checkout@v3
     
@@ -16,21 +19,20 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: blog/package-lock.json
         
     - name: Install dependencies
-      run: |
-        cd blog
-        npm ci
-        
+      run: npm ci
+      
     - name: Build
-      run: |
-        cd blog
-        npm run build
-        
+      run: npm run build
+      
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.ORG_ID }}
         vercel-project-id: ${{ secrets.PROJECT_ID }}
-        working-directory: ./blog
+        working-directory: blog
+        vercel-args: '--prod'
