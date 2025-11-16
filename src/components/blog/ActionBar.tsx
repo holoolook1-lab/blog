@@ -17,11 +17,11 @@ export default function ActionBar({
   
   return (
     <div 
-      className={`flex items-center gap-4 p-3 bg-neutral-50 rounded-xl border border-neutral-200 ${className}`} 
+      className={`flex justify-end items-center gap-3 p-4 bg-neutral-50 rounded-xl border border-neutral-200 ${className}`} 
       role="group" 
       aria-label={t('actionGroup') || '게시글 상호작용'}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <VoteButtons 
           postId={postId} 
           initialLikes={initialLikes} 

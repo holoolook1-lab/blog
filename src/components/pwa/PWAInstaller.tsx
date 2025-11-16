@@ -62,13 +62,13 @@ export default function PWAInstaller() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <Card className="max-w-md w-full">
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-black rounded-lg">
-                <Smartphone className="h-6 w-6 text-white" />
+              <div className="p-2 bg-gray-200 rounded-lg">
+                <Smartphone className="h-6 w-6 text-gray-700" />
               </div>
               <div>
                 <CardTitle className="text-lg">앱 설치하기</CardTitle>
@@ -119,7 +119,7 @@ export default function PWAInstaller() {
           <div className="flex gap-3">
             <Button
               onClick={handleInstall}
-              className="flex-1 bg-black hover:bg-gray-800"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               <Download className="h-4 w-4 mr-2" />
               설치하기

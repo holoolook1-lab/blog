@@ -5,7 +5,7 @@ import AuthToastBridge from '@/components/layout/AuthToastBridge';
 import AuthSessionHydrator from '@/components/layout/AuthSessionHydrator';
 import { Suspense } from 'react';
 import { cookies } from 'next/headers';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { getPublicSiteMeta } from '@/lib/site';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from '@/i18n/getLocale';
@@ -14,6 +14,16 @@ import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { generateNaverVerificationMeta } from '@/lib/seo/naverSEO';
 
 const { url: site, name: siteName, description: siteDesc } = getPublicSiteMeta();
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  // 다크모드 비활성화 - 항상 밝은 테마 유지
+  colorScheme: 'light',
+  themeColor: '#ffffff',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(site),
@@ -128,7 +138,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let nonce: string | undefined = undefined;
   try { nonce = (await cookies()).get('cspnonce')?.value; } catch {}
   return (
-    <html lang={locale}>
+    <html lang={locale} className="light" style={{ colorScheme: 'light' }}>
       <body className="min-h-screen bg-white text-black antialiased">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Seoul">
           <Header />

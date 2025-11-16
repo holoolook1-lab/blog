@@ -25,7 +25,7 @@ export default function BackToTop() {
   return (
     <button
       onClick={goTop}
-      className="fixed z-50 rounded-full bg-black text-white shadow-xl px-3.5 py-2 text-sm hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-black min-w-[44px] min-h-[44px]"
+      className="fixed z-50 rounded-full bg-white text-gray-700 shadow-xl px-3.5 py-2 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-200 min-w-[44px] min-h-[44px]"
       style={{
         bottom: 'max(16px, env(safe-area-inset-bottom))',
         right: 'max(16px, env(safe-area-inset-right))',

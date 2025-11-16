@@ -16,7 +16,7 @@ import ServerPreviewPosts from '@/components/blog/ServerPreviewPosts';
 import { initializeLocalTestData } from '@/lib/local-test-data';
 import { isBuildTime, isSupabaseStub } from '@/lib/build-utils';
 
-export const revalidate = 60;
+export const revalidate = 30; // 캐시 시간 단축 (60초 -> 30초)
 
 const SocialLink = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => (
   <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-200">
@@ -88,7 +88,10 @@ export default async function HomePage() {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const res = await fetch(apiUrl, { 
-          next: { revalidate: 60, tags: ['posts:list'] },
+          next: { 
+            revalidate: 30, // 캐시 시간 단축
+            tags: ['posts:list', 'posts', 'home', 'recent'] // 추가 태그
+          },
           signal: controller.signal
         });
         

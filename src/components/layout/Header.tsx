@@ -39,7 +39,7 @@ export default function Header() {
             avatarUrl ? (
               <img src={avatarUrl} alt="프로필" className="w-6 h-6 rounded-full object-cover border" />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs flex items-center justify-center border border-gray-300">
                 {email?.slice(0,1).toUpperCase()}
               </div>
             )

@@ -273,9 +273,9 @@ export default function MyPage() {
                     <button
                       className={`${outlineButtonSmall} border-red-600 text-red-600 hover:bg-red-50`}
                       onClick={async () => {
-                        console.log('삭제 버튼 클릭됨, userId:', userId, 'postId:', p.id);
+                        console.warn('삭제 버튼 클릭됨, userId:', userId, 'postId:', p.id);
                         if (!userId) { 
-                          console.log('로그인되지 않음');
+                          console.warn('로그인되지 않음');
                           setToast({ type: 'error', message: '로그인이 필요합니다' }); 
                           return; 
                         }
@@ -286,34 +286,56 @@ export default function MyPage() {
                         
                         setToast(null);
                         try {
-                          console.log('삭제 API 호출 시작:', `/api/posts/${p.id}`);
+                          console.warn('삭제 API 호출 시작:', `/api/posts/${p.id}`);
+                          
+                          // 낙관적 업데이트: 즉시 UI에서 제거
+                          setRecentPosts((prev) => prev.filter((x) => x.id !== p.id));
+                          
                           const res = await fetch(`/api/posts/${p.id}`, { 
                             method: 'DELETE',
                             headers: {
                               'Content-Type': 'application/json',
                             }
                           });
-                          console.log('삭제 API 응답:', res.status, res.statusText);
+                          console.warn('삭제 API 응답:', res.status, res.statusText);
                           
                           let json;
                           try {
                             json = await res.json();
-                            console.log('삭제 API 응답 데이터:', json);
+                            console.warn('삭제 API 응답 데이터:', json);
                           } catch (e) {
-                            console.log('응답 JSON 파싱 실패:', e);
+                            console.warn('응답 JSON 파싱 실패:', e);
                             json = {};
                           }
                           
                           if (!res.ok) {
-                            console.log('삭제 실패:', res.status, json);
+                            console.warn('삭제 실패:', res.status, json);
+                            // 실패 시 UI 복구
+                            setRecentPosts((prev) => [p, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
                             throw new Error(json.error || `삭제 실패 (${res.status})`);
                           }
                           
-                          console.log('삭제 성공, UI 업데이트');
-                          setRecentPosts((prev) => prev.filter((x) => x.id !== p.id));
-                          setToast({ type: 'success', message: '삭제했습니다' });
+                          console.warn('삭제 성공, 메인 화면 캐시 무효화');
+                          
+                          // 메인 화면 캐시 무효화를 위한 추가 API 호출
+                          try {
+                            await fetch('/api/public/recent', { 
+                              method: 'GET',
+                              cache: 'reload',
+                              headers: { 'Cache-Control': 'no-cache' }
+                            });
+                          } catch (cacheError) {
+                            console.warn('캐시 무효화 실패:', cacheError);
+                          }
+                          
+                          // 강제 새로고침으로 즉시 반영
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 500);
+                          
+                          setToast({ type: 'success', message: '삭제했습니다. 페이지가 새로고침됩니다.' });
                         } catch (err: any) {
-                          console.log('삭제 오류:', err);
+                          console.warn('삭제 오류:', err);
                           setToast({ type: 'error', message: err?.message || '삭제 실패' });
                         }
                       }}

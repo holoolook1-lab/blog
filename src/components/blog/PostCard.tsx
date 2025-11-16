@@ -34,7 +34,7 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
     ? 'rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow'
     : variant === 'card'
       ? 'border rounded overflow-hidden'
-      : '';
+      : 'border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow';
   // 본문 내 첫 비디오/임베드 추출
   const extractFirstVideo = () => {
     const iframeMatch = safe.match(/<iframe[^>]+src=["']([^"']+)["'][^>]*>/i);
@@ -120,10 +120,10 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
     return trimmed.length > 140 ? trimmed.slice(0, 140) + '…' : trimmed;
   })();
   return (
-    <article className={wrapperClass} aria-labelledby={`card-title-${post.id}`}>
+    <article className={`${wrapperClass} flex flex-col`} aria-labelledby={`card-title-${post.id}`}>
       {/* 카드 내부 프로필 헤더 */}
       {(authorName || authorAvatarUrl) && (
-        <div className={isPolaroid ? 'p-4 md:p-5' : 'p-4 md:p-5'}>
+        <div className='px-4 pt-4 md:px-5 md:pt-5 pb-2'>
           <div className="flex items-center gap-3">
             <div className="relative w-9 h-9 rounded-full overflow-hidden border bg-gray-100">
               {authorAvatarUrl ? (
@@ -147,7 +147,7 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
       )}
       {firstVideo ? (
         isPolaroid ? (
-          <div className="p-3">
+          <div className="px-4 pt-3 pb-2 md:px-5 md:pt-3 md:pb-2">
             <div className={`relative w-full ${getAspectClass(firstVideo.src)} bg-white border rounded-lg shadow-sm overflow-hidden`}>
               <AutoPlayEmbed type={firstVideo.type} src={toAutoplaySrc(firstVideo.src)} className="absolute inset-0 w-full h-full polaroid-photo" />
             </div>
@@ -158,7 +158,7 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
       ) : post.cover_image && (
         isPolaroid ? (
           <Link href={`/posts/${post.slug}`} aria-label={post.title} className="focus:outline-none focus:ring-2 focus:ring-black rounded">
-            <div className="p-3">
+            <div className="px-4 pt-3 pb-2 md:px-5 md:pt-3 md:pb-2">
               <div className="relative w-full aspect-[16/9] bg-white border rounded-lg shadow-sm overflow-hidden">
                 {isYouTubeImage(post.cover_image) ? (
                   // YouTube 이미지는 일반 img 태그로 처리 (next/image 설정 문제 방지)
@@ -208,34 +208,25 @@ export default function PostCard({ post, variant = 'borderless', showExcerpt = t
           </Link>
         )
       )}
-      <div className={isPolaroid ? 'p-4 md:p-5' : 'p-4 md:p-5'}>
+      <div className='px-4 pb-4 md:px-5 md:pb-5 pt-2'>
         <Link id={`card-title-${post.id}`} href={`/posts/${post.slug}`} className="text-lg font-semibold clamp-2 break-keep link-gauge focus:outline-none focus:ring-2 focus:ring-black rounded">
           {post.title}
         </Link>
-        {isPolaroid ? (
-          <div className="mt-2 flex items-center justify-between">
-            {!(authorName || authorAvatarUrl) ? (
-              <p className="text-xs text-gray-500">{formatDateKR(post.created_at)} · {mins}분 읽기</p>
-            ) : (
-              <span />
-            )}
-            <ActionBar
-              postId={post.id}
-              initialLikes={post.like_count || 0}
-              initialDislikes={post.dislike_count || 0}
-              className="pt-0"
-            />
-          </div>
-        ) : (
-          <>
-            {/* 날짜/작성자 정보는 헤더로 이동했으며, 헤더가 없는 경우만 본문 상단에 표시 */}
-            {!(authorName || authorAvatarUrl) && (
-              <p className="text-xs text-gray-500 mt-1">
-                {formatDateKR(post.created_at)} · {mins}분 읽기
-              </p>
-            )}
-            <ActionBar postId={post.id} initialLikes={post.like_count || 0} initialDislikes={post.dislike_count || 0} className="pt-2" />
-          </>
+        {/* ActionBar를 정중앙에 위치 */}
+        <div className="flex justify-center items-center mt-3">
+          <ActionBar 
+            postId={post.id}
+            initialLikes={post.like_count || 0}
+            initialDislikes={post.dislike_count || 0}
+            className="pt-0"
+          />
+        </div>
+        
+        {/* 날짜/작성자 정보 표시 */}
+        {!(authorName || authorAvatarUrl) && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            {formatDateKR(post.created_at)} · {mins}분 읽기
+          </p>
         )}
         {showExcerpt && summary && <p className="text-sm text-gray-600 mt-2 break-words clamp-3">{summary}</p>}
       </div>

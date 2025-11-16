@@ -105,7 +105,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
     <div ref={rootRef} className="relative flex items-center gap-2 md:gap-3">
       {isMounted && open && (
         <div
-          className="fixed inset-0 z-10 bg-black/30 md:hidden menu-overlay backdrop-blur-sm"
+          className="fixed inset-0 z-10 bg-gray-500/30 md:hidden menu-overlay backdrop-blur-sm"
           onClick={() => setOpen(false)}
           aria-hidden="true"
         />
@@ -131,7 +131,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
             md:translate-x-0 md:opacity-100 md:flex md:flex-row md:items-center md:gap-6 
             absolute md:relative top-full right-0 md:top-0 md:right-0 h-auto max-h-[calc(100vh-4rem)] md:h-auto w-[calc(100vw-2rem)] max-w-[280px] md:w-auto 
             luxury-menu-bg md:bg-transparent rounded-lg md:rounded-none border md:border-none shadow-xl md:shadow-none
-            transition-all duration-300 ease-in-out z-20 overflow-y-auto overflow-x-visible mt-1 md:mt-0`
+            transition-all duration-300 ease-in-out z-20 overflow-y-auto overflow-x-hidden mt-1 md:mt-0`
           }
           onKeyDown={(e) => {
             if (e.key === 'Escape') { setOpen(false); return; }
@@ -185,7 +185,7 @@ export default function NavLinks({ showWrite }: { showWrite: boolean }) {
               <Link
                 ref={firstLinkRef}
                 href={`/posts`}
-                className={`text-lg md:text-base font-normal menu-item-luxury
+                className={`text-lg md:text-base font-normal menu-item-luxury break-words
                   ${isActive('/posts') 
                     ? 'active text-black font-medium' 
                     : 'text-gray-700'

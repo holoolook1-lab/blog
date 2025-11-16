@@ -171,16 +171,16 @@ export default async function PostDetailPage({ params }: Params) {
     });
     
     out = out.replace(/https?:\/\/(?:player\.)?vimeo\.com\/video\/([0-9]+)/gi, (_m, id) => {
-      return `<iframe src="https://player.vimeo.com/video/${id}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://player.vimeo.com/video/${id}" class="absolute inset-0 w-full h-full border-0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
     });
     out = out.replace(/https?:\/\/www\.dailymotion\.com\/video\/([A-Za-z0-9]+)/gi, (_m, id) => {
-      return `<iframe src="https://www.dailymotion.com/embed/video/${id}" width="560" height="315" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://www.dailymotion.com/embed/video/${id}" class="absolute inset-0 w-full h-full border-0" allow="autoplay" allowfullscreen loading="lazy"></iframe></div>`;
     });
     out = out.replace(/https?:\/\/(?:www\.)?twitch\.tv\/videos\/([0-9]+)/gi, (_m, id) => {
       const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
       let parent = 'localhost';
       try { parent = new URL(site).hostname; } catch {}
-      return `<iframe src="https://player.twitch.tv/?video=${id}&parent=${parent}" width="560" height="315" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+      return `<div class="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg my-6"><iframe src="https://player.twitch.tv/?video=${id}&parent=${parent}" class="absolute inset-0 w-full h-full border-0" allow="autoplay" allowfullscreen loading="lazy"></iframe></div>`;
     });
     return out;
   };

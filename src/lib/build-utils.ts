@@ -79,6 +79,7 @@ export function isSupabaseStub(supabase: any): boolean {
  */
 export function devLog(level: 'log' | 'warn' | 'error', message: string, ...args: any[]) {
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
     console[level](`[Dev] ${message}`, ...args);
   }
 }

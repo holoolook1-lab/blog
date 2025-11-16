@@ -199,20 +199,58 @@ export default function AdvancedEditor({ value, onChange, placeholder = "내용�
           }
         }
         
-        // 비디오 링크 자동 임베드
+        // 텍스트 붙여넣기 처리
         const text = event.clipboardData?.getData('text/plain') || '';
-        if (text && /^https?:\/\//i.test(text)) {
-          const embed = makeVideoEmbed(text);
-          if (embed) {
+        if (text) {
+          // YouTube 링크 패턴 찾기
+          const youtubePattern = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/gi;
+          const matches = [...text.matchAll(youtubePattern)];
+          
+          if (matches.length > 0) {
             event.preventDefault();
-            editor?.chain().focus().insertContent(embed).run();
+            
+            // 텍스트를 분할하여 처리
+            let processedText = text;
+            const embeds: string[] = [];
+            
+            // 각 YouTube 링크를 임베드로 변환
+            for (const match of matches) {
+              const fullUrl = match[0];
+              const embed = makeVideoEmbed(fullUrl);
+              if (embed) {
+                embeds.push(embed);
+                // 텍스트에서 URL을 플레이스홀더로 교체
+                processedText = processedText.replace(fullUrl, `{{EMBED_${embeds.length - 1}}}`);
+              }
+            }
+            
+            // 최종 HTML 조합
+            let finalHtml = escapeHtml(processedText);
+            
+            // 플레이스홀더를 실제 임베드로 교체
+            embeds.forEach((embed, index) => {
+              finalHtml = finalHtml.replace(`{{EMBED_${index}}}`, embed);
+            });
+            
+            // 줄바꿈을 <br> 태그로 변환
+            finalHtml = finalHtml.replace(/\n/g, '<br>');
+            
+            editor?.chain().focus().insertContent(finalHtml).run();
+            return true;
+          } else if (/^https?:\/\//i.test(text)) {
+            // 단일 URL인 경우
+            const embed = makeVideoEmbed(text);
+            if (embed) {
+              event.preventDefault();
+              editor?.chain().focus().insertContent(embed).run();
+              return true;
+            }
+            
+            // 일반 링크 → 링크 카드 삽입
+            event.preventDefault();
+            void insertLinkCardFromUrl(text);
             return true;
           }
-          
-          // 일반 링크 → 링크 카드 삽입
-          event.preventDefault();
-          void insertLinkCardFromUrl(text);
-          return true;
         }
         return false;
       },
