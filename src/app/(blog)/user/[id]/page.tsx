@@ -3,7 +3,9 @@ import { getServerSupabase } from '@/lib/supabase/server';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/utils/image';
 import { formatDateKR } from '@/lib/date';
-import { Crown, Diamond, Medal } from 'lucide-react';
+import { Crown, Diamond, Medal, Users, UserPlus } from 'lucide-react';
+import FollowButton from '@/components/user/FollowButton';
+import FollowList from '@/components/user/FollowList';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,6 +22,16 @@ function levelIcon(level: string) {
 export default async function UserProfilePage({ params }: Params) {
   const supabase = (await getServerSupabase()) || createPublicSupabaseClient();
   const { id } = await params;
+
+  // 현재 로그인한 사용자 확인
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+  // 팔로우 수 정보 조회
+  const { data: followStats } = await supabase
+    .from('profiles')
+    .select('followers_count, following_count')
+    .eq('id', id)
+    .single();
 
   // 프로필/집계 조회
   const { data: profile } = await supabase
@@ -113,14 +125,34 @@ export default async function UserProfilePage({ params }: Params) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-3">
             <h1 className="text-2xl font-bold">{profile?.username || '사용자'}</h1>
             <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border bg-gray-50">
               {levelIcon(level)} {levelLabel(level)}
             </span>
           </div>
-          <p className="mt-2 text-sm text-gray-700 whitespace-pre-line break-words">{profile?.bio || '자기소개가 없습니다.'}</p>
-          <p className="mt-2 text-sm text-gray-600">글 수: <strong>{postCount}</strong> · 추천 합: <strong>{likeSum}</strong> · 점수: <strong>{score}</strong></p>
+          <p className="text-sm text-gray-700 whitespace-pre-line break-words">{profile?.bio || '자기소개가 없습니다.'}</p>
+          <p className="mt-2 text-sm text-gray-600">
+            글 수: <strong>{postCount}</strong> · 
+            추천 합: <strong>{likeSum}</strong> · 
+            점수: <strong>{score}</strong>
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            팔로워: <strong>{followStats?.followers_count || 0}</strong> · 
+            팔로잉: <strong>{followStats?.following_count || 0}</strong>
+          </p>
+          
+          {/* 팔로우 버튼 */}
+          {currentUser && currentUser.id !== id && (
+            <div className="mt-4">
+              <FollowButton 
+                targetUserId={id}
+                targetUserName={profile?.username || undefined}
+                size="md"
+                showIcon={true}
+              />
+            </div>
+          )}
         </div>
       </header>
 
@@ -147,6 +179,58 @@ export default async function UserProfilePage({ params }: Params) {
           )) : <p className="text-sm text-gray-600">아직 임계치 돌파 기록이 없습니다.</p>}
         </div>
       </section>
+
+      {/* 팔로워/팔로잉 목록 */}
+      {(followStats?.followers_count || 0) > 0 || (followStats?.following_count || 0) > 0 ? (
+        <section className="space-y-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {(followStats?.followers_count || 0) > 0 && (
+                <div className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  팔로워 {followStats?.followers_count || 0}
+                </div>
+              )}
+              {(followStats?.following_count || 0) > 0 && (
+                <div className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  팔로잉 {followStats?.following_count || 0}
+                </div>
+              )}
+            </nav>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {(followStats?.followers_count || 0) > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  팔로워
+                </h3>
+                <FollowList 
+                  userId={id}
+                  currentUserId={currentUser?.id}
+                  type="followers"
+                />
+              </div>
+            )}
+            
+            {(followStats?.following_count || 0) > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <UserPlus className="w-5 h-5" />
+                  팔로잉
+                </h3>
+                <FollowList 
+                  userId={id}
+                  currentUserId={currentUser?.id}
+                  type="following"
+                />
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

@@ -12,6 +12,8 @@ import { getLocale } from '@/i18n/getLocale';
 import { getMessages } from '@/i18n/messages';
 import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { generateNaverVerificationMeta } from '@/lib/seo/naverSEO';
+import { CoreWebVitalsTracker } from '@/components/analytics/CoreWebVitalsTracker';
+import { Toaster } from 'sonner';
 
 const { url: site, name: siteName, description: siteDesc } = getPublicSiteMeta();
 
@@ -48,6 +50,12 @@ export const metadata: Metadata = {
     'naver-webmaster-tool': 'enabled',
     'naver-analytics': 'true',
     'naver-search-console': 'verified',
+    
+    // 다음(카카오) 검색엔진 대응
+    'daum-site-verification': 'c4a4c8c9c1c2c3c4c5c6c7c8c9c0c1c2c3',
+    'kakao-webmaster-tool': 'enabled',
+    'daum-webmaster-tool': 'enabled',
+    'kakao-analytics': 'true',
     
     // 한국어 특화
     'language': 'korean',
@@ -208,6 +216,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           
           <Footer />
         </NextIntlClientProvider>
+        
+        {/* Core Web Vitals 추적기 */}
+        <CoreWebVitalsTracker />
+        
+        {/* Toast 알림 */}
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            className: 'toast',
+          }}
+        />
       </body>
     </html>
   );

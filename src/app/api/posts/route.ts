@@ -78,6 +78,43 @@ export async function POST(req: Request) {
     revalidateTag('feed:sitemap', 'auto');
   } catch {}
   if (!data) return badRequest('insert_failed');
+  
+  // 포스트 작성 성공 시 팔로워들에게 알림 보내기 (비동기)
+  if (published) {
+    try {
+      // 팔로워들 조회
+      const { data: followers, error: followersError } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', user.id);
+
+      if (!followersError && followers && followers.length > 0) {
+        // 각 팔로워에게 알림 전송 (병렬 처리)
+        const notificationPromises = followers.map(follower =>
+          fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/notifications/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'followed_user_post',
+              targetUserId: follower.follower_id,
+              postId: data.id,
+              postTitle: title
+            }),
+          }).catch(error => {
+            console.error(`팔로워 ${follower.follower_id} 알림 전송 실패:`, error);
+          })
+        );
+
+        // 모든 알림 전송을 기다리지 않고 비동기로 처리
+        Promise.allSettled(notificationPromises);
+      }
+    } catch (error) {
+      console.error('팔로워 알림 전송 중 오류:', error);
+    }
+  }
+  
   return NextResponse.json({ id: data.id, slug: s });
 }
   

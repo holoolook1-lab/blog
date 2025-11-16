@@ -1,7 +1,7 @@
 "use client";
 import { MessageSquare, Users } from 'lucide-react';
 import CommentForm from './CommentForm';
-import ClientCommentList from './ClientCommentList';
+import EnhancedCommentList from './EnhancedCommentList';
 
 export default function CommentSection({ postId }: { postId: string }) {
   return (
@@ -38,7 +38,7 @@ export default function CommentSection({ postId }: { postId: string }) {
 
       {/* 댓글 목록 */}
       <div className="space-y-4">
-        <ClientCommentList postId={postId} />
+        <EnhancedCommentList postId={postId} />
       </div>
     </section>
   );

@@ -5,6 +5,9 @@
  import Link from 'next/link';
  import { getOptimizedImageUrl } from '@/lib/utils/image';
  import { Crown, Diamond, Medal } from 'lucide-react';
+ import { FollowButton } from '@/components/community/FollowButton';
+ import { FollowListModal } from '@/components/community/FollowListModal';
+ import { useAuth } from '@/hooks/use-auth';
 
 type Profile = { username?: string | null; avatar_url?: string | null; bio?: string | null };
 
@@ -12,9 +15,13 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
   const [profile, setProfile] = useState<Profile>({});
   const [postCount, setPostCount] = useState<number>(0);
   const [likeSum, setLikeSum] = useState<number>(0);
+  const [followersCount, setFollowersCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showFollowModal, setShowFollowModal] = useState<'followers' | 'following' | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const loadedRef = useRef<boolean>(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     let alive = true;
@@ -64,6 +71,38 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
         const likes = (posts || []).reduce((sum: number, p: any) => sum + (p.like_count || 0), 0);
         if (alive) { setPostCount(count); setLikeSum(likes); }
       } catch {}
+      // 팔로우/팔로워 수 조회
+      try {
+        const { data: followStats } = await supabase
+          .from('user_follow_stats')
+          .select('followers_count, following_count')
+          .eq('user_id', authorId)
+          .single();
+        
+        if (alive && followStats) {
+          setFollowersCount((followStats as any)?.followers_count || 0);
+          setFollowingCount((followStats as any)?.following_count || 0);
+        }
+      } catch {
+        // 폴백: 직접 카운트
+        try {
+          const { count: followers } = await supabase
+            .from('user_follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('following_id', authorId);
+          
+          const { count: following } = await supabase
+            .from('user_follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('follower_id', authorId);
+          
+          if (alive) {
+            setFollowersCount(followers || 0);
+            setFollowingCount(following || 0);
+          }
+        } catch {}
+      }
+      
       if (alive) { setLoading(false); loadedRef.current = true; }
     };
     const el = containerRef.current;
@@ -149,21 +188,45 @@ export default function ProfileCard({ authorId }: { authorId: string }) {
 
           {/* 통계 - 미니멀한 수평 레이아웃 */}
           <div className="flex justify-center items-center space-x-4 sm:space-x-6 text-xs sm:text-sm">
+            <button 
+              onClick={() => setShowFollowModal('followers')}
+              className="text-center hover:bg-muted/50 p-2 rounded-lg transition-colors"
+            >
+              <div className="text-gray-900 font-light">{followersCount}</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">팔로워</div>
+            </button>
+            <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
+            <button 
+              onClick={() => setShowFollowModal('following')}
+              className="text-center hover:bg-muted/50 p-2 rounded-lg transition-colors"
+            >
+              <div className="text-gray-900 font-light">{followingCount}</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">팔로잉</div>
+            </button>
+            <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
             <div className="text-center">
               <div className="text-gray-900 font-light">{postCount}</div>
-              <div className="text-gray-500 text-xs uppercase tracking-wider">Posts</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">게시글</div>
             </div>
             <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
             <div className="text-center">
               <div className="text-gray-900 font-light">{likeSum}</div>
-              <div className="text-gray-500 text-xs uppercase tracking-wider">Likes</div>
-            </div>
-            <div className="h-4 sm:h-6 w-px bg-gray-200"></div>
-            <div className="text-center">
-              <div className="text-gray-900 font-light">{score}</div>
-              <div className="text-gray-500 text-xs uppercase tracking-wider">Score</div>
+              <div className="text-gray-500 text-xs uppercase tracking-wider">추천</div>
             </div>
           </div>
+
+          {/* 팔로우 버튼 (자기 자신이 아닐 때만 표시) */}
+          {user && user.id !== authorId && (
+            <div className="pt-4">
+              <FollowButton
+                targetUserId={authorId}
+                targetUsername={username || '사용자'}
+                variant="primary"
+                size="md"
+                showIcon={true}
+              />
+            </div>
+          )}
 
           {/* 구분선 */}
           <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent w-12 sm:w-16 mx-auto"></div>

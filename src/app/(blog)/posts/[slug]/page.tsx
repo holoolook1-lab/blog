@@ -20,11 +20,15 @@ import BackToTop from '@/components/ui/BackToTop';
 import ActionBar from '@/components/blog/ActionBar';
 import EditLinkClient from '@/components/blog/EditLinkClient';
 import ProfileCard from '@/components/profile/ProfileCard';
+import { FollowListModal } from '@/components/community/FollowListModal';
 import { getPostBySlugCached } from '@/lib/cache/posts';
 import { generateNaverBlogPostMeta } from '@/lib/seo/naverSEO';
+import { generateDaumBlogPostMeta } from '@/lib/seo/daumSEO';
 import { Badge } from '@/components/ui/index';
+import { PostJSONLD, BreadcrumbJSONLD } from '@/components/seo/JSONLD';
+import { EnhancedPostSEO } from '@/components/seo/EnhancedSEO';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string}> }) {
   const { slug } = await params;
   const rawSlug = (slug || '').toString();
   let cleanSlug = rawSlug.trim();
@@ -55,46 +59,48 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     readingTime: post?.content ? computeReadingMinutes(post.content) : undefined,
     wordCount: post?.content ? post.content.split(/\s+/).length : undefined,
   });
+
+  // 다음(카카오) SEO 메타데이터 생성
+  const daumMeta = generateDaumBlogPostMeta({
+    title,
+    description,
+    content: post?.content || '',
+    author: '락이락이 블로그',
+    publishDate: post?.created_at || new Date().toISOString(),
+    modifyDate: post?.updated_at || undefined,
+    tags: [], // 태그 시스템이 구현되면 추가
+    category: '블로그 포스트',
+    readingTime: post?.content ? computeReadingMinutes(post.content) : undefined,
+    wordCount: post?.content ? post.content.split(/\s+/).length : undefined,
+    image: post?.cover_image || undefined,
+    url: postUrl,
+  });
   
   return {
-    ...naverMeta,
     title,
     description,
     alternates: { 
       canonical: postUrl, 
       languages: { ko: `/posts/${cleanSlug}` } 
     },
-    openGraph: {
-      ...naverMeta.openGraph,
-      type: 'article',
-      title,
-      description,
-      url: postUrl,
-      images,
-      siteName: siteName || '블로그',
-      locale: 'ko_KR',
-      countryName: 'South Korea',
-      publishedTime: post?.created_at || undefined,
-      modifiedTime: post?.updated_at || undefined,
-      section: '블로그',
-      authors: ['락이락이 블로그'],
+    other: {
+      // EnhancedPostSEO 컴포넌트에서 처리될 데이터
+      enhancedSeoData: JSON.stringify({
+        title,
+        description,
+        content: post?.content || '',
+        author: '락이락이 블로그',
+        publishedTime: post?.created_at || new Date().toISOString(),
+        modifiedTime: post?.updated_at || undefined,
+        image: post?.cover_image || undefined,
+        url: postUrl,
+        keywords: ['블로그', '한국블로그', '글쓰기', '커뮤니티', '게임화시스템', '출석체크', '업적시스템'],
+        section: '블로그',
+        tag: ['게임', 'IT', '기술', '리뷰'],
+        readingTime: post?.content ? computeReadingMinutes(post.content) : undefined,
+        wordCount: post?.content ? post.content.split(/\s+/).length : undefined,
+      }),
     },
-    twitter: {
-      ...naverMeta.twitter,
-      card: 'summary_large_image',
-      title,
-      description,
-      images,
-      creator: '@rakiraki_blog',
-      site: '@rakiraki_blog',
-    },
-    keywords: [
-      '블로그', '한국블로그', '글쓰기', '커뮤니티',
-      '게임화시스템', '출석체크', '업적시스템',
-      '소셜미디어', '유튜브', '인스타그램',
-      'PWA', '프로그레시브웹앱', '오프라인',
-      ...(typeof naverMeta.keywords === 'string' ? naverMeta.keywords.split(', ') : naverMeta.keywords || [])
-    ].join(', '),
   };
 }
 
@@ -285,34 +291,30 @@ export default async function PostDetailPage({ params }: Params) {
 
   return (
     <article id="main" className="max-w-5xl mx-auto p-4 space-y-4" aria-labelledby="post-title">
-      {/* Article JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: post.title,
-            datePublished: post.created_at,
-            dateModified: post.updated_at,
-            image: post.cover_image ? [post.cover_image] : undefined,
-            author: post.user_id ? { '@type': 'Person', name: post.user_id } : undefined,
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': buildPostUrl(site, cleanSlug),
-            },
-            publisher: {
-              '@type': 'Organization',
-              name: siteName,
-              logo: { '@type': 'ImageObject', url: `${site}/opengraph-image` },
-            },
-            isPartOf: {
-              '@type': 'WebSite',
-              url: site,
-              name: siteName,
-            },
-          }),
-        }}
+      {/* Enhanced SEO with Korean search optimization */}
+      <EnhancedPostSEO
+        title={post.title}
+        description={post.excerpt || ''}
+        content={safe}
+        author={post.user_id || '락이락이 블로그'}
+        publishedTime={post.created_at}
+        modifiedTime={post.updated_at}
+        image={post.cover_image || undefined}
+        url={buildPostUrl(site, cleanSlug)}
+        keywords={['게임', 'IT', '기술', '리뷰', '블로그']}
+        section="블로그"
+        tag={['게임', 'IT', '기술', '리뷰']}
+        readingTime={computeReadingMinutes(post.content)}
+        wordCount={post.content.split(/\s+/).length}
+      />
+      
+      {/* Breadcrumb JSON-LD */}
+      <BreadcrumbJSONLD
+        items={[
+          { name: '홈', url: site },
+          { name: '블로그', url: `${site}/posts` },
+          { name: post.title, url: buildPostUrl(site, cleanSlug) }
+        ]}
       />
       {/* 모바일 상단 프로필 */}
       <div className="block lg:hidden">

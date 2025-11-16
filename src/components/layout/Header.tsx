@@ -8,6 +8,7 @@ import { useAuthUser } from '@/lib/hooks/useAuthUser';
 import { outlineButtonSmall } from '@/lib/styles/ui';
 import { useTranslations } from 'next-intl';
 import { PWAStatusIndicator } from '@/components/pwa/PWAStatus';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 export default function Header() {
   const t = useTranslations('common');
@@ -55,6 +56,7 @@ export default function Header() {
         </div>
         {/* 우측 영역: 햄버거 메뉴/내비게이션 */}
         <div className="flex items-center gap-2 md:gap-4 text-sm md:text-base">
+          {userId && <NotificationBell />}
           <NavLinks showWrite={!!userId} />
         </div>
       </div>

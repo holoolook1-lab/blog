@@ -137,6 +137,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.1 
       },
       
+      // 다음(카카오) 검색엔진용 사이트맵
+      { 
+        url: `${site}/daum-sitemap.xml`, 
+        lastModified: now, 
+        changeFrequency: 'daily' as const, 
+        priority: 0.9 
+      },
+      
       // PWA 파일들
       { 
         url: `${site}/manifest.json`, 
